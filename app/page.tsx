@@ -6,91 +6,94 @@ const ROWS = 20;
 const COLS = 20;
 
 export default function Home() {
-
   const [pattern, setPattern] = useState("");
-
-  const [selectedTool, setSelectedTool] = useState<string | null>("X");
+  const [analysis, setAnalysis] = useState("");
 
   const [cells, setCells] = useState(
     Array.from({ length: ROWS }, () => Array(COLS).fill(null))
   );
 
-  const handleClick = (row: number, col: number) => {
-    const updated = [...cells];
-    updated[row][col] = selectedTool;
-    setCells(updated);
-  };
-
   const generateFromText = () => {
+    const updated = Array.from(
+      { length: ROWS },
+      () => Array(COLS).fill(null)
+    );
 
-  const updated = Array.from(
-    { length: ROWS },
-    () => Array(COLS).fill(null)
-  );
+    const lines = pattern.split("\n");
 
-  if (pattern.includes("maille serrée")) {
-    updated[0][0] = "X";
+    lines.forEach((line, rowIndex) => {
+      const text = line.toLowerCase();
+
+      const match = text.match(/\d+/);
+      const count = match ? parseInt(match[0]) : 0;
+
+      let symbol = "";
+      if (
+      text.includes("1 maille serrée") &&
+      text.includes("1 augmentation") &&
+      text.includes("x6")
+      ) {
+
+  for (let i = 0; i < 12; i++) {
+    updated[rowIndex][i] = i % 2 === 0 ? "X" : "V";
   }
 
-  setCells(updated);
-};
+  return;
+         }
+      if (
+        text.includes("maille serrée") ||
+        text.includes("mailles serrées")
+      ) {
+        symbol = "X";
+      } else if (
+        text.includes("bride") ||
+        text.includes("brides")
+      ) {
+        symbol = "T";
+      } else if (
+        text.includes("augmentation") ||
+        text.includes("augmentations")
+      ) {
+        symbol = "V";
+      }
+
+      for (let i = 0; i < count; i++) {
+        updated[rowIndex][i] = symbol;
+      }
+    });
+
+    setCells(updated);
+    setAnalysis(`${lines.length} ligne(s) analysée(s)`);
+  };
+
   return (
     <main style={{ padding: "20px" }}>
-
       <h1>Créateur de diagrammes crochet 🧶</h1>
 
       <textarea
         value={pattern}
         onChange={(e) => setPattern(e.target.value)}
-        placeholder="Tape ton modèle ici"
-        rows={5}
+        placeholder="Exemple :
+6 mailles serrées
+12 brides
+6 augmentations"
+        rows={6}
         cols={40}
       />
-      <p>{pattern}</p>
-    <button onClick={generateFromText}>
-  Générer
-</button>
-      <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          marginTop: "20px",
-          marginBottom: "20px",
-        }}
-      >
-        <button onClick={() => setSelectedTool("○")}>
-          Maille en l’air
-        </button>
 
-        <button onClick={() => setSelectedTool("X")}>
-          Maille serrée
-        </button>
+      <br />
+      <br />
 
-        <button onClick={() => setSelectedTool("T")}>
-          Bride
-        </button>
+      <button onClick={generateFromText}>
+        Générer
+      </button>
 
-        <button onClick={() => setSelectedTool("/")}>
-          Demi-bride
-        </button>
-
-        <button onClick={() => setSelectedTool("V")}>
-          Augmentation
-        </button>
-
-        <button onClick={() => setSelectedTool(null)}>
-          Effaceur
-        </button>
-      </div>
+      <p>{analysis}</p>
 
       <svg width={800} height={800}>
         {cells.map((row, rowIndex) =>
           row.map((cell, colIndex) => (
-            <g
-              key={`${rowIndex}-${colIndex}`}
-              onClick={() => handleClick(rowIndex, colIndex)}
-              style={{ cursor: "pointer" }}
-            >
+            <g key={`${rowIndex}-${colIndex}`}>
               <rect
                 x={colIndex * 40}
                 y={rowIndex * 40}
@@ -114,7 +117,6 @@ export default function Home() {
           ))
         )}
       </svg>
-
     </main>
   );
 }
