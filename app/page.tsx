@@ -1,84 +1,70 @@
 "use client";
 
 import { useState } from "react";
-
-const ROWS = 20;
-const COLS = 20;
+import { CROCHET_SYMBOLS } from "./lib/crochetSymbols";
+import { drawSymbol } from "./lib/drawSymbol";
+import { parsePattern } from "./lib/parser";
 
 export default function Home() {
   const [pattern, setPattern] = useState("");
   const [analysis, setAnalysis] = useState("");
+  const [firstRoundCount, setFirstRoundCount] = useState(6);
+  const [roundCounts, setRoundCounts] = useState<number[]>([]);
+  const [roundSymbols, setRoundSymbols] =  useState<string[][]>([]);
 
-  const [cells, setCells] = useState(
-    Array.from({ length: ROWS }, () => Array(COLS).fill(null))
-  );
+  const [cells, setCells] = useState<(string | null)[][]>([]);
 
   const generateFromText = () => {
-    const updated = Array.from(
-      { length: ROWS },
-      () => Array(COLS).fill(null)
-    );
+        const lines = pattern
+  .split("\n")
+  .filter(line => line.trim() !== "");
 
-    const lines = pattern.split("\n");
+  const result = parsePattern(pattern);
+  
+  setRoundCounts(result.counts);
+  setAnalysis(result.analysis);
+  setCells(result.cells);
+  setRoundSymbols(result.roundSymbols);
 
-    lines.forEach((line, rowIndex) => {
-      const text = line.toLowerCase();
+//console.log(result);
+    
+    if (lines.length > 0) {
+  const firstNumbers = lines[0].match(/\d+/g);
 
-      const match = text.match(/\d+/);
-      const count = match ? parseInt(match[0]) : 0;
+  if (firstNumbers) {
+    const value =
+      firstNumbers.length > 1
+        ? parseInt(firstNumbers[1])
+        : parseInt(firstNumbers[0]);
 
-      let symbol = "";
-      if (
-      text.includes("1 maille serrée") &&
-      text.includes("1 augmentation") &&
-      text.includes("x6")
-      ) {
-
-  for (let i = 0; i < 12; i++) {
-    updated[rowIndex][i] = i % 2 === 0 ? "X" : "V";
+    setFirstRoundCount(value);
   }
-
-  return;
-         }
-      if (
-        text.includes("maille serrée") ||
-        text.includes("mailles serrées")
-      ) {
-        symbol = "X";
-      } else if (
-        text.includes("bride") ||
-        text.includes("brides")
-      ) {
-        symbol = "T";
-      } else if (
-        text.includes("augmentation") ||
-        text.includes("augmentations")
-      ) {
-        symbol = "V";
-      }
-
-      for (let i = 0; i < count; i++) {
-        updated[rowIndex][i] = symbol;
-      }
-    });
-
-    setCells(updated);
-    setAnalysis(`${lines.length} ligne(s) analysée(s)`);
+}
   };
 
   return (
     <main style={{ padding: "20px" }}>
       <h1>Créateur de diagrammes crochet 🧶</h1>
 
+ <h2>Points reconnus</h2>
+
+    <ul>
+      {Object.entries(CROCHET_SYMBOLS).map(
+        ([key, value]) => (
+          <li key={key}>
+            {key} - {value.name} ({value.code})
+          </li>
+        )
+      )}
+    </ul>
       <textarea
         value={pattern}
         onChange={(e) => setPattern(e.target.value)}
-        placeholder="Exemple :
-6 mailles serrées
-12 brides
-6 augmentations"
-        rows={6}
-        cols={40}
+        rows={8}
+        cols={50}
+        placeholder={`Rang 1 : 6 mailles serrées
+Rang 2 : 6 augmentations
+Rang 3 : 2 mailles serrées, 1 augmentation x6`}
       />
 
       <br />
@@ -87,8 +73,9 @@ export default function Home() {
       <button onClick={generateFromText}>
         Générer
       </button>
-
-      <p>{analysis}</p>
+       <p>Premier rang : {firstRoundCount}</p>
+       <p>Rangs : {roundCounts.join(" - ")}</p>
+      <pre>{analysis}</pre>
 
       <svg width={800} height={800}>
         {cells.map((row, rowIndex) =>
@@ -103,20 +90,63 @@ export default function Home() {
                 stroke="black"
               />
 
-              {cell && (
-                <text
-                  x={colIndex * 40 + 20}
-                  y={rowIndex * 40 + 25}
-                  textAnchor="middle"
-                  fontSize="20"
-                >
-                  {cell}
-                </text>
-              )}
+  {drawSymbol(
+  cell,
+  colIndex * 40,
+  rowIndex * 40
+)}
             </g>
           ))
         )}
-      </svg>
+        </svg>
+
+      <h3>Aperçu circulaire</h3>
+
+      <svg width={700} height={700}>
+        {roundSymbols.map((_, ringIndex) => {
+  const radius = 60 + ringIndex * 50;
+
+  return (
+    <circle
+      key={`guide-${ringIndex}`}
+      cx={350}
+      cy={350}
+      r={radius}
+      fill="none"
+      stroke="#555"
+    />
+  );
+})}
+  {roundSymbols.map((round, ringIndex) => {
+    const radius = 60 + ringIndex * 50;
+
+    return round.map((symbol, index) => {
+      const angle =
+        (index / round.length) * Math.PI * 2;
+
+      const centerX = 350;
+      const centerY = 350;
+
+      const x = centerX + Math.cos(angle) * radius;
+      const y = centerY + Math.sin(angle) * radius;
+
+      return (
+        <text
+          key={`${ringIndex}-${index}`}
+          x={x}
+          y={y}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize="20"
+          fontWeight="bold"
+          fill="white"
+        >
+          {symbol}
+        </text>
+      );
+    });
+  })}
+</svg>
     </main>
   );
 }
