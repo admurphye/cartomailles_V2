@@ -28,16 +28,17 @@ export function parsePattern(pattern: string) {
   let col = 0;
   const symbols: string[] = [];
 
-  for (let r = 0; r < repetitions; r++) {
-    for (let m = 0; m < nbMs; m++) {
-      cells[index][col] = "X";
-      col++;
-    }
-
-    cells[index][col] = "V";
-    symbols.push("V");
+for (let r = 0; r < repetitions; r++) {
+  for (let m = 0; m < nbMs; m++) {
+    cells[index][col] = "X";
+    symbols.push("X");
     col++;
   }
+
+  cells[index][col] = "V";
+  symbols.push("V");
+  col++;
+}
 
   const totalMailles =
     (nbMs + 1) * repetitions;

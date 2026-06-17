@@ -3,7 +3,8 @@ import React from "react";
 export function drawSymbol(
   cell: string | null,
   x: number,
-  y: number
+  y: number,
+  color = "black"
 ) {
   if (!cell) return null;
 
@@ -15,7 +16,7 @@ export function drawSymbol(
           y1={y + 12}
           x2={x + 28}
           y2={y + 28}
-          stroke="black"
+          stroke={color}
           strokeWidth="2"
         />
 
@@ -24,7 +25,7 @@ export function drawSymbol(
           y1={y + 12}
           x2={x + 12}
           y2={y + 28}
-          stroke="black"
+          stroke={color}
           strokeWidth="2"
         />
       </>
@@ -39,7 +40,7 @@ export function drawSymbol(
           y1={y + 8}
           x2={x + 20}
           y2={y + 32}
-          stroke="black"
+          stroke={color}
           strokeWidth="2"
         />
 
@@ -48,7 +49,7 @@ export function drawSymbol(
           y1={y + 18}
           x2={x + 28}
           y2={y + 18}
-          stroke="black"
+          stroke={color}
           strokeWidth="2"
         />
       </>
@@ -62,7 +63,7 @@ if (cell === "V") {
         y1={y + 10}
         x2={x + 14}
         y2={y + 30}
-        stroke="black"
+        stroke={color}
         strokeWidth="2"
       />
 
@@ -71,7 +72,7 @@ if (cell === "V") {
         y1={y + 18}
         x2={x + 18}
         y2={y + 18}
-        stroke="black"
+        stroke={color}
         strokeWidth="2"
       />
 
@@ -80,7 +81,7 @@ if (cell === "V") {
         y1={y + 10}
         x2={x + 26}
         y2={y + 30}
-        stroke="black"
+        stroke={color}
         strokeWidth="2"
       />
 
@@ -89,7 +90,7 @@ if (cell === "V") {
         y1={y + 18}
         x2={x + 30}
         y2={y + 18}
-        stroke="black"
+        stroke={color}
         strokeWidth="2"
       />
     </>
@@ -103,7 +104,7 @@ if (cell === "A") {
         y1={y + 10}
         x2={x + 20}
         y2={y + 30}
-        stroke="black"
+        stroke={color}
         strokeWidth="2"
       />
 
@@ -112,7 +113,7 @@ if (cell === "A") {
         y1={y + 10}
         x2={x + 20}
         y2={y + 30}
-        stroke="black"
+        stroke={color}
         strokeWidth="2"
       />
     </>
@@ -124,7 +125,7 @@ if (cell === "MC") {
       cx={x + 20}
       cy={y + 20}
       r={4}
-      fill="black"
+      fill={color}
     />
   );
 }
@@ -136,7 +137,7 @@ if (cell === "DB") {
         y1={y + 8}
         x2={x + 20}
         y2={y + 32}
-        stroke="black"
+        stroke={color}
         strokeWidth="2"
       />
 
@@ -145,7 +146,7 @@ if (cell === "DB") {
         y1={y + 18}
         x2={x + 26}
         y2={y + 18}
-        stroke="black"
+        stroke={color}
         strokeWidth="2"
       />
     </>
@@ -159,7 +160,7 @@ if (cell === "TB") {
         y1={y + 6}
         x2={x + 20}
         y2={y + 34}
-        stroke="black"
+        stroke={color}
         strokeWidth="2"
       />
 
@@ -168,7 +169,7 @@ if (cell === "TB") {
         y1={y + 16}
         x2={x + 28}
         y2={y + 16}
-        stroke="black"
+        stroke={color}
         strokeWidth="2"
       />
 
@@ -177,7 +178,7 @@ if (cell === "TB") {
         y1={y + 22}
         x2={x + 28}
         y2={y + 22}
-        stroke="black"
+        stroke={color}
         strokeWidth="2"
       />
     </>
@@ -190,8 +191,8 @@ if (cell === "TB") {
         cy={y + 20}
         rx={8}
         ry={5}
-        fill="none"
-        stroke="black"
+        fill={color}
+        stroke={color}
         strokeWidth="2"
       />
     );
