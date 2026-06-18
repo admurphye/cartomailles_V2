@@ -5,6 +5,12 @@ import { CROCHET_SYMBOLS } from "./lib/crochetSymbols";
 import { drawSymbol } from "./lib/drawSymbol";
 import { parsePattern } from "./lib/parser";
 
+const cardStyle = {
+  padding: "15px",
+  border: "1px solid #333",
+  borderRadius: "12px",
+  background: "#111",
+};
 export default function Home() {
   const [pattern, setPattern] = useState("");
   const [diagramType, setDiagramType] =
@@ -52,7 +58,15 @@ export default function Home() {
     margin: "0 auto",
   }}
 >
-      <h1>Créateur de diagrammes crochet 🧶</h1>
+      <h1
+  style={{
+    marginBottom: "20px",
+    fontSize: "32px",
+  }}
+>
+  🧶 Créateur de diagrammes crochet
+</h1>
+
  <div
   style={{
     display: "flex",
@@ -68,15 +82,10 @@ export default function Home() {
     gap: "15px",
   }}
 >
-<div 
-  style={{ 
-    width: "350px",
-    padding: "20px",
-    border: "1px solid #333",
-    borderRadius: "12px",
-    background: "#111",
-  }}
->
+  <h3>⚙️ Paramètres</h3>
+
+<div style={cardStyle}>
+
   <label>
     Type de diagramme :
   </label>
@@ -100,12 +109,11 @@ export default function Home() {
     </option>
   </select>
 </div>
- <h2>Points reconnus</h2>
 
-  <details>
-  <summary>Points reconnus</summary>
-
-  <ul>
+<div style={cardStyle}>
+<h3>📚 Bibliothèque des symboles</h3>
+ <details>
+     <ul>
     {Object.entries(CROCHET_SYMBOLS).map(
       ([key, value]) => (
         <li key={key}>
@@ -114,40 +122,124 @@ export default function Home() {
       )
     )}
   </ul>
+  <summary>Afficher les symboles</summary>
 </details>
+</div>
+<div style={cardStyle}>
+
+<h3>📝 Patron</h3>
+<p
+  style={{
+    fontSize: "14px",
+    color: "#999",
+    marginTop: "-5px",
+    marginBottom: "10px",
+  }}
+>
+  Colle ou écris ton patron crochet
+</p>
       <textarea
         value={pattern}
         onChange={(e) => setPattern(e.target.value)}
        rows={10}
-  style={{
-    width: "100%",
-    resize: "vertical",
+ style={{
+  width: "100%",
+  minHeight: "220px",
+  background: "#0f0f0f",
+  color: "white",
+  border: "1px solid #333",
+  borderRadius: "8px",
+  padding: "12px",
+  resize: "vertical",
+  fontSize: "15px",
 }}
-        placeholder={`Rang 1 : 6 mailles serrées
-Rang 2 : 6 augmentations
-Rang 3 : 2 mailles serrées, 1 augmentation x6`}
+        placeholder={`Exemple :
+
+Cercle magique
+6 mailles serrées
+6 augmentations
+2 mailles serrées, 1 augmentation x6
+3 mailles serrées, 1 augmentation x6
+`}
       />
 
       <br />
       <br />
-
-      <button
+<p
+ style={{
+  width: "100%",
+  minHeight: "220px",
+  marginBottom: "15px",
+  background: "#0f0f0f",
+  color: "white",
+  border: "1px solid #333",
+  borderRadius: "8px",
+  padding: "12px",
+  resize: "vertical",
+  fontSize: "15px",
+  marginBottom: "15px"
+}}
+>
+  {pattern
+    .split("\n")
+    .filter(line => line.trim() !== "")
+    .length}
+  {" "}ligne(s)
+</p>
+<button
   onClick={generateFromText}
   style={{
     width: "100%",
-    padding: "12px",
-    borderRadius: "8px",
+    padding: "14px",
+    borderRadius: "10px",
     border: "none",
-    cursor: "pointer",
+    background: "#8b5cf6",
+    color: "white",
+    fontSize: "16px",
     fontWeight: "bold",
+    cursor: "pointer",
+    boxShadow: "0 4px 15px rgba(139,92,246,0.4)",
   }}
 >
-  Générer le diagramme
+  ✨ Générer le diagramme
 </button>
-       <p>Premier rang : {firstRoundCount}</p>
-       <p>Rangs : {roundCounts.join(" - ")}</p>
+    </div>
 
-      <pre>{analysis}</pre>
+<div style={cardStyle}>
+<h3>📊 Résumé</h3>
+       <p>
+  🪄 Premier rang : {firstRoundCount}
+</p>
+
+<p>
+  🔄 Tours : {roundCounts.length}
+</p>
+
+<p>
+  🧵 Mailles finales :
+  {" "}
+  {roundCounts.length > 0
+    ? roundCounts[roundCounts.length - 1]
+    : 0}
+</p>
+
+<hr
+  style={{
+    borderColor: "#333",
+    margin: "10px 0",
+  }}
+/>
+
+<pre
+  style={{
+    fontSize: "14px",
+    lineHeight: "1.6",
+    color: "#ddd",
+  }}
+>
+  {analysis}
+</pre>
+      </div>
 </div>
 <div
   style={{
@@ -157,6 +249,7 @@ Rang 3 : 2 mailles serrées, 1 augmentation x6`}
     padding: "20px",
     background: "#111",
     overflow: "auto",
+    boxShadow: "0 0 20px rgba(139, 92, 246, 0.15)",
   }}
 >
   {diagramType === "flat" && (
@@ -183,9 +276,67 @@ Rang 3 : 2 mailles serrées, 1 augmentation x6`}
         )}
         </svg>
 )}
+<div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "15px",
+  }}
+>
+  <h3>
+  📊 Diagramme {diagramType === "flat"
+    ? "plat"
+    : "circulaire"}
+</h3>
+
+  <div
+    style={{
+      display: "flex",
+      gap: "10px",
+    }}
+  >
+    <button
+  style={{
+    padding: "6px 12px",
+    borderRadius: "6px",
+    border: "1px solid #444",
+    background: "#1a1a1a",
+    color: "white",
+    cursor: "pointer",
+  }}
+>
+  PNG
+</button>
+ <button
+  style={{
+    padding: "6px 12px",
+    borderRadius: "6px",
+    border: "1px solid #444",
+    background: "#1a1a1a",
+    color: "white",
+    cursor: "pointer",
+  }}
+>
+  SVG
+  </button>
+    <button
+  style={{
+    padding: "6px 12px",
+    borderRadius: "6px",
+    border: "1px solid #444",
+    background: "#1a1a1a",
+    color: "white",
+    cursor: "pointer",
+  }}
+>
+  PDF
+</button>
+  </div>
+</div>
+
 {diagramType === "circular" && (
       <>
-     <h3>Aperçu circulaire</h3>
 
       <svg width={700} height={700}>
         {roundSymbols.map((_, ringIndex) => {
@@ -195,8 +346,8 @@ Rang 3 : 2 mailles serrées, 1 augmentation x6`}
   
       <circle
       key={`guide-${ringIndex}`}
-      cx={250}
-      cy={250}
+      cx={350}
+      cy={350}
       r={radius}
       fill="none"
       stroke="#555"
@@ -205,8 +356,8 @@ Rang 3 : 2 mailles serrées, 1 augmentation x6`}
 })}
 
 <circle
-  cx={250}
-  cy={250}
+  cx={350}
+  cy={350}
   r={20}
   fill="none"
   stroke="white"
@@ -214,8 +365,8 @@ Rang 3 : 2 mailles serrées, 1 augmentation x6`}
 />
 
 <text
-  x={250}
-  y={255}
+  x={350}
+  y={350}
   textAnchor="middle"
   fill="white"
   fontSize="16"
@@ -230,8 +381,8 @@ Rang 3 : 2 mailles serrées, 1 augmentation x6`}
       const angle =
         (index / round.length) * Math.PI * 2;
 
-      const centerX = 250;
-      const centerY = 250;
+      const centerX = 350;
+      const centerY = 350;
 
       const x = centerX + Math.cos(angle) * radius;
       const y = centerY + Math.sin(angle) * radius;
