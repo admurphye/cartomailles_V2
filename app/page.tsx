@@ -40,7 +40,7 @@ export default function Home() {
   const firstNumbers = lines[0].match(/\d+/g);
 
   if (firstNumbers) {
-    const value =
+        const value =
       firstNumbers.length > 1
         ? parseInt(firstNumbers[1])
         : parseInt(firstNumbers[0]);
@@ -252,31 +252,7 @@ Cercle magique
     boxShadow: "0 0 20px rgba(139, 92, 246, 0.15)",
   }}
 >
-  {diagramType === "flat" && (
-      <svg width={800} height={800}> 
-        {cells.map((row, rowIndex) =>
-          row.map((cell, colIndex) => (
-            <g key={`${rowIndex}-${colIndex}`}>
-              <rect
-                x={colIndex * 40}
-                y={rowIndex * 40}
-                width={40}
-                height={40}
-                fill="white"
-                stroke="black"
-              />
-
-  {drawSymbol(
-  cell,
-  colIndex * 40,
-  rowIndex * 40
-)}
-            </g>
-          ))
-        )}
-        </svg>
-)}
-<div
+  <div
   style={{
     display: "flex",
     justifyContent: "space-between",
@@ -334,6 +310,31 @@ Cercle magique
 </button>
   </div>
 </div>
+  {diagramType === "flat" && (
+      <svg width={800} height={800}> 
+        {cells.map((row, rowIndex) =>
+          row.map((cell, colIndex) => (
+            <g key={`${rowIndex}-${colIndex}`}>
+              <rect
+                x={colIndex * 40}
+                y={rowIndex * 40}
+                width={40}
+                height={40}
+                fill="white"
+                stroke="black"
+              />
+
+  {drawSymbol(
+  cell,
+  colIndex * 40,
+  rowIndex * 40
+)}
+            </g>
+          ))
+        )}
+        </svg>
+)}
+
 
 {diagramType === "circular" && (
       <>
