@@ -1,9 +1,11 @@
 "use client";
 
+import * as htmlToImage from "html-to-image";
 import { useState } from "react";
 import { CROCHET_SYMBOLS } from "./lib/crochetSymbols";
 import { drawSymbol } from "./lib/drawSymbol";
 import { parsePattern } from "./lib/parser";
+
 
 const cardStyle = {
   padding: "15px",
@@ -21,7 +23,26 @@ export default function Home() {
   const [roundSymbols, setRoundSymbols] =  useState<string[][]>([]);
 
   const [cells, setCells] = useState<(string | null)[][]>([]);
+  const exportPNG = async () => {
+  const node = document.getElementById(
+    "diagram-container"
+  );
 
+  if (!node) return;
+
+  const dataUrl =
+    await htmlToImage.toPng(node);
+
+  const link =
+    document.createElement("a");
+
+  link.download =
+    "diagramme-crochet.png";
+
+  link.href = dataUrl;
+
+  link.click();
+};
   const generateFromText = () => {
         const lines = pattern
   .split("\n")
@@ -242,6 +263,7 @@ Cercle magique
       </div>
 </div>
 <div
+ 
   style={{
     flex: 1,
     border: "1px solid #333",
@@ -252,6 +274,7 @@ Cercle magique
     boxShadow: "0 0 20px rgba(139, 92, 246, 0.15)",
   }}
 >
+  {/* Barre du haut */}
   <div
   style={{
     display: "flex",
@@ -261,10 +284,8 @@ Cercle magique
   }}
 >
   <h3>
-  📊 Diagramme {diagramType === "flat"
-    ? "plat"
-    : "circulaire"}
-</h3>
+      📊 Diagramme {diagramType === "flat" ? "plat" : "circulaire"}
+    </h3>
 
   <div
     style={{
@@ -272,7 +293,8 @@ Cercle magique
       gap: "10px",
     }}
   >
-    <button
+   <button
+  onClick={exportPNG}
   style={{
     padding: "6px 12px",
     borderRadius: "6px",
@@ -282,7 +304,7 @@ Cercle magique
     cursor: "pointer",
   }}
 >
-  PNG
+  📸 PNG
 </button>
  <button
   style={{
@@ -310,6 +332,10 @@ Cercle magique
 </button>
   </div>
 </div>
+
+ {/* Zone exportable */}
+  <div id="diagram-container">
+
   {diagramType === "flat" && (
       <svg width={800} height={800}> 
         {cells.map((row, rowIndex) =>
@@ -404,6 +430,7 @@ Cercle magique
   </>
       )}
    </div>  {/* colonne droite */}
+   </div>
 
      </div>  {/* conteneur flex principal */}
        </main>
