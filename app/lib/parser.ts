@@ -2,6 +2,7 @@ import { findSymbol } from "./findSymbol";
     const ROWS = 20;
     const COLS = 20;
 export function parsePattern(pattern: string) {
+  let hasMR = false;
     const cells = Array.from(
   { length: ROWS },
   () => Array(COLS).fill(null)
@@ -17,7 +18,12 @@ export function parsePattern(pattern: string) {
 
   lines.forEach((line, index) => {
     const text = line.toLowerCase();
-
+if (
+  text.includes("mr") ||
+  text.includes("cercle magique")
+) {
+  hasMR = true;
+}
     const repeatMatch = text.match(
   /(\d+)\s*mailles?\s*serrées?.*?1\s*augmentation.*?x(\d+)/
 );
@@ -88,5 +94,6 @@ analysis +=
   analysis,
   cells,
   roundSymbols,
+  hasMR
 };
 }

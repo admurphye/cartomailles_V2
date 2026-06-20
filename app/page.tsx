@@ -21,8 +21,10 @@ export default function Home() {
   const [firstRoundCount, setFirstRoundCount] = useState(6);
   const [roundCounts, setRoundCounts] = useState<number[]>([]);
   const [roundSymbols, setRoundSymbols] =  useState<string[][]>([]);
-
   const [cells, setCells] = useState<(string | null)[][]>([]);
+  const [zoom, setZoom] = useState(1);
+  const [hasMR, setHasMR] = useState(false);
+
   const exportPNG = async () => {
   const node = document.getElementById(
     "diagram-container"
@@ -43,10 +45,48 @@ export default function Home() {
 
   link.click();
 };
+const exportSVG = () => {
+  const svg =
+    document.querySelector("svg");
+
+  if (!svg) return;
+
+  const serializer =
+    new XMLSerializer();
+
+  const source =
+    serializer.serializeToString(svg);
+
+  const blob = new Blob(
+    [source],
+    {
+      type: "image/svg+xml;charset=utf-8",
+    }
+  );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const link =
+    document.createElement("a");
+
+  link.href = url;
+  link.download =
+    "diagramme-crochet.svg";
+
+  link.click();
+
+  URL.revokeObjectURL(url);
+};
   const generateFromText = () => {
         const lines = pattern
   .split("\n")
-  .filter(line => line.trim() !== "");
+  .filter(line => line.trim() !== ""
+);
+setHasMR(
+  pattern.toLowerCase().includes("mr") ||
+  pattern.toLowerCase().includes("cercle magique")
+);
 
   const result = parsePattern(pattern);
   
@@ -54,7 +94,7 @@ export default function Home() {
   setAnalysis(result.analysis);
   setCells(result.cells);
   setRoundSymbols(result.roundSymbols);
-
+  setHasMR(result.hasMR);
 //console.log(result);
     
     if (lines.length > 0) {
@@ -132,6 +172,7 @@ export default function Home() {
 </div>
 
 <div style={cardStyle}>
+
 <h3>📚 Bibliothèque des symboles</h3>
  <details>
      <ul>
@@ -274,6 +315,7 @@ Cercle magique
     boxShadow: "0 0 20px rgba(139, 92, 246, 0.15)",
   }}
 >
+
   {/* Barre du haut */}
   <div
   style={{
@@ -290,9 +332,31 @@ Cercle magique
   <div
     style={{
       display: "flex",
-      gap: "10px",
+      alignItems: "center",
+  }}
+>
+  <button
+    onClick={() => setZoom((z) => z + 0.1)}
+  >
+    ➕
+  </button>
+
+  <button
+    onClick={() =>
+      setZoom((z) => Math.max(0.5, z - 0.1))
+    }
+  >
+    ➖
+  </button>
+
+  <span
+    style={{
+      color: "#aaa",
+      marginRight: "10px",
     }}
   >
+    {Math.round(zoom * 100)}%
+  </span>
    <button
   onClick={exportPNG}
   style={{
@@ -307,6 +371,7 @@ Cercle magique
   📸 PNG
 </button>
  <button
+  onClick={exportSVG}
   style={{
     padding: "6px 12px",
     borderRadius: "6px",
@@ -334,31 +399,49 @@ Cercle magique
 </div>
 
  {/* Zone exportable */}
-  <div id="diagram-container">
+  <div
+  id="diagram-container"
+  style={{
+    transform: `scale(${zoom})`,
+    transformOrigin: "top center",
+  }}
+>
 
   {diagramType === "flat" && (
-      <svg width={800} height={800}> 
-        {cells.map((row, rowIndex) =>
-          row.map((cell, colIndex) => (
-            <g key={`${rowIndex}-${colIndex}`}>
-              <rect
-                x={colIndex * 40}
-                y={rowIndex * 40}
-                width={40}
-                height={40}
-                fill="white"
-                stroke="black"
-              />
+  <svg width={800} height={800}>
+    {cells.map((row, rowIndex) => (
+      <g key={rowIndex}>
+        <text
+          x={10}
+          y={rowIndex * 40 + 25}
+          fill="white"
+          fontSize="16"
+          fontWeight="bold"
+        >
+          {rowIndex + 1}
+        </text>
 
-  {drawSymbol(
-  cell,
-  colIndex * 40,
-  rowIndex * 40
-)}
-            </g>
-          ))
-        )}
-        </svg>
+        {row.map((cell, colIndex) => (
+          <g key={`${rowIndex}-${colIndex}`}>
+            <rect
+              x={50 + colIndex * 40}
+              y={rowIndex * 40}
+              width={40}
+              height={40}
+              fill="white"
+              stroke="black"
+            />
+
+            {drawSymbol(
+              cell,
+              50 + colIndex * 40,
+              rowIndex * 40
+            )}
+          </g>
+        ))}
+      </g>
+    ))}
+  </svg>
 )}
 
 
@@ -366,53 +449,68 @@ Cercle magique
       <>
 
       <svg width={700} height={700}>
-        {roundSymbols.map((_, ringIndex) => {
-  const radius = 35 + ringIndex * 50;
+       {roundSymbols.map((_, ringIndex) => {
+
+  if (hasMR && ringIndex === 0) {
+    return null;
+  }
+
+  const radius =
+  hasMR
+    ? 20 + ringIndex * 50
+    : 45 + ringIndex * 50;
 
   return (
-  
+    <g key={`guide-${ringIndex}`}>
       <circle
-      key={`guide-${ringIndex}`}
-      cx={350}
-      cy={350}
-      r={radius}
-      fill="none"
-      stroke="#555"
-    />
+        cx={350}
+        cy={350}
+        r={radius}
+        fill="none"
+        stroke="#555"
+      />
+    </g>
   );
 })}
+{hasMR && (
+  <>
+    <circle
+      cx={350}
+      cy={350}
+      r={10}
+      fill="none"
+      stroke="white"
+      strokeWidth="2"
+    />
 
-<circle
-  cx={350}
-  cy={350}
-  r={20}
-  fill="none"
-  stroke="white"
-  strokeWidth="2"
-/>
-
-<text
-  x={350}
-  y={350}
-  textAnchor="middle"
-  fill="white"
-  fontSize="16"
-  fontWeight="bold"
->
-  MR
-</text>
+    <text
+      x={350}
+      y={354}
+      textAnchor="middle"
+      fill="white"
+      fontSize="10"
+      fontWeight="bold"
+    >
+      MR
+    </text>
+  </>
+)}
   {roundSymbols.map((round, ringIndex) => {
-    const radius = 60 + ringIndex * 50;
-
+    const radius =
+  hasMR
+    ? 25 + ringIndex * 50
+    : 45 + ringIndex * 50;
     return round.map((symbol, index) => {
       const angle =
         (index / round.length) * Math.PI * 2;
 
       const centerX = 350;
       const centerY = 350;
+      const x =
+      centerX + Math.cos(angle) * radius;
 
-      const x = centerX + Math.cos(angle) * radius;
-      const y = centerY + Math.sin(angle) * radius;
+       const y =
+      centerY + Math.sin(angle) * radius;
 
       return (
   <g key={`${ringIndex}-${index}`}>
