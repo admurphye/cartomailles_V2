@@ -5,7 +5,16 @@ import { useState } from "react";
 import { CROCHET_SYMBOLS } from "./lib/crochetSymbols";
 import { drawSymbol } from "./lib/drawSymbol";
 import { parsePattern } from "./lib/parser";
+import { jsPDF } from "jspdf";
 
+const SYMBOL_LABELS: Record<string, string> =
+  Object.values(CROCHET_SYMBOLS)
+    .reduce((acc, item) => {
+
+      acc[item.code] = item.name;
+
+      return acc;
+    }, {} as Record<string, string>);
 
 const cardStyle = {
   padding: "15px",
@@ -13,6 +22,9 @@ const cardStyle = {
   borderRadius: "12px",
   background: "#111",
 };
+// =====================================================
+// ÉTATS DE L'APPLICATION
+// =====================================================
 export default function Home() {
   const [pattern, setPattern] = useState("");
   const [diagramType, setDiagramType] =
@@ -24,11 +36,26 @@ export default function Home() {
   const [cells, setCells] = useState<(string | null)[][]>([]);
   const [zoom, setZoom] = useState(1);
   const [hasMR, setHasMR] = useState(false);
+  const svgSize = 700;
+
+const centerX = svgSize / 2;
+const centerY = svgSize / 2;
+  const [projectName, setProjectName] =  useState("");
+// =====================================================
+// EXPORT PNG
+// =====================================================
+  const [exportMode, setExportMode] = useState(false);
 
   const exportPNG = async () => {
-  const node = document.getElementById(
-    "diagram-container"
+
+    await new Promise(resolve =>
+    setTimeout(resolve, 100)
   );
+
+  const node =
+    document.getElementById(
+      "diagram-container"
+    );
 
   if (!node) return;
 
@@ -44,8 +71,17 @@ export default function Home() {
   link.href = dataUrl;
 
   link.click();
-};
-const exportSVG = () => {
+ };
+
+ // =====================================================
+// EXPORT SVG
+// =====================================================
+const exportSVG = async () => {
+  setExportMode(true);
+
+await new Promise(resolve =>
+  setTimeout(resolve, 100)
+);
   const svg =
     document.querySelector("svg");
 
@@ -56,6 +92,7 @@ const exportSVG = () => {
 
   const source =
     serializer.serializeToString(svg);
+    setExportMode(false);
 
   const blob = new Blob(
     [source],
@@ -77,7 +114,167 @@ const exportSVG = () => {
   link.click();
 
   URL.revokeObjectURL(url);
+  
 };
+
+// =====================================================
+// EXPORT PDF
+// =====================================================
+const exportPDF = async () => {
+
+  setExportMode(true);
+
+  await new Promise(resolve =>
+    setTimeout(resolve, 100)
+  );
+
+  const node =
+    document.getElementById(
+      "diagram-container"
+    );
+
+  if (!node) return;
+
+  const dataUrl =
+    await htmlToImage.toPng(node);
+
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  });
+
+const usedSymbols = new Set<string>();
+
+pdf.setFontSize(20);
+
+pdf.text(
+  projectName || "Diagramme Crochet",
+  105,
+  15
+);
+pdf.setFontSize(10);
+
+pdf.text(
+  `Premier rang : ${firstRoundCount}`,
+  10,
+  25
+);
+
+pdf.text(
+  `Nombre de rangs : ${roundCounts.length}`,
+  10,
+  32
+);
+
+pdf.text(
+  `Mailles finales : ${
+    roundCounts.length > 0
+      ? roundCounts[roundCounts.length - 1]
+      : 0
+  }`,
+  10,
+  39
+);
+  pdf.addImage(
+    dataUrl,
+    "PNG",
+    25,
+    50,
+    150,
+    150
+  );
+let y = 230;
+
+pdf.setFontSize(14);
+pdf.text("Résumé des rangs", 10, y);
+
+y += 8;
+
+pdf.setFontSize(10);
+
+roundCounts.forEach((count, index) => {
+  pdf.text(
+    `Rang ${index + 1} : ${count} mailles`,
+    10,
+    y
+  );
+
+  y += 6;
+});
+  y += 10;
+
+pdf.setFontSize(14);
+pdf.text("Patron", 10, y);
+
+y += 8;
+
+pdf.setFontSize(10);
+
+const lines = pattern.split("\n");
+
+lines.forEach((line) => {
+
+  if (y > 280) {
+    pdf.addPage();
+    y = 20;
+  }
+
+  pdf.text(line, 10, y);
+  y += 6;
+});
+y += 10;
+
+if (y > 250) {
+  pdf.addPage();
+  y = 20;
+}
+
+pdf.setFontSize(14);
+pdf.text("Légende", 10, y);
+
+y += 8;
+
+pdf.setFontSize(10);
+
+if (hasMR) {
+  usedSymbols.add("MR");
+}
+
+Array.from(usedSymbols).forEach((symbol) => {
+
+  const label =
+  SYMBOL_LABELS[symbol] || symbol;
+
+  pdf.text(
+    `${symbol} = ${label}`,
+    10,
+    y
+  );
+
+  y += 6;
+});
+
+roundSymbols.forEach((round) => {
+  round.forEach((symbol) => {
+    usedSymbols.add(symbol);
+  });
+});
+console.log("roundSymbols", roundSymbols);
+
+console.log(
+  "usedSymbols",
+  Array.from(usedSymbols)
+);
+  pdf.save(
+    "diagramme-crochet.pdf"
+  );
+
+  setExportMode(false);
+};
+// =====================================================
+// ANALYSE DU PATRON ET GÉNÉRATION DU DIAGRAMME
+// =====================================================
   const generateFromText = () => {
         const lines = pattern
   .split("\n")
@@ -143,6 +340,9 @@ setHasMR(
     gap: "15px",
   }}
 >
+  {/* =====================================================
+    PANNEAU DE CONFIGURATION
+===================================================== */}
   <h3>⚙️ Paramètres</h3>
 
 <div style={cardStyle}>
@@ -188,6 +388,30 @@ setHasMR(
 </details>
 </div>
 <div style={cardStyle}>
+
+{/* =====================================================
+    SAISIE DU PATRON
+===================================================== */}
+<div style={cardStyle}>
+  <h3>📁 Projet</h3>
+
+  <input
+    type="text"
+    value={projectName}
+    onChange={(e) =>
+      setProjectName(e.target.value)
+    }
+    placeholder="Nom du projet"
+    style={{
+      width: "100%",
+      padding: "10px",
+      borderRadius: "8px",
+      border: "1px solid #333",
+      background: "#0f0f0f",
+      color: "white",
+    }}
+  />
+</div>
 
 <h3>📝 Patron</h3>
 <p
@@ -266,8 +490,11 @@ Cercle magique
   ✨ Générer le diagramme
 </button>
     </div>
-
 <div style={cardStyle}>
+
+  {/* =====================================================
+    RÉSUMÉ DU PATRON
+===================================================== */}
 <h3>📊 Résumé</h3>
        <p>
   🪄 Premier rang : {firstRoundCount}
@@ -315,7 +542,9 @@ Cercle magique
     boxShadow: "0 0 20px rgba(139, 92, 246, 0.15)",
   }}
 >
-
+{/* =====================================================
+    OUTILS DU DIAGRAMME
+===================================================== */}
   {/* Barre du haut */}
   <div
   style={{
@@ -381,9 +610,10 @@ Cercle magique
     cursor: "pointer",
   }}
 >
-  SVG
+  📐 SVG
   </button>
     <button
+  onClick={exportPDF}
   style={{
     padding: "6px 12px",
     borderRadius: "6px",
@@ -393,7 +623,7 @@ Cercle magique
     cursor: "pointer",
   }}
 >
-  PDF
+  📄 PDF
 </button>
   </div>
 </div>
@@ -406,7 +636,9 @@ Cercle magique
     transformOrigin: "top center",
   }}
 >
-
+{/* =====================================================
+    DIAGRAMME PLAT
+===================================================== */}
   {diagramType === "flat" && (
   <svg width={800} height={800}>
     {cells.map((row, rowIndex) => (
@@ -444,27 +676,38 @@ Cercle magique
   </svg>
 )}
 
-
+{/* =====================================================
+    DIAGRAMME CIRCULAIRE
+===================================================== */}
 {diagramType === "circular" && (
       <>
 
-      <svg width={700} height={700}>
+      <svg
+  width={svgSize}
+  height={svgSize}
+>
+  {/* Cercles guides des rangs */}
        {roundSymbols.map((_, ringIndex) => {
 
   if (hasMR && ringIndex === 0) {
     return null;
   }
 
-  const radius =
+const maxRadius = 300;
+
+const step =
+  maxRadius / Math.max(roundSymbols.length, 1);
+
+const radius =
   hasMR
-    ? 20 + ringIndex * 50
-    : 45 + ringIndex * 50;
+    ? 20 + ringIndex * step
+    : 45 + ringIndex * step;
 
   return (
     <g key={`guide-${ringIndex}`}>
       <circle
-        cx={350}
-        cy={350}
+       cx={centerX}
+       cy={centerY}
         r={radius}
         fill="none"
         stroke="#555"
@@ -472,22 +715,23 @@ Cercle magique
     </g>
   );
 })}
+{/* Cercle magique */}
 {hasMR && (
   <>
     <circle
-      cx={350}
-      cy={350}
+      cx={centerX}
+      cy={centerY}
       r={10}
       fill="none"
-      stroke="white"
+      stroke={exportMode ? "black" : "white"}
       strokeWidth="2"
     />
 
     <text
-      x={350}
-      y={354}
+      x={centerX}
+      y={centerY + 4}
       textAnchor="middle"
-      fill="white"
+      fill={exportMode ? "black" : "white"}
       fontSize="10"
       fontWeight="bold"
     >
@@ -495,31 +739,36 @@ Cercle magique
     </text>
   </>
 )}
-  {roundSymbols.map((round, ringIndex) => {
-    const radius =
-  hasMR
-    ? 25 + ringIndex * 50
-    : 45 + ringIndex * 50;
-    return round.map((symbol, index) => {
-      const angle =
-        (index / round.length) * Math.PI * 2;
+{/* Symboles crochet */}
+{roundSymbols.map((round, ringIndex) => {
+ const maxRadius = 300;
 
-      const centerX = 350;
-      const centerY = 350;
-      const x =
+const step =
+  maxRadius / Math.max(roundSymbols.length, 1);
+
+const radius =
+  hasMR
+    ? 20 + ringIndex * step
+    : 45 + ringIndex * step;
+
+  return round.map((symbol, index) => {
+    const angle =
+      (index / round.length) * Math.PI * 2;
+
+    const x =
       centerX + Math.cos(angle) * radius;
 
-       const y =
+    const y =
       centerY + Math.sin(angle) * radius;
 
-      return (
-  <g key={`${ringIndex}-${index}`}>
+    return (
+      <g key={`${ringIndex}-${index}`}>
     {drawSymbol(
-      symbol,
-      x - 20,
-      y - 20,
-      "white"
-    )}
+  symbol,
+  x - 20,
+  y - 12,
+  exportMode ? "black" : "white"
+)}
   </g>
 );
     });
