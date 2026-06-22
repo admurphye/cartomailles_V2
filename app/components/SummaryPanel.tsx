@@ -10,14 +10,7 @@ export default function SummaryPanel({
   analysis,
 }: SummaryPanelProps) {
   return (
-    <div
-      style={{
-        padding: "15px",
-        border: "1px solid #333",
-        borderRadius: "12px",
-        background: "#111",
-      }}
-    >
+  <>
       <h3>📊 Résumé</h3>
 
       <p>
@@ -51,6 +44,6 @@ export default function SummaryPanel({
       >
         {analysis}
       </pre>
-    </div>
-  );
+    </>
+);
 }
