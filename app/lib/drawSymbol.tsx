@@ -4,7 +4,8 @@ export function drawSymbol(
   cell: string | null,
   x: number,
   y: number,
-  color = "black"
+  color = "black",
+  angle = 0
 ) {
   if (!cell) return null;
 
@@ -185,19 +186,23 @@ if (cell === "TB") {
   );
 }
   if (cell === "O") {
-    return (
-      <ellipse
-        cx={x + 20}
-        cy={y + 20}
-        rx={8}
-        ry={5}
-        fill={color}
-        stroke={color}
-        strokeWidth="2"
-      />
-    );
-  }
-
+  return (
+    <ellipse
+      cx={x + 20}
+      cy={y + 20}
+      rx={9}
+      ry={5}
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      transform={`rotate(
+       ${(angle * 180) / Math.PI + 90}
+       ${x + 20}
+       ${y + 20}
+      )`}
+    />
+  );
+}
   return (
     <text
       x={x + 20}

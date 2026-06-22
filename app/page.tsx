@@ -6,6 +6,8 @@ import { CROCHET_SYMBOLS } from "./lib/crochetSymbols";
 import { drawSymbol } from "./lib/drawSymbol";
 import { parsePattern } from "./lib/parser";
 import { jsPDF } from "jspdf";
+import DiagramToolbar from "./components/DiagramToolbar";
+import SummaryPanel from "./components/SummaryPanel";
 
 const SYMBOL_LABELS: Record<string, string> =
   Object.values(CROCHET_SYMBOLS)
@@ -146,6 +148,15 @@ const exportPDF = async () => {
 
 const usedSymbols = new Set<string>();
 
+roundSymbols.forEach((round) => {
+  round.forEach((symbol) => {
+    usedSymbols.add(symbol);
+  });
+});
+if (hasMR) {
+  usedSymbols.add("MR");
+}
+
 pdf.setFontSize(20);
 
 pdf.text(
@@ -237,14 +248,10 @@ y += 8;
 
 pdf.setFontSize(10);
 
-if (hasMR) {
-  usedSymbols.add("MR");
-}
-
 Array.from(usedSymbols).forEach((symbol) => {
 
   const label =
-  SYMBOL_LABELS[symbol] || symbol;
+    SYMBOL_LABELS[symbol] || symbol;
 
   pdf.text(
     `${symbol} = ${label}`,
@@ -255,11 +262,6 @@ Array.from(usedSymbols).forEach((symbol) => {
   y += 6;
 });
 
-roundSymbols.forEach((round) => {
-  round.forEach((symbol) => {
-    usedSymbols.add(symbol);
-  });
-});
 console.log("roundSymbols", roundSymbols);
 
 console.log(
@@ -267,8 +269,8 @@ console.log(
   Array.from(usedSymbols)
 );
   pdf.save(
-    "diagramme-crochet.pdf"
-  );
+  `${projectName || "diagramme"}.pdf`
+);
 
   setExportMode(false);
 };
@@ -489,153 +491,29 @@ Cercle magique
 >
   ✨ Générer le diagramme
 </button>
-    </div>
-<div style={cardStyle}>
-
-  {/* =====================================================
-    RÉSUMÉ DU PATRON
-===================================================== */}
-<h3>📊 Résumé</h3>
-       <p>
-  🪄 Premier rang : {firstRoundCount}
-</p>
-
-<p>
-  🔄 Tours : {roundCounts.length}
-</p>
-
-<p>
-  🧵 Mailles finales :
-  {" "}
-  {roundCounts.length > 0
-    ? roundCounts[roundCounts.length - 1]
-    : 0}
-</p>
-
-<hr
-  style={{
-    borderColor: "#333",
-    margin: "10px 0",
-  }}
+    
+<SummaryPanel
+  firstRoundCount={firstRoundCount}
+  roundCounts={roundCounts}
+  analysis={analysis}
+/>
+<DiagramToolbar
+  diagramType={diagramType}
+  zoom={zoom}
+  setZoom={setZoom}
+  exportPNG={exportPNG}
+  exportSVG={exportSVG}
+  exportPDF={exportPDF}
 />
 
-<pre
-  style={{
-    fontSize: "14px",
-    lineHeight: "1.6",
-    color: "#ddd",
-  }}
->
-  {analysis}
-</pre>
-      </div>
-</div>
+{/* Zone exportable */}
 <div
- 
-  style={{
-    flex: 1,
-    border: "1px solid #333",
-    borderRadius: "12px",
-    padding: "20px",
-    background: "#111",
-    overflow: "auto",
-    boxShadow: "0 0 20px rgba(139, 92, 246, 0.15)",
-  }}
->
-{/* =====================================================
-    OUTILS DU DIAGRAMME
-===================================================== */}
-  {/* Barre du haut */}
-  <div
-  style={{
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "15px",
-  }}
->
-  <h3>
-      📊 Diagramme {diagramType === "flat" ? "plat" : "circulaire"}
-    </h3>
-
-  <div
-    style={{
-      display: "flex",
-      alignItems: "center",
-  }}
->
-  <button
-    onClick={() => setZoom((z) => z + 0.1)}
-  >
-    ➕
-  </button>
-
-  <button
-    onClick={() =>
-      setZoom((z) => Math.max(0.5, z - 0.1))
-    }
-  >
-    ➖
-  </button>
-
-  <span
-    style={{
-      color: "#aaa",
-      marginRight: "10px",
-    }}
-  >
-    {Math.round(zoom * 100)}%
-  </span>
-   <button
-  onClick={exportPNG}
-  style={{
-    padding: "6px 12px",
-    borderRadius: "6px",
-    border: "1px solid #444",
-    background: "#1a1a1a",
-    color: "white",
-    cursor: "pointer",
-  }}
->
-  📸 PNG
-</button>
- <button
-  onClick={exportSVG}
-  style={{
-    padding: "6px 12px",
-    borderRadius: "6px",
-    border: "1px solid #444",
-    background: "#1a1a1a",
-    color: "white",
-    cursor: "pointer",
-  }}
->
-  📐 SVG
-  </button>
-    <button
-  onClick={exportPDF}
-  style={{
-    padding: "6px 12px",
-    borderRadius: "6px",
-    border: "1px solid #444",
-    background: "#1a1a1a",
-    color: "white",
-    cursor: "pointer",
-  }}
->
-  📄 PDF
-</button>
-  </div>
-</div>
-
- {/* Zone exportable */}
-  <div
   id="diagram-container"
   style={{
     transform: `scale(${zoom})`,
     transformOrigin: "top center",
   }}
->
+>  
 {/* =====================================================
     DIAGRAMME PLAT
 ===================================================== */}
@@ -665,10 +543,12 @@ Cercle magique
             />
 
             {drawSymbol(
-              cell,
-              50 + colIndex * 40,
-              rowIndex * 40
-            )}
+               cell,
+                50 + colIndex * 40,
+             rowIndex * 40,
+             "black",
+              0
+              )}
           </g>
         ))}
       </g>
@@ -767,7 +647,8 @@ const radius =
   symbol,
   x - 20,
   y - 12,
-  exportMode ? "black" : "white"
+  exportMode ? "black" : "white",
+  angle
 )}
   </g>
 );
@@ -778,8 +659,7 @@ const radius =
       )}
    </div>  {/* colonne droite */}
    </div>
-
-     </div>  {/* conteneur flex principal */}
+   
        </main>
   );
 }
