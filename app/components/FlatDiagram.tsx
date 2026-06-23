@@ -32,20 +32,11 @@ export default function FlatDiagram({
           {row.map((stitch, stitchIndex) => (
             <g key={`${rowIndex}-${stitchIndex}`}>
 
-              <rect
-                x={50 + stitch.x}
-                y={stitch.y}
-                width={40}
-                height={40}
-                fill="white"
-                stroke="black"
-              />
-
               {drawSymbol(
                 stitch.symbol,
                 50 + stitch.x,
                 stitch.y,
-                "black",
+                "white",
                 0
               )}
 
