@@ -1,20 +1,27 @@
 import { drawSymbol } from "../lib/drawSymbol";
+import { Stitch } from "../lib/types";
+import { layoutFlat } from "../lib/layoutEngine";
 
 type FlatDiagramProps = {
-  cells: (string | null)[][];
+  roundStitches: Stitch[][];
 };
 
 export default function FlatDiagram({
-  cells,
+  roundStitches,
 }: FlatDiagramProps) {
+
+  const positioned =
+    layoutFlat(roundStitches);
 
   return (
     <svg width={800} height={800}>
-      {cells.map((row, rowIndex) => (
+
+      {positioned.map((row, rowIndex) => (
         <g key={rowIndex}>
+
           <text
             x={10}
-            y={rowIndex * 40 + 25}
+            y={rowIndex * 60 + 25}
             fill="white"
             fontSize="16"
             fontWeight="bold"
@@ -22,11 +29,12 @@ export default function FlatDiagram({
             {rowIndex + 1}
           </text>
 
-          {row.map((cell, colIndex) => (
-            <g key={`${rowIndex}-${colIndex}`}>
+          {row.map((stitch, stitchIndex) => (
+            <g key={`${rowIndex}-${stitchIndex}`}>
+
               <rect
-                x={50 + colIndex * 40}
-                y={rowIndex * 40}
+                x={50 + stitch.x}
+                y={stitch.y}
                 width={40}
                 height={40}
                 fill="white"
@@ -34,16 +42,19 @@ export default function FlatDiagram({
               />
 
               {drawSymbol(
-                cell,
-                50 + colIndex * 40,
-                rowIndex * 40,
+                stitch.symbol,
+                50 + stitch.x,
+                stitch.y,
                 "black",
                 0
               )}
+
             </g>
           ))}
+
         </g>
       ))}
+
     </svg>
   );
 }

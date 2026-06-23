@@ -1,16 +1,20 @@
 import { Stitch } from "./types";
-import { findSymbol } from "./findSymbol";
-    const ROWS = 20;
-    const COLS = 20;
+import { findSymbolInfo } from "./findSymbol";
+
+const ROWS = 20;
+const COLS = 20;
+
 export function parsePattern(pattern: string) {
   let hasMR = false;
-    const cells = Array.from(
-  { length: ROWS },
-  () => Array(COLS).fill(null)
-);
+
+  const cells = Array.from(
+    { length: ROWS },
+    () => Array(COLS).fill(null)
+  );
+
   const lines = pattern
     .split("\n")
-    .filter(line => line.trim() !== "");
+    .filter((line) => line.trim() !== "");
 
   const counts: number[] = [];
   let analysis = "";
@@ -20,92 +24,122 @@ export function parsePattern(pattern: string) {
 
   lines.forEach((line, index) => {
     const text = line.toLowerCase();
-if (
-  text.includes("mr") ||
-  text.includes("cercle magique")
-) {
-  hasMR = true;
-}
+
+    if (
+      text.includes("mr") ||
+      text.includes("cercle magique")
+    ) {
+      hasMR = true;
+    }
+
     const repeatMatch = text.match(
-  /(\d+)\s*mailles?\s*serrées?.*?1\s*augmentation.*?x(\d+)/
-);
-   if (repeatMatch) {
-  const nbMs = parseInt(repeatMatch[1]);
-  const repetitions = parseInt(repeatMatch[2]);
+      /(\d+)\s*mailles?\s*serrées?.*?1\s*augmentation.*?x(\d+)/
+    );
 
-  let col = 0;
-  const symbols: string[] = [];
-  const stitches: Stitch[] = [];
+    // =====================================================
+    // CAS : 2 mailles serrées, 1 augmentation x6
+    // =====================================================
+    if (repeatMatch) {
+      const nbMs = parseInt(repeatMatch[1]);
+      const repetitions = parseInt(repeatMatch[2]);
 
-for (let r = 0; r < repetitions; r++) {
-  for (let m = 0; m < nbMs; m++) {
-    cells[index][col] = "X";
-    symbols.push("X");
-    stitches.push({
-  symbol: "X",
-  parents:
-    index === 0
-      ? []
-      : [stitches.length],
-});
-    col++;
-  }
+      let col = 0;
 
-  cells[index][col] = "V";
-  symbols.push("V");
-  stitches.push({
-  symbol: "V",
-  parents:
-    index === 0
-      ? []
-      : [stitches.length],
-});
-  col++;
-}
+      const symbols: string[] = [];
+      const stitches: Stitch[] = [];
 
-  const totalMailles =
-    (nbMs + 1) * repetitions;
+      for (let r = 0; r < repetitions; r++) {
 
-  counts.push(totalMailles);
-  roundSymbols.push(symbols);
-  roundStitches.push(stitches);
+        for (let m = 0; m < nbMs; m++) {
 
-  analysis +=
-    `Rang ${index + 1} : ${totalMailles} mailles\n`;
+          cells[index][col] = "X";
+          symbols.push("X");
 
-  return;
-}
-const numbers = text.match(/\d+/g);
+          stitches.push({
+            symbol: "X",
+            parents:
+              index === 0
+                ? []
+                : [stitches.length],
+            produces: 1,
+          });
 
-const count =
-  numbers && numbers.length > 0
-    ? parseInt(numbers[0])
-    : 0;
+          col++;
+        }
 
-const symbol = findSymbol(text);
+        cells[index][col] = "V";
+        symbols.push("V");
 
-let actualCount = count;
-if (
-  text.includes("augmentation") ||
-  text.includes("augmentations") ||
-  text.includes("aug")
-) {
-  actualCount = count * 2;
-}
-const symbols: string[] = [];
-const stitches: Stitch[] = [];
+        stitches.push({
+          symbol: "V",
+          parents:
+            index === 0
+              ? []
+              : [stitches.length],
+          produces: 2,
+        });
 
-for (let i = 0; i < actualCount; i++) {
+        col++;
+      }
+
+      const totalMailles =
+        (nbMs + 1) * repetitions;
+
+      counts.push(totalMailles);
+      roundSymbols.push(symbols);
+      roundStitches.push(stitches);
+
+      analysis +=
+        `Rang ${index + 1} : ${totalMailles} mailles\n`;
+
+      return;
+    }
+
+    // =====================================================
+    // CAS GÉNÉRAL
+    // =====================================================
+    const numbers = text.match(/\d+/g);
+
+    const count =
+      numbers && numbers.length > 0
+        ? parseInt(numbers[0])
+        : 0;
+
+    const symbolInfo =
+     findSymbolInfo(text);
+
+    const symbol =
+      symbolInfo?.code || "";
+
+    let actualCount = count;
+
+    if (
+      text.includes("augmentation") ||
+      text.includes("augmentations") ||
+      text.includes("aug")
+    ) {
+      actualCount = count * 2;
+    }
+
+    const symbols: string[] = [];
+    const stitches: Stitch[] = [];
+
+    for (let i = 0; i < actualCount; i++) {
+
   cells[index][i] = symbol;
   symbols.push(symbol);
+
   stitches.push({
-  symbol,
-  parents:
-    index === 0
-      ? []
-      : [i],
-});
-}
+    symbol,
+    parents:
+      index === 0
+        ? []
+        : [i],
+    produces:
+      symbolInfo?.produces || 1,
+  });
+
+} // <-- AJOUTER CETTE ACCOLADE
 
 roundSymbols.push(symbols);
 roundStitches.push(stitches);
@@ -115,13 +149,13 @@ analysis +=
   `Rang ${index + 1} : ${actualCount} mailles\n`;
   });
 
- return {
-  lines,
-  counts,
-  analysis,
-  cells,
-  roundSymbols,
-  roundStitches,
-  hasMR
-};
+  return {
+    lines,
+    counts,
+    analysis,
+    cells,
+    roundSymbols,
+    roundStitches,
+    hasMR,
+  };
 }

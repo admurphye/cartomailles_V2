@@ -13,6 +13,7 @@ import { exportPDF } from "./lib/exportPDF";
 import FlatDiagram from "./components/FlatDiagram";
 import { saveProject } from "./lib/saveProject";
 import { openProject } from "./lib/openProject";
+import { Stitch } from "./lib/types";
 
 const SYMBOL_LABELS: Record<string, string> =
   Object.values(CROCHET_SYMBOLS)
@@ -45,6 +46,7 @@ export default function Home() {
   const [hasMR, setHasMR] = useState(false);
   const [projectName, setProjectName] =  useState("");
   const [exportMode, setExportMode] = useState(false);
+  const [roundStitches, setRoundStitches] =  useState<Stitch[][]>([]);
 // =====================================================
 // ANALYSE DU PATRON ET GÉNÉRATION DU DIAGRAMME
 // =====================================================
@@ -68,6 +70,8 @@ setHasMR(
   setCells(result.cells);
   setRoundSymbols(result.roundSymbols);
   setHasMR(result.hasMR);
+  setRoundStitches(result.roundStitches);
+  
 //console.log(result);
     
     if (lines.length > 0) {
@@ -359,9 +363,9 @@ Cercle magique
     DIAGRAMME PLAT
 ===================================================== */}
  {diagramType === "flat" && (
-  <FlatDiagram
-    cells={cells}
-  />
+ <FlatDiagram
+  roundStitches={roundStitches}
+/>
 )}
 {/* =====================================================
     DIAGRAMME CIRCULAIRE
