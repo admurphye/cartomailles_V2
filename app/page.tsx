@@ -10,6 +10,9 @@ import CircularDiagram from "./components/CircularDiagram";
 import { exportPNG } from "./lib/exportPNG";
 import { exportSVG } from "./lib/exportSVG";
 import { exportPDF } from "./lib/exportPDF";
+import FlatDiagram from "./components/FlatDiagram";
+import { saveProject } from "./lib/saveProject";
+import { openProject } from "./lib/openProject";
 
 const SYMBOL_LABELS: Record<string, string> =
   Object.values(CROCHET_SYMBOLS)
@@ -89,8 +92,47 @@ const handleExportPDF = () =>
     setExportMode
   );
 
-const handleExportSVG = () =>
-  exportSVG(setExportMode);
+const handleExportSVG = () => exportSVG(setExportMode);
+
+const handleSaveProject = () => {
+
+  saveProject({
+    projectName,
+    pattern,
+    diagramType,
+  });
+};
+
+const handleOpenProject = () => {
+
+  openProject((data) => {
+
+    setProjectName(
+      data.projectName || ""
+    );
+
+    setPattern(
+      data.pattern || ""
+    );
+
+    setDiagramType(
+      data.diagramType || "circular"
+    );
+
+    // Régénération automatique
+    const result = parsePattern(
+      data.pattern || ""
+    );
+
+    setRoundCounts(result.counts);
+    setAnalysis(result.analysis);
+    setCells(result.cells);
+    setRoundSymbols(result.roundSymbols);
+    setHasMR(result.hasMR);
+  });
+};
+
+
   return (
     <main
   style={{
@@ -286,10 +328,6 @@ Cercle magique
     boxShadow: "0 0 20px rgba(139, 92, 246, 0.15)",
   }}
 >
-<<<<<<< HEAD
-=======
-
->>>>>>> 9ef9abe (23/06/26)
 <SummaryPanel
   firstRoundCount={firstRoundCount}
   roundCounts={roundCounts}
@@ -302,6 +340,8 @@ Cercle magique
   exportPNG={exportPNG}
   exportSVG={handleExportSVG}
   exportPDF={handleExportPDF}
+  openProject={handleOpenProject}
+  saveProject={handleSaveProject}
 />
 
 {/* Zone exportable */}
@@ -315,45 +355,11 @@ Cercle magique
 {/* =====================================================
     DIAGRAMME PLAT
 ===================================================== */}
-  {diagramType === "flat" && (
-  <svg width={800} height={800}>
-    {cells.map((row, rowIndex) => (
-      <g key={rowIndex}>
-        <text
-          x={10}
-          y={rowIndex * 40 + 25}
-          fill="white"
-          fontSize="16"
-          fontWeight="bold"
-        >
-          {rowIndex + 1}
-        </text>
-
-        {row.map((cell, colIndex) => (
-          <g key={`${rowIndex}-${colIndex}`}>
-            <rect
-              x={50 + colIndex * 40}
-              y={rowIndex * 40}
-              width={40}
-              height={40}
-              fill="white"
-              stroke="black"
-            />
-
-            {drawSymbol(
-               cell,
-                50 + colIndex * 40,
-             rowIndex * 40,
-             "black",
-              0
-              )}
-          </g>
-        ))}
-      </g>
-    ))}
-  </svg>
+ {diagramType === "flat" && (
+  <FlatDiagram
+    cells={cells}
+  />
 )}
-
 {/* =====================================================
     DIAGRAMME CIRCULAIRE
 ===================================================== */}
@@ -370,39 +376,6 @@ Cercle magique
 </div> {/* colonne droite */}
 
 </div> {/* conteneur principal flex */}
-
-<<<<<<< HEAD
 </main>
-=======
-  return round.map((symbol, index) => {
-    const angle =
-      (index / round.length) * Math.PI * 2;
-
-    const x =
-      centerX + Math.cos(angle) * radius;
-
-    const y =
-      centerY + Math.sin(angle) * radius;
-
-    return (
-      <g key={`${ringIndex}-${index}`}>
-    {drawSymbol(
-  symbol,
-  x - 20,
-  y - 12,
-  exportMode ? "black" : "white",
-  angle
-)}
-  </g>
-);
-    });
-  })}
-</svg>
-  </>
-      )}
-   </div>  {/* colonne droite */}
-   </div>
-          </main>
->>>>>>> 9ef9abe (23/06/26)
   );
 }

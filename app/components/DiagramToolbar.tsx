@@ -9,6 +9,8 @@ type DiagramToolbarProps = {
   exportPNG: () => void;
   exportSVG: () => void;
   exportPDF: () => void;
+  saveProject: () => void;
+  openProject: () => void;
 };
 
 export default function DiagramToolbar({
@@ -18,7 +20,10 @@ export default function DiagramToolbar({
   exportPNG,
   exportSVG,
   exportPDF,
+  openProject,
+  saveProject,
 }: DiagramToolbarProps) {
+  
   return (
     <div
       style={{
@@ -79,6 +84,14 @@ export default function DiagramToolbar({
 
         <button onClick={exportPDF}>
           📄 PDF
+        </button>
+
+        <button onClick={openProject}>
+           📂 Ouvrir
+        </button>
+
+        <button onClick={saveProject}>
+            💾 Sauver
         </button>
       </div>
     </div>
