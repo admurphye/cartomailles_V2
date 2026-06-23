@@ -111,16 +111,10 @@ export function parsePattern(pattern: string) {
     const symbol =
       symbolInfo?.code || "";
 
-    let actualCount = count;
+    const actualCount = count;
 
-    if (
-      text.includes("augmentation") ||
-      text.includes("augmentations") ||
-      text.includes("aug")
-    ) {
-      actualCount = count * 2;
-    }
-
+    const producedCount =
+    count * (symbolInfo?.produces || 1);  
     const symbols: string[] = [];
     const stitches: Stitch[] = [];
 
@@ -139,14 +133,14 @@ export function parsePattern(pattern: string) {
       symbolInfo?.produces || 1,
   });
 
-} // <-- AJOUTER CETTE ACCOLADE
+}
 
 roundSymbols.push(symbols);
 roundStitches.push(stitches);
-counts.push(actualCount);
+counts.push(producedCount);
 
 analysis +=
-  `Rang ${index + 1} : ${actualCount} mailles\n`;
+  `Rang ${index + 1} : ${producedCount} mailles\n`;
   });
 
   return {

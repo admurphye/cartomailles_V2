@@ -36,7 +36,12 @@ export function layoutFlat(
           x = parent.x;
         }
       }
-
+if (
+  stitch.symbol === "V" &&
+  rowIndex > 0
+) {
+  x += spacingX / 2;
+}
       positionedRound.push({
         ...stitch,
         x,
