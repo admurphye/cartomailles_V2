@@ -59,7 +59,10 @@ setHasMR(
 );
 
   const result = parsePattern(pattern);
-  
+
+  console.log("result", result);
+  console.log("roundStitches", result.roundStitches);
+
   setRoundCounts(result.counts);
   setAnalysis(result.analysis);
   setCells(result.cells);

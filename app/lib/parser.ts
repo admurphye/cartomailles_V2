@@ -1,3 +1,4 @@
+import { Stitch } from "./types";
 import { findSymbol } from "./findSymbol";
     const ROWS = 20;
     const COLS = 20;
@@ -15,6 +16,7 @@ export function parsePattern(pattern: string) {
   let analysis = "";
 
   const roundSymbols: string[][] = [];
+  const roundStitches: Stitch[][] = [];
 
   lines.forEach((line, index) => {
     const text = line.toLowerCase();
@@ -33,16 +35,31 @@ if (
 
   let col = 0;
   const symbols: string[] = [];
+  const stitches: Stitch[] = [];
 
 for (let r = 0; r < repetitions; r++) {
   for (let m = 0; m < nbMs; m++) {
     cells[index][col] = "X";
     symbols.push("X");
+    stitches.push({
+  symbol: "X",
+  parents:
+    index === 0
+      ? []
+      : [stitches.length],
+});
     col++;
   }
 
   cells[index][col] = "V";
   symbols.push("V");
+  stitches.push({
+  symbol: "V",
+  parents:
+    index === 0
+      ? []
+      : [stitches.length],
+});
   col++;
 }
 
@@ -51,6 +68,7 @@ for (let r = 0; r < repetitions; r++) {
 
   counts.push(totalMailles);
   roundSymbols.push(symbols);
+  roundStitches.push(stitches);
 
   analysis +=
     `Rang ${index + 1} : ${totalMailles} mailles\n`;
@@ -75,13 +93,22 @@ if (
   actualCount = count * 2;
 }
 const symbols: string[] = [];
+const stitches: Stitch[] = [];
 
 for (let i = 0; i < actualCount; i++) {
   cells[index][i] = symbol;
   symbols.push(symbol);
+  stitches.push({
+  symbol,
+  parents:
+    index === 0
+      ? []
+      : [i],
+});
 }
 
 roundSymbols.push(symbols);
+roundStitches.push(stitches);
 counts.push(actualCount);
 
 analysis +=
@@ -94,6 +121,7 @@ analysis +=
   analysis,
   cells,
   roundSymbols,
+  roundStitches,
   hasMR
 };
 }
