@@ -286,6 +286,10 @@ Cercle magique
     boxShadow: "0 0 20px rgba(139, 92, 246, 0.15)",
   }}
 >
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9ef9abe (23/06/26)
 <SummaryPanel
   firstRoundCount={firstRoundCount}
   roundCounts={roundCounts}
@@ -367,6 +371,38 @@ Cercle magique
 
 </div> {/* conteneur principal flex */}
 
+<<<<<<< HEAD
 </main>
+=======
+  return round.map((symbol, index) => {
+    const angle =
+      (index / round.length) * Math.PI * 2;
+
+    const x =
+      centerX + Math.cos(angle) * radius;
+
+    const y =
+      centerY + Math.sin(angle) * radius;
+
+    return (
+      <g key={`${ringIndex}-${index}`}>
+    {drawSymbol(
+  symbol,
+  x - 20,
+  y - 12,
+  exportMode ? "black" : "white",
+  angle
+)}
+  </g>
+);
+    });
+  })}
+</svg>
+  </>
+      )}
+   </div>  {/* colonne droite */}
+   </div>
+          </main>
+>>>>>>> 9ef9abe (23/06/26)
   );
 }
