@@ -230,28 +230,37 @@ export function drawAUG(
   return (
     <>
       <line
-        x1={x + 20}
-        y1={y + 30}
-        x2={x + 12}
+        x1={x + 12}
+        y1={y + 28}
+        x2={x + 20}
         y2={y + 10}
         stroke={color}
         strokeWidth="2"
       />
 
       <line
-        x1={x + 20}
-        y1={y + 30}
-        x2={x + 28}
+        x1={x + 28}
+        y1={y + 28}
+        x2={x + 20}
         y2={y + 10}
         stroke={color}
         strokeWidth="2"
       />
 
       <line
-        x1={x + 14}
-        y1={y + 20}
-        x2={x + 26}
-        y2={y + 20}
+        x1={x + 17}
+        y1={y + 16}
+        x2={x + 23}
+        y2={y + 22}
+        stroke={color}
+        strokeWidth="2"
+      />
+
+      <line
+        x1={x + 23}
+        y1={y + 16}
+        x2={x + 17}
+        y2={y + 22}
         stroke={color}
         strokeWidth="2"
       />
@@ -269,7 +278,7 @@ export function drawDIM(
         x1={x + 12}
         y1={y + 10}
         x2={x + 20}
-        y2={y + 30}
+        y2={y + 28}
         stroke={color}
         strokeWidth="2"
       />
@@ -278,15 +287,24 @@ export function drawDIM(
         x1={x + 28}
         y1={y + 10}
         x2={x + 20}
-        y2={y + 30}
+        y2={y + 28}
         stroke={color}
         strokeWidth="2"
       />
 
       <line
-        x1={x + 15}
-        y1={y + 22}
-        x2={x + 25}
+        x1={x + 17}
+        y1={y + 16}
+        x2={x + 23}
+        y2={y + 22}
+        stroke={color}
+        strokeWidth="2"
+      />
+
+      <line
+        x1={x + 23}
+        y1={y + 16}
+        x2={x + 17}
         y2={y + 22}
         stroke={color}
         strokeWidth="2"
