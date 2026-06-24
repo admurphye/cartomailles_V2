@@ -122,10 +122,11 @@ if (cell === "A") {
 }
 if (cell === "MC") {
   return (
-    <circle
+    <ellipse
       cx={x + 20}
       cy={y + 20}
-      r={4}
+      rx={8}
+      ry={4}
       fill={color}
     />
   );

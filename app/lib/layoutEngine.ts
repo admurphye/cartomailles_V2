@@ -9,8 +9,8 @@ export function layoutFlat(
   rounds: Stitch[][]
 ): PositionedStitch[][] {
 
-  const spacingX = 80;
-  const spacingY = 80;
+  const spacingX = 40;
+  const spacingY = 60;
 
   const result: PositionedStitch[][] = [];
 
@@ -20,17 +20,7 @@ export function layoutFlat(
 
     round.forEach((stitch, stitchIndex) => {
 
-     const rowWidth =
-  (round.length - 1) * spacingX;
-
-const maxWidth = 700;
-
-const offset =
-  (maxWidth - rowWidth) / 2;
-
-let x =
-  offset +
-  stitchIndex * spacingX;
+      let x = stitchIndex * spacingX;
 
       if (
         rowIndex > 0 &&
@@ -46,12 +36,7 @@ let x =
           x = parent.x;
         }
       }
-if (
-  stitch.symbol === "V" &&
-  rowIndex > 0
-) {
-  x += spacingX / 2;
-}
+
       positionedRound.push({
         ...stitch,
         x,
