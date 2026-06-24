@@ -63,15 +63,33 @@ export const CROCHET_SYMBOLS: Record<
     produces: 1,
   },
 
-  tb: {
-    name: "Double bride",
-    code: "TB",
-    svg: "trebleCrochet",
-    category: "basic",
-    aliases: ["double bride", "doubles brides", "tb"],
-    consumes: 1,
-    produces: 1,
-  },
+ dbr: {
+  name: "Double bride",
+  code: "DBR",
+  svg: "trebleCrochet",
+  category: "basic",
+  aliases: [
+    "double bride",
+    "doubles brides",
+    "dbr"
+  ],
+  consumes: 1,
+  produces: 1,
+},
+
+tbr: {
+  name: "Triple bride",
+  code: "TBR",
+  svg: "doubleTrebleCrochet",
+  category: "basic",
+  aliases: [
+    "triple bride",
+    "triples brides",
+    "tbr"
+  ],
+  consumes: 1,
+  produces: 1,
+},
 
   aug: {
     name: "Augmentation",
