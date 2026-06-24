@@ -1,53 +1,83 @@
-import { Stitch } from "./types";
-
-export type PositionedStitch = Stitch & {
-  x: number;
-  y: number;
-};
+import {
+  Stitch,
+  PositionedStitch,
+} from "./types";
 
 export function layoutFlat(
   rounds: Stitch[][]
 ): PositionedStitch[][] {
 
-  const spacingX = 40;
-  const spacingY = 60;
-
   const result: PositionedStitch[][] = [];
 
-  rounds.forEach((round, rowIndex) => {
+  const spacingX = 50;
+  const spacingY = 70;
 
-    const positionedRound: PositionedStitch[] = [];
+  for (
+    let row = 0;
+    row < rounds.length;
+    row++
+  ) {
+    const positioned: PositionedStitch[] = [];
 
-    round.forEach((stitch, stitchIndex) => {
+    for (
+      let i = 0;
+      i < rounds[row].length;
+      i++
+    ) {
 
-      let x = stitchIndex * spacingX;
+      const stitch =
+        rounds[row][i];
+
+      let x = i * spacingX;
 
       if (
-        rowIndex > 0 &&
-        stitch.parents.length > 0
-      ) {
-        const parentIndex =
-          stitch.parents[0];
+  row > 0 &&
+  stitch.parents.length > 0
+) {
 
-        const parent =
-          result[rowIndex - 1]?.[parentIndex];
+  const parentIndex =
+    stitch.parents[0];
 
-        if (parent) {
-          x = parent.x;
-        }
-      }
+  const parent =
+    result[row - 1]?.[
+      parentIndex
+    ];
 
-      positionedRound.push({
+  if (parent) {
+
+    const previousStitch =
+      rounds[row - 1][parentIndex];
+
+    if (
+      previousStitch?.produces === 2
+    ) {
+
+      const childNumber =
+        i % 2;
+
+      x =
+        parent.x +
+        (childNumber === 0
+          ? -15
+          : 15);
+
+    } else {
+
+      x = parent.x;
+
+    }
+  }
+}
+
+      positioned.push({
         ...stitch,
         x,
-        y: rowIndex * spacingY,
+        y: row * spacingY,
       });
+    }
 
-    });
-
-    result.push(positionedRound);
-
-  });
-
+    result.push(positioned);
+  }
+console.log("LAYOUT", result);
   return result;
 }

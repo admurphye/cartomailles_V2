@@ -10,9 +10,12 @@ export default function FlatDiagram({
   roundStitches,
 }: FlatDiagramProps) {
 
+  console.log(roundStitches);
+  
   const positioned =
-    layoutFlat(roundStitches);
+  layoutFlat(roundStitches);
 
+console.log(positioned);
   return (
     <svg width={800} height={800}>
 
@@ -32,20 +35,11 @@ export default function FlatDiagram({
           {row.map((stitch, stitchIndex) => (
             <g key={`${rowIndex}-${stitchIndex}`}>
 
-              <rect
-                x={50 + stitch.x}
-                y={stitch.y}
-                width={40}
-                height={40}
-                fill="white"
-                stroke="black"
-              />
-
               {drawSymbol(
                 stitch.symbol,
                 50 + stitch.x,
                 stitch.y,
-                "black",
+                "#ffffff",
                 0
               )}
 
