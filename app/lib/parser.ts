@@ -60,17 +60,40 @@ const producedCount =
 const symbols: string[] = [];
 const stitches: Stitch[] = [];
 
+const previousRound =
+  roundStitches[index - 1];
+
+let parentIndex = 0;
+let childrenCreated = 0;
+
 for (let i = 0; i < actualCount; i++) {
 
   cells[index][i] = symbol;
   symbols.push(symbol);
 
+  let parents: number[] = [];
+
+  if (index > 0 && previousRound) {
+
+    parents = [parentIndex];
+
+    childrenCreated++;
+
+    const maxChildren =
+      previousRound[parentIndex]
+        ?.produces || 1;
+
+    if (childrenCreated >= maxChildren) {
+
+      parentIndex++;
+      childrenCreated = 0;
+
+    }
+  }
+
   stitches.push({
     symbol,
-    parents:
-      index === 0
-        ? []
-        : [i],
+    parents,
     produces:
       symbolInfo?.produces || 1,
   });
