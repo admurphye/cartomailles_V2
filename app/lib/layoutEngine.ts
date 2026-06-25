@@ -48,46 +48,91 @@ export function layoutFlat(
     rounds[row].forEach(
       (stitch, stitchIndex) => {
 
-        const children =
-          result[row + 1].filter(
-            child =>
-              child.parents.includes(
-                stitchIndex
-              )
-          );
+       const nextRow = result[row + 1];
+const nextRowHasDecrease =
+  nextRow.some(
+    child => child.consumes === 2
+  );
 
-        let x = 0;
+if (
+  nextRowHasDecrease &&
+  row === 0
+) {
 
-        if (children.length === 0) {
+  result[row].push({
+    ...stitch,
+    x: stitchIndex * spacingX,
+    y: row * spacingY,
+  });
 
-          x =
-            stitchIndex *
-            spacingX;
+  return;
+}
+const children =
+  nextRow.filter(
+    child =>
+      child.parents.includes(
+        stitchIndex
+      )
+  );
 
-        } else if (
-          children.length === 1
-        ) {
+// Cas diminution
+if (
+  stitch.consumes === 2 &&
+  stitch.parents.length === 2
+) {
 
-          x =
-            children[0].x;
+  const x =
+    (
+      stitch.parents[0] * spacingX +
+      stitch.parents[1] * spacingX
+    ) / 2;
+console.log(
+  "DIM",
+  stitchIndex,
+  "X",
+  x
+);
+  result[row].push({
+    ...stitch,
+    x,
+    y: row * spacingY,
+  });
 
-        } else {
+  return;
+}
+let x = 0;
 
-          x =
-            (
-              children[0].x +
-              children[
-                children.length - 1
-              ].x
-            ) / 2;
+if (children.length === 0) {
 
-        }
+  x =
+    stitchIndex *
+    spacingX;
 
-        result[row].push({
-          ...stitch,
-          x,
-          y: row * spacingY,
-        });
+} else if (
+  children.length === 1
+) {
+
+
+  x =
+    children[0].x;
+
+} else {
+
+  x =
+    (
+      children[0].x +
+      children[
+        children.length - 1
+      ].x
+    ) / 2;
+
+}
+
+result[row].push({
+  ...stitch,
+  x,
+  y: row * spacingY,
+});
 
       }
     );

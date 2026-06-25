@@ -2,7 +2,7 @@ export type Stitch = {
   symbol: string;
   parents: number[];
   produces: number;
-  index?: number;
+  consumes: number;
 };
 export type PositionedStitch =
   Stitch & {

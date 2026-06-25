@@ -73,7 +73,21 @@ for (let i = 0; i < actualCount; i++) {
 
   let parents: number[] = [];
 
-  if (index > 0 && previousRound) {
+ if (index > 0 && previousRound) {
+
+  const consumes =
+    symbolInfo?.consumes || 1;
+
+  if (consumes === 2) {
+
+    parents = [
+      parentIndex,
+      parentIndex + 1,
+    ];
+
+    parentIndex += 2;
+
+  } else {
 
     parents = [parentIndex];
 
@@ -90,12 +104,15 @@ for (let i = 0; i < actualCount; i++) {
 
     }
   }
+}
 
   stitches.push({
     symbol,
     parents,
     produces:
       symbolInfo?.produces || 1,
+      consumes:
+  symbolInfo?.consumes || 1,
   });
 
 }

@@ -14,7 +14,7 @@ export default function FlatDiagram({
   
   const positioned =
   layoutFlat(roundStitches);
-
+console.log("POSITIONED", positioned);
 console.log(positioned);
   return (
     <svg width={800} height={800}>
