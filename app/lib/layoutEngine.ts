@@ -7,77 +7,91 @@ export function layoutFlat(
   rounds: Stitch[][]
 ): PositionedStitch[][] {
 
-  const result: PositionedStitch[][] = [];
-
   const spacingX = 50;
   const spacingY = 70;
 
-  for (
-    let row = 0;
-    row < rounds.length;
-    row++
-  ) {
-    const positioned: PositionedStitch[] = [];
+  const result: PositionedStitch[][] = [];
 
-    for (
-      let i = 0;
-      i < rounds[row].length;
-      i++
-    ) {
+  // ====================================
+  // Dernier rang
+  // ====================================
 
-      const stitch =
-        rounds[row][i];
+  const lastRow =
+    rounds.length - 1;
 
-      let x = i * spacingX;
+  result[lastRow] = [];
 
-      if (
-  row > 0 &&
-  stitch.parents.length > 0
-) {
+  rounds[lastRow].forEach(
+    (stitch, i) => {
 
-  const parentIndex =
-    stitch.parents[0];
-
-  const parent =
-    result[row - 1]?.[
-      parentIndex
-    ];
-
-  if (parent) {
-
-    const previousStitch =
-      rounds[row - 1][parentIndex];
-
-    if (
-      previousStitch?.produces === 2
-    ) {
-
-      const childNumber =
-        i % 2;
-
-      x =
-        parent.x +
-        (childNumber === 0
-          ? -15
-          : 15);
-
-    } else {
-
-      x = parent.x;
-
-    }
-  }
-}
-
-      positioned.push({
+      result[lastRow].push({
         ...stitch,
-        x,
-        y: row * spacingY,
+        x: i * spacingX,
+        y: lastRow * spacingY,
       });
-    }
 
-    result.push(positioned);
+    }
+  );
+
+  // ====================================
+  // Remonter les rangs
+  // ====================================
+
+  for (
+    let row = lastRow - 1;
+    row >= 0;
+    row--
+  ) {
+
+    result[row] = [];
+
+    rounds[row].forEach(
+      (stitch, stitchIndex) => {
+
+        const children =
+          result[row + 1].filter(
+            child =>
+              child.parents.includes(
+                stitchIndex
+              )
+          );
+
+        let x = 0;
+
+        if (children.length === 0) {
+
+          x =
+            stitchIndex *
+            spacingX;
+
+        } else if (
+          children.length === 1
+        ) {
+
+          x =
+            children[0].x;
+
+        } else {
+
+          x =
+            (
+              children[0].x +
+              children[
+                children.length - 1
+              ].x
+            ) / 2;
+
+        }
+
+        result[row].push({
+          ...stitch,
+          x,
+          y: row * spacingY,
+        });
+
+      }
+    );
   }
-console.log("LAYOUT", result);
+
   return result;
 }

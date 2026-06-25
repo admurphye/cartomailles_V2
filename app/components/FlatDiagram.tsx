@@ -10,7 +10,7 @@ export default function FlatDiagram({
   roundStitches,
 }: FlatDiagramProps) {
 
-  console.log(roundStitches);
+  console.log("roundStitches", roundStitches);
   
   const positioned =
   layoutFlat(roundStitches);
