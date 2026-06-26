@@ -6,12 +6,14 @@ import { shadows } from "@/app/theme/shadows";
 
 type CardProps = {
   title?: string;
+  subtitle?: string;
   icon?: ReactNode;
   children: ReactNode;
 };
 
 export default function Card({
   title,
+  subtitle,
   icon,
   children,
 }: CardProps) {
@@ -26,21 +28,35 @@ export default function Card({
       }}
     >
       {title && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: spacing.sm,
-            marginBottom: spacing.md,
-            fontWeight: 600,
-            color: colors.text,
-            fontSize: 18,
-          }}
-        >
-          {icon}
-          {title}
-        </div>
-      )}
+  <>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: spacing.sm,
+        marginBottom: spacing.xs,
+        fontWeight: 600,
+        color: colors.text,
+        fontSize: 18,
+      }}
+    >
+        
+      {icon}
+      {title}
+    </div>
+
+    <div
+      style={{
+        color: colors.textSecondary,
+        fontSize: 13,
+        marginBottom: spacing.lg,
+        lineHeight: 1.5,
+      }}
+    >
+      Choisissez la forme du diagramme.
+    </div>
+  </>
+)}
 
       {children}
     </div>

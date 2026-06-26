@@ -14,6 +14,8 @@ import FlatDiagram from "./components/FlatDiagram";
 import { saveProject } from "./lib/saveProject";
 import { openProject } from "./lib/openProject";
 import { Stitch } from "./lib/types";
+import Card from "@/app/components/ui/Card";
+import Image from "next/image";
 
 const SYMBOL_LABELS: Record<string, string> =
   Object.values(CROCHET_SYMBOLS)
@@ -148,14 +150,14 @@ const handleOpenProject = () => {
     margin: "0 auto",
   }}
 >
-      <h1
-  style={{
-    marginBottom: "20px",
-    fontSize: "32px",
-  }}
->
-  🧶 Créateur de diagrammes crochet
-</h1>
+     
+  <Image
+  src="/logo-cartomailles.png"
+  alt="Cartomailles"
+  width={420}
+  height={120}
+  priority
+/>
 
  <div
   style={{
@@ -175,22 +177,33 @@ const handleOpenProject = () => {
   {/* =====================================================
     PANNEAU DE CONFIGURATION
 ===================================================== */}
-  <h3>⚙️ Paramètres</h3>
-
-<div style={cardStyle}>
-
-  <label>
-    Type de diagramme :
+  <Card
+    title="Préférences"
+    subtitle="Choisissez la forme du diagramme."
+    icon={<span>⚙️</span>}
+>
+  <label
+    style={{
+      display: "block",
+      marginBottom: 10,
+      fontWeight: 500,
+    }}
+  >
+    Type
   </label>
 
   <select
     value={diagramType}
-    onChange={(e) =>
-      setDiagramType(e.target.value)
-    }
+    onChange={(e) => setDiagramType(e.target.value)}
     style={{
-      marginLeft: "10px",
-      padding: "5px"
+      width: "100%",
+      padding: "10px 12px",
+      borderRadius: 12,
+      border: "1px solid #494152",
+      background: "#1F1B22",
+      color: "#F8F5F2",
+      fontSize: 15,
+      outline: "none",
     }}
   >
     <option value="circular">
@@ -201,7 +214,7 @@ const handleOpenProject = () => {
       Plat
     </option>
   </select>
-</div>
+</Card>
 
 <div style={cardStyle}>
 
