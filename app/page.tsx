@@ -16,6 +16,15 @@ import { openProject } from "./lib/openProject";
 import { Stitch } from "./lib/types";
 import Card from "@/app/components/ui/Card";
 import Image from "next/image";
+import { colors } from "./theme/colors";
+import Input from "@/app/components/ui/Input";
+import TextArea from "@/app/components/ui/TextArea";
+import PrimaryButton from "@/app/components/ui/PrimaryButton";
+import Select from "@/app/components/ui/Select";
+import PreferencesPanel from "@/app/components/panels/PreferencesPanel";
+import SymbolsPanel from "@/app/components/panels/SymbolsPanel";
+import ProjectPanel from "@/app/components/panels/ProjectPanel";
+import PatternPanel from "@/app/components/panels/PatternPanel";
 
 const SYMBOL_LABELS: Record<string, string> =
   Object.values(CROCHET_SYMBOLS)
@@ -28,9 +37,9 @@ const SYMBOL_LABELS: Record<string, string> =
 
 const cardStyle = {
   padding: "15px",
-  border: "1px solid #333",
-  borderRadius: "12px",
-  background: "#111",
+  border: `1px solid ${colors.border}`,
+  borderRadius: "18px",
+  background: colors.surface,
 };
 // =====================================================
 // ÉTATS DE L'APPLICATION
@@ -143,22 +152,16 @@ const handleOpenProject = () => {
 
 
   return (
-    <main
+ <main
   style={{
     padding: "20px",
     maxWidth: "1400px",
     margin: "0 auto",
+    background: colors.background,
+    minHeight: "100vh",
   }}
 >
      
-  <Image
-  src="/logo-cartomailles.png"
-  alt="Cartomailles"
-  width={420}
-  height={120}
-  priority
-/>
-
  <div
   style={{
     display: "flex",
@@ -174,167 +177,54 @@ const handleOpenProject = () => {
     gap: "15px",
   }}
 >
+
+{/* =====================================================
+    TITRE ET LOGO
+===================================================== */}
+ <div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  }}
+>
+  <Image
+    src="/logo-cartomailles-v5.png"
+    alt="Cartomailles"
+    width={190}
+    height={190}
+    priority
+  />
+</div>
   {/* =====================================================
     PANNEAU DE CONFIGURATION
 ===================================================== */}
-  <Card
-    title="Préférences"
-    subtitle="Choisissez la forme du diagramme."
-    icon={<span>⚙️</span>}
->
-  <label
-    style={{
-      display: "block",
-      marginBottom: 10,
-      fontWeight: 500,
-    }}
-  >
-    Type
-  </label>
+  
+ <PreferencesPanel
+  diagramType={diagramType}
+  setDiagramType={setDiagramType}
+/>
 
-  <select
-    value={diagramType}
-    onChange={(e) => setDiagramType(e.target.value)}
-    style={{
-      width: "100%",
-      padding: "10px 12px",
-      borderRadius: 12,
-      border: "1px solid #494152",
-      background: "#1F1B22",
-      color: "#F8F5F2",
-      fontSize: 15,
-      outline: "none",
-    }}
-  >
-    <option value="circular">
-      Circulaire
-    </option>
+<SymbolsPanel />
 
-    <option value="flat">
-      Plat
-    </option>
-  </select>
-</Card>
-
-<div style={cardStyle}>
-
-<h3>📚 Bibliothèque des symboles</h3>
- <details>
-     <ul>
-    {Object.entries(CROCHET_SYMBOLS).map(
-      ([key, value]) => (
-        <li key={key}>
-          {key} - {value.name} ({value.code})
-        </li>
-      )
-    )}
-  </ul>
-  <summary>Afficher les symboles</summary>
-</details>
-</div>
-<div style={cardStyle}>
 
 {/* =====================================================
     SAISIE DU PATRON
 ===================================================== */}
+<div style={cardStyle}> 
+  <ProjectPanel
+  projectName={projectName}
+  setProjectName={setProjectName}
+/>
+  </div>
 <div style={cardStyle}>
-  <h3>📁 Projet</h3>
-
-  <input
-    type="text"
-    value={projectName}
-    onChange={(e) =>
-      setProjectName(e.target.value)
-    }
-    placeholder="Nom du projet"
-    style={{
-      width: "100%",
-      padding: "10px",
-      borderRadius: "8px",
-      border: "1px solid #333",
-      background: "#0f0f0f",
-      color: "white",
-    }}
-  />
-</div>
-
-<h3>📝 Patron</h3>
-<p
-  style={{
-    fontSize: "14px",
-    color: "#999",
-    marginTop: "-5px",
-    marginBottom: "10px",
-  }}
->
-  Colle ou écris ton patron crochet
-</p>
-      <textarea
-        value={pattern}
-        onChange={(e) => setPattern(e.target.value)}
-       rows={10}
- style={{
-  width: "100%",
-  minHeight: "220px",
-  background: "#0f0f0f",
-  color: "white",
-  border: "1px solid #333",
-  borderRadius: "8px",
-  padding: "12px",
-  resize: "vertical",
-  fontSize: "15px",
-}}
-        placeholder={`Exemple :
-
-Cercle magique
-6 mailles serrées
-6 augmentations
-2 mailles serrées, 1 augmentation x6
-3 mailles serrées, 1 augmentation x6
-`}
-      />
-
-      <br />
-      <br />
-<p
- style={{
-  width: "100%",
-  minHeight: "220px",
-  marginBottom: "15px",
-  background: "#0f0f0f",
-  color: "white",
-  border: "1px solid #333",
-  borderRadius: "8px",
-  padding: "12px",
-  resize: "vertical",
-  fontSize: "15px",
-
-}}
->
-  {pattern
-    .split("\n")
-    .filter(line => line.trim() !== "")
-    .length}
-  {" "}ligne(s)
-</p>
-<button
-  onClick={generateFromText}
-  style={{
-    width: "100%",
-    padding: "14px",
-    borderRadius: "10px",
-    border: "none",
-    background: "#8b5cf6",
-    color: "white",
-    fontSize: "16px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    boxShadow: "0 4px 15px rgba(139,92,246,0.4)",
-  }}
->
-  ✨ Générer le diagramme
-</button>
-    </div> {/* fin carte patron */}
+<PatternPanel
+  pattern={pattern}
+  setPattern={setPattern}
+  generateFromText={generateFromText}
+/>
+    </div>
 </div> {/* fin colonne gauche */}
 
 <div
@@ -343,9 +233,9 @@ Cercle magique
     border: "1px solid #333",
     borderRadius: "12px",
     padding: "20px",
-    background: "#111",
+    background: colors.workspace,
     overflow: "auto",
-    boxShadow: "0 0 20px rgba(139, 92, 246, 0.15)",
+    border: `1px solid ${colors.border}`,
   }}
 >
 <SummaryPanel

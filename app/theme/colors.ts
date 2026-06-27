@@ -1,21 +1,31 @@
 export const colors = {
+  // Fond principal du logiciel
+  background: "#1E1A22",
 
-    background: "#1F1B22",
+  // Fond des cartes
+  surface: "#2B2434",
 
-    surface: "#2A2530",
+  // Zone de travail
+  workspace: "#241F2B",
 
-    card: "#2B2532",
+  // Bordures
+  border: "#5B2E4D",
 
-    border: "#494152",
+  // Couleurs principales
+  primary: "#D98CA8",
+  secondary: "#A7B8A1",
 
-    primary: "#D88FA7",
+  // Texte
+  text: "#FBF7F2",
+  textSecondary: "#D7C9CF",
 
-    primaryHover: "#C87895",
+  // Boutons
+  button: "#D98CA8",
+  buttonHover: "#E8A4BD",
 
-    accent: "#7B9D97",
+  // Succès
+  success: "#A7B8A1",
 
-    text: "#F8F5F2",
-
-    textSecondary: "#C7C2CC",
-
+  // Erreur
+  danger: "#D16A7C",
 };
