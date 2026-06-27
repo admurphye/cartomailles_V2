@@ -1,5 +1,22 @@
 import React from "react";
 
+import {
+  Map,
+  ZoomIn,
+  ZoomOut,
+  Image,
+  FileImage,
+  FileText,
+  FolderOpen,
+  Save,
+} from "lucide-react";
+
+import ToolbarButton from "@/app/components/ui/ToolbarButton";
+import IconButton from "@/app/components/ui/IconButton";
+import PanelTitle from "@/app/components/ui/PanelTitle";
+import { colors } from "@/app/theme/colors";
+import { spacing } from "@/app/theme/spacing";
+
 type DiagramToolbarProps = {
   diagramType: string;
   zoom: number;
@@ -23,76 +40,91 @@ export default function DiagramToolbar({
   openProject,
   saveProject,
 }: DiagramToolbarProps) {
-  
   return (
     <div
       style={{
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: "15px",
+        marginBottom: spacing.lg,
       }}
     >
-      <h3>
-        📊 Diagramme{" "}
-        {diagramType === "flat"
-          ? "plat"
-          : "circulaire"}
-      </h3>
+      <PanelTitle
+        title={`Diagramme ${
+          diagramType === "flat"
+            ? "plat"
+            : "circulaire"
+        }`}
+        icon={<Map />}
+      />
 
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "5px",
+          gap: spacing.sm,
         }}
       >
-        <button
+        <IconButton
+          icon={<ZoomIn color={colors.secondary} />}
           onClick={() =>
             setZoom((z) => z + 0.1)
           }
-        >
-          ➕
-        </button>
+        />
 
-        <button
+        <IconButton
+          icon={<ZoomOut color={colors.secondary} />}
           onClick={() =>
             setZoom((z) =>
               Math.max(0.5, z - 0.1)
             )
           }
-        >
-          ➖
-        </button>
+        />
 
         <span
           style={{
-            color: "#aaa",
-            marginRight: "10px",
+            color: colors.textSecondary,
+            minWidth: 55,
+            textAlign: "center",
           }}
         >
           {Math.round(zoom * 100)}%
         </span>
 
-        <button onClick={exportPNG}>
-          📸 PNG
-        </button>
+        <ToolbarButton
+          icon={<Image color={colors.secondary} />}
+          onClick={exportPNG}
+        >
+          PNG
+        </ToolbarButton>
 
-        <button onClick={exportSVG}>
-          📐 SVG
-        </button>
+        <ToolbarButton
+          icon={<FileImage color={colors.secondary} />}
+          onClick={exportSVG}
+        >
+          SVG
+        </ToolbarButton>
 
-        <button onClick={exportPDF}>
-          📄 PDF
-        </button>
+        <ToolbarButton
+          icon={<FileText color={colors.secondary} />}
+          onClick={exportPDF}
+        >
+          PDF
+        </ToolbarButton>
 
-        <button onClick={openProject}>
-           📂 Ouvrir
-        </button>
+        <ToolbarButton
+          icon={<FolderOpen color={colors.secondary} />}
+          onClick={openProject}
+        >
+          Ouvrir
+        </ToolbarButton>
 
-        <button onClick={saveProject}>
-            💾 Sauver
-        </button>
+        <ToolbarButton
+          icon={<Save color={colors.secondary} />}
+          onClick={saveProject}
+        >
+          Sauvegarder
+        </ToolbarButton>
       </div>
     </div>
   );

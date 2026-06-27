@@ -1,4 +1,5 @@
 import { colors } from "@/app/theme/colors";
+import { ChartColumn } from "lucide-react";
 
 type SummaryPanelProps = {
   firstRoundCount: number;
@@ -22,13 +23,17 @@ export default function SummaryPanel({
     }}
   >
     <h3
-      style={{
-        marginTop: 0,
-        marginBottom: "20px",
-      }}
-    >
-      📊 Résumé
-    </h3>
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 0,
+    marginBottom: 20,
+  }}
+>
+  <ChartColumn size={18} strokeWidth={1.75} />
+  Résumé
+</h3>
 
     <div
       style={{

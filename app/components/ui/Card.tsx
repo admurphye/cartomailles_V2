@@ -3,6 +3,7 @@ import { colors } from "@/app/theme/colors";
 import { radius } from "@/app/theme/radius";
 import { spacing } from "@/app/theme/spacing";
 import { shadows } from "@/app/theme/shadows";
+import PanelTitle from "./PanelTitle";
 
 type CardProps = {
   title?: string;
@@ -28,35 +29,26 @@ export default function Card({
       }}
     >
       {title && (
-  <>
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: spacing.sm,
-        marginBottom: spacing.xs,
-        fontWeight: 600,
-        color: colors.text,
-        fontSize: 18,
-      }}
-    >
-        
-      {icon}
-      {title}
-    </div>
+        <>
+          <PanelTitle
+            title={title}
+            icon={icon}
+          />
 
-    <div
-      style={{
-        color: colors.textSecondary,
-        fontSize: 13,
-        marginBottom: spacing.lg,
-        lineHeight: 1.5,
-      }}
-    >
-      Choisissez la forme du diagramme.
-    </div>
-  </>
-)}
+          {subtitle && (
+            <div
+              style={{
+                color: colors.textSecondary,
+                fontSize: 13,
+                marginBottom: spacing.lg,
+                lineHeight: 1.5,
+              }}
+            >
+              {subtitle}
+            </div>
+          )}
+        </>
+      )}
 
       {children}
     </div>

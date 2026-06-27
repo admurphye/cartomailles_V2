@@ -2,6 +2,7 @@ import Card from "@/app/components/ui/Card";
 import TextArea from "@/app/components/ui/TextArea";
 import PrimaryButton from "@/app/components/ui/PrimaryButton";
 import { colors } from "@/app/theme/colors";
+import { FileText } from "lucide-react";
 
 type PatternPanelProps = {
   pattern: string;
@@ -21,7 +22,7 @@ export default function PatternPanel({
   return (
     <Card
       title="Patron"
-      icon={<span>📝</span>}
+      icon={<FileText size={17} strokeWidth={1.75} />}
     >
       <p
         style={{

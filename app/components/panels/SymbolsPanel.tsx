@@ -1,11 +1,12 @@
 import Card from "@/app/components/ui/Card";
 import { CROCHET_SYMBOLS } from "@/app/lib/crochetSymbols";
+import { Shapes } from "lucide-react";
 
 export default function SymbolsPanel() {
   return (
     <Card
       title="Symboles"
-      icon={<span>🧶</span>}
+      icon={<Shapes size={17} strokeWidth={1.75} />}
     >
       <details>
         <summary

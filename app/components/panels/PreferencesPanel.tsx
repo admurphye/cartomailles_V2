@@ -1,5 +1,6 @@
 import Card from "@/app/components/ui/Card";
 import Select from "@/app/components/ui/Select";
+import { Settings } from "lucide-react";
 
 type Props = {
   diagramType: string;
@@ -12,9 +13,9 @@ export default function PreferencesPanel({
 }: Props) {
   return (
     <Card
-      title="Préférences"
-      icon={<span>⚙️</span>}
-    >
+  title="Préférences"
+  icon={<Settings size={17} strokeWidth={1.75} />}
+>
       <label
         style={{
           display: "block",

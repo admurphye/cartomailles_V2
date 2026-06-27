@@ -1,5 +1,6 @@
 import Card from "@/app/components/ui/Card";
 import Input from "@/app/components/ui/Input";
+import { FolderOpen } from "lucide-react";
 
 type ProjectPanelProps = {
   projectName: string;
@@ -13,7 +14,7 @@ export default function ProjectPanel({
   return (
     <Card
       title="Projet"
-      icon={<span>📁</span>}
+      icon={<FolderOpen size={17} strokeWidth={1.75} />}
     >
       <Input
         value={projectName}
