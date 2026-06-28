@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CROCHET_SYMBOLS } from "./lib/crochetSymbols";
 import { drawSymbol } from "./lib/drawSymbol";
-import { parsePattern } from "./lib/parser";
+import { parsePatternV2 } from "./lib/parserV2";
 import DiagramToolbar from "./components/DiagramToolbar";
 import SummaryPanel from "./components/SummaryPanel";
 import CircularDiagram from "./components/CircularDiagram";
@@ -71,7 +71,7 @@ setHasMR(
   pattern.toLowerCase().includes("cercle magique")
 );
 
-  const result = parsePattern(pattern);
+  const result = parsePatternV2(pattern);
 
   console.log("result", result);
   console.log("roundStitches", result.roundStitches);
@@ -138,7 +138,7 @@ const handleOpenProject = () => {
     );
 
     // Régénération automatique
-    const result = parsePattern(
+    const result = parsePatternV2(
       data.pattern || ""
     );
 
@@ -274,8 +274,8 @@ const handleOpenProject = () => {
     DIAGRAMME CIRCULAIRE
 ===================================================== */}
 {diagramType === "circular" && (
-      <CircularDiagram
-        roundSymbols={roundSymbols}
+     <CircularDiagram
+    roundStitches={roundStitches}
         hasMR={hasMR}
         exportMode={exportMode}
       />

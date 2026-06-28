@@ -1,13 +1,14 @@
 import { drawSymbol } from "../lib/drawSymbol";
+import { Stitch } from "../lib/types";
 
 type CircularDiagramProps = {
-  roundSymbols: string[][];
+  roundStitches: Stitch[][];
   hasMR: boolean;
   exportMode: boolean;
 };
 
 export default function CircularDiagram({
-  roundSymbols,
+  roundStitches,
   hasMR,
   exportMode,
 }: CircularDiagramProps) {
@@ -25,7 +26,7 @@ export default function CircularDiagram({
 
       {/* Cercles guides */}
 
-      {roundSymbols.map((_, ringIndex) => {
+      {roundStitches.map((_, ringIndex) => {
 
         if (hasMR && ringIndex === 0) {
           return null;
@@ -35,7 +36,7 @@ export default function CircularDiagram({
 
         const step =
           maxRadius /
-          Math.max(roundSymbols.length, 1);
+          Math.max(roundStitches.length, 1);
 
         const radius =
           hasMR
@@ -54,7 +55,7 @@ export default function CircularDiagram({
         );
       })}
 {/* Cercles guides des rangs */}
-       {roundSymbols.map((_, ringIndex) => {
+       {roundStitches.map((_, ringIndex) => {
 
   if (hasMR && ringIndex === 0) {
     return null;
@@ -63,7 +64,7 @@ export default function CircularDiagram({
 const maxRadius = 300;
 
 const step =
-  maxRadius / Math.max(roundSymbols.length, 1);
+  maxRadius / Math.max(roundStitches.length, 1);
 
 const radius =
   hasMR
@@ -107,18 +108,18 @@ const radius =
   </>
 )}
 {/* Symboles crochet */}
-{roundSymbols.map((round, ringIndex) => {
+{roundStitches.map((round, ringIndex) => {
  const maxRadius = 300;
 
 const step =
-  maxRadius / Math.max(roundSymbols.length, 1);
+  maxRadius / Math.max(roundStitches.length, 1);
 
 const radius =
   hasMR
     ? 20 + ringIndex * step
     : 45 + ringIndex * step;
 
-  return round.map((symbol, index) => {
+  return round.map((stitch, index) => {
     const angle =
       (index / round.length) * Math.PI * 2;
 
@@ -131,7 +132,7 @@ const radius =
     return (
       <g key={`${ringIndex}-${index}`}>
     {drawSymbol(
-  symbol,
+  stitch.symbol,
   x - 20,
   y - 12,
   exportMode ? "black" : "white",

@@ -1,5 +1,6 @@
 import { Stitch } from "./types";
 import { findSymbolInfo } from "./findSymbol";
+import { parseRound } from "./parseRound";
 
 const ROWS = 20;
 const COLS = 20;
@@ -39,23 +40,13 @@ export function parsePattern(pattern: string) {
     // =====================================================
     // CAS GÉNÉRAL
     // =====================================================
-   const numbers = text.match(/\d+/g);
+  const parsed = parseRound(text);
+console.log("PARSED =", parsed);
+const symbol = parsed.symbol;
+const actualCount = parsed.actualCount;
+const producedCount = parsed.producedCount;
 
-const count =
-  numbers && numbers.length > 0
-    ? parseInt(numbers[0])
-    : 0;
-
-const symbolInfo =
-  findSymbolInfo(text);
-
-const symbol =
-  symbolInfo?.code || "";
-
-const actualCount = count;
-
-const producedCount =
-  count * (symbolInfo?.produces || 1);
+const symbolInfo = findSymbolInfo(text);
 
 const symbols: string[] = [];
 const stitches: Stitch[] = [];
