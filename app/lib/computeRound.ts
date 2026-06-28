@@ -107,28 +107,17 @@ export function computeRound(
   for (let i = 0; i < instruction.count; i++) {
 
     symbols.push("V");
-    symbols.push("V");
 
     stitches.push({
       symbol: "V",
       parents: [],
-      produces: 1,
-      consumes: 1,
-    });
-
-    stitches.push({
-      symbol: "V",
-      parents: [],
-      produces: 1,
+      produces: 2,
       consumes: 1,
     });
 
   }
 
   break;
-
-
-  
 
       case "dim":
 
