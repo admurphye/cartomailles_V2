@@ -1,5 +1,7 @@
 import { drawSymbol } from "../lib/drawSymbol";
 import { Stitch } from "../lib/types";
+import { buildTopology } from "../lib/topology/buildTopology";
+import { layoutCircularV2 } from "../lib/layout/layoutCircularV2";
 
 type CircularDiagramProps = {
   roundStitches: Stitch[][];
@@ -13,10 +15,22 @@ export default function CircularDiagram({
   exportMode,
 }: CircularDiagramProps) {
 
+ const topology =
+  buildTopology(roundStitches);
+
+const positioned =
+  layoutCircularV2(topology);
+
   const svgSize = 700;
 
   const centerX = svgSize / 2;
   const centerY = svgSize / 2;
+
+  const maxRadius = 280;
+
+  const step =
+    maxRadius /
+    Math.max(positioned.length, 1);
 
   return (
     <svg
@@ -26,21 +40,15 @@ export default function CircularDiagram({
 
       {/* Cercles guides */}
 
-      {roundStitches.map((_, ringIndex) => {
+      {positioned.map((_, ringIndex) => {
 
         if (hasMR && ringIndex === 0) {
           return null;
         }
 
-        const maxRadius = 300;
-
-        const step =
-          maxRadius /
-          Math.max(roundStitches.length, 1);
-
         const radius =
           hasMR
-            ? 20 + ringIndex * step
+            ? 40 + ringIndex * step
             : 45 + ringIndex * step;
 
         return (
@@ -53,95 +61,74 @@ export default function CircularDiagram({
             stroke="#555"
           />
         );
+
       })}
-{/* Cercles guides des rangs */}
-       {roundStitches.map((_, ringIndex) => {
 
-  if (hasMR && ringIndex === 0) {
-    return null;
-  }
+      {/* Cercle magique */}
 
-const maxRadius = 300;
+      {hasMR && (
+        <>
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={10}
+            fill="none"
+            stroke={
+              exportMode
+                ? "black"
+                : "white"
+            }
+            strokeWidth="2"
+          />
 
-const step =
-  maxRadius / Math.max(roundStitches.length, 1);
+          <text
+            x={centerX}
+            y={centerY + 4}
+            textAnchor="middle"
+            fill={
+              exportMode
+                ? "black"
+                : "white"
+            }
+            fontSize="10"
+            fontWeight="bold"
+          >
+            MR
+          </text>
+        </>
+      )}
 
-const radius =
-  hasMR
-    ? 20 + ringIndex * step
-    : 45 + ringIndex * step;
+      {/* Symboles */}
 
-  return (
-    <g key={`guide-${ringIndex}`}>
-      <circle
-       cx={centerX}
-       cy={centerY}
-        r={radius}
-        fill="none"
-        stroke="#555"
-      />
-    </g>
-  );
-})}
-{/* Cercle magique */}
-{hasMR && (
-  <>
-    <circle
-      cx={centerX}
-      cy={centerY}
-      r={10}
-      fill="none"
-      stroke={exportMode ? "black" : "white"}
-      strokeWidth="2"
-    />
+      {positioned.map((row, rowIndex) => (
 
-    <text
-      x={centerX}
-      y={centerY + 4}
-      textAnchor="middle"
-      fill={exportMode ? "black" : "white"}
-      fontSize="10"
-      fontWeight="bold"
-    >
-      MR
-    </text>
-  </>
-)}
-{/* Symboles crochet */}
-{roundStitches.map((round, ringIndex) => {
- const maxRadius = 300;
+        <g key={rowIndex}>
 
-const step =
-  maxRadius / Math.max(roundStitches.length, 1);
+          {row.map((stitch, stitchIndex) => (
 
-const radius =
-  hasMR
-    ? 20 + ringIndex * step
-    : 45 + ringIndex * step;
+            <g
+              key={`${rowIndex}-${stitchIndex}`}
+            >
 
-  return round.map((stitch, index) => {
-    const angle =
-      (index / round.length) * Math.PI * 2;
+              {drawSymbol(
+                stitch.symbol,
+                stitch.x - 20,
+                stitch.y - 12,
+                exportMode
+                  ? "black"
+                  : "white",
+                0
+              )}
 
-    const x =
-      centerX + Math.cos(angle) * radius;
+            </g>
 
-    const y =
-      centerY + Math.sin(angle) * radius;
+          ))}
 
-    return (
-      <g key={`${ringIndex}-${index}`}>
-    {drawSymbol(
-  stitch.symbol,
-  x - 20,
-  y - 12,
-  exportMode ? "black" : "white",
-  angle
-)}
-  </g>
-);
-    });
-  })}
+        </g>
+
+      ))}
+
     </svg>
   );
+
 }

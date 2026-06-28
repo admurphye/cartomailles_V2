@@ -51,8 +51,7 @@ export default function Home() {
   const [analysis, setAnalysis] = useState("");
   const [firstRoundCount, setFirstRoundCount] = useState(6);
   const [roundCounts, setRoundCounts] = useState<number[]>([]);
-  const [roundSymbols, setRoundSymbols] =  useState<string[][]>([]);
-  const [cells, setCells] = useState<(string | null)[][]>([]);
+    const [cells, setCells] = useState<(string | null)[][]>([]);
   const [zoom, setZoom] = useState(1);
   const [hasMR, setHasMR] = useState(false);
   const [projectName, setProjectName] =  useState("");
@@ -79,8 +78,7 @@ setHasMR(
   setRoundCounts(result.counts);
   setAnalysis(result.analysis);
   setCells(result.cells);
-  setRoundSymbols(result.roundSymbols);
-  setHasMR(result.hasMR);
+   setHasMR(result.hasMR);
   setRoundStitches(result.roundStitches);
   
 //console.log(result);
@@ -104,7 +102,6 @@ const handleExportPDF = () =>
     firstRoundCount,
     roundCounts,
     pattern,
-    roundSymbols,
     hasMR,
     SYMBOL_LABELS,
     setExportMode

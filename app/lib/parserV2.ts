@@ -10,7 +10,6 @@ export function parsePatternV2(pattern: string) {
     .filter(line => line.trim() !== "");
 
   const counts: number[] = [];
-  const roundSymbols: string[][] = [];
   let analysis = "";
   let hasMR = false;
 
@@ -33,8 +32,6 @@ export function parsePatternV2(pattern: string) {
  const round = computeRound(parsed);
 
 counts.push(round.stitchCount);
-
-roundSymbols.push(round.symbols);
 
 let stitches = round.stitches;
 
@@ -62,21 +59,12 @@ analysis +=
   }
 
   return {
-
-    lines,
-
-    counts,
-
-    analysis,
-
-    cells: [],
-
-    roundSymbols,
-
-    roundStitches,
-
-    hasMR,
-
-  };
+  lines,
+  counts,
+  analysis,
+  cells: [],
+  roundStitches,
+  hasMR,
+};
 
 }
