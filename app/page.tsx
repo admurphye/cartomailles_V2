@@ -49,7 +49,7 @@ export default function Home() {
   const [diagramType, setDiagramType] =
   useState("circular");
   const [analysis, setAnalysis] = useState("");
-  const [firstRoundCount, setFirstRoundCount] = useState(6);
+ const [firstRoundCount, setFirstRoundCount] = useState<number>(0);
   const [roundCounts, setRoundCounts] = useState<number[]>([]);
   const [roundSymbols, setRoundSymbols] =  useState<string[][]>([]);
   const [cells, setCells] = useState<(string | null)[][]>([]);
@@ -85,16 +85,20 @@ setHasMR(
   
 //console.log(result);
     
-    if (lines.length > 0) {
+   if (lines.length === 0) {
+  setFirstRoundCount(0);
+} else {
   const firstNumbers = lines[0].match(/\d+/g);
 
   if (firstNumbers) {
-        const value =
+    const value =
       firstNumbers.length > 1
         ? parseInt(firstNumbers[1])
         : parseInt(firstNumbers[0]);
 
     setFirstRoundCount(value);
+  } else {
+    setFirstRoundCount(0);
   }
 }
   };

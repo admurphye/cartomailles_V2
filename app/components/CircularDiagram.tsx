@@ -118,7 +118,13 @@ const radius =
   hasMR
     ? 20 + ringIndex * step
     : 45 + ringIndex * step;
-
+console.log(
+  "Rang",
+  ringIndex + 1,
+  "taille =",
+  round.length,
+  round
+);
   return round.map((stitch, index) => {
     const angle =
       (index / round.length) * Math.PI * 2;

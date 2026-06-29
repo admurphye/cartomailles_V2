@@ -1,6 +1,6 @@
-import { Stitch } from "./types";
+import { Stitch } from "../types";
 
-export function buildLinks(
+export function buildLinksFlat(
   previous: Stitch[],
   current: Stitch[]
 ): Stitch[] {
