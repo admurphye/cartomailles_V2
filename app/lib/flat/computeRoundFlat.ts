@@ -128,8 +128,8 @@ export function computeRoundFlat(
   break;
 
 
-  
 
+  
       case "dim":
 
         stitchesPerRepeat += instruction.count;
