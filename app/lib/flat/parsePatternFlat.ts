@@ -1,9 +1,9 @@
-import { parseLine } from "./parseLine";
-import { buildLinksFlat } from "./flat/buildLinksFlat";
-import { computeRoundFlat } from "./flat/computeRoundFlat";
-import { Stitch } from "./types";
+import { parseLine } from "../parseLine";
+import { computeRoundFlat } from "./computeRoundFlat";
+import { buildLinksFlat } from "./buildLinksFlat";
+import { Stitch } from "../types";
 
-export function parsePatternV2(pattern: string) {
+export function parsePatternFlat(pattern: string) {
 
   const lines = pattern
     .split("\n")

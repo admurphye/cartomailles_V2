@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { CROCHET_SYMBOLS } from "./lib/crochetSymbols";
 import { drawSymbol } from "./lib/drawSymbol";
-import { parsePatternV2 } from "./lib/parserV2";
 import DiagramToolbar from "./components/DiagramToolbar";
 import SummaryPanel from "./components/SummaryPanel";
 import CircularDiagram from "./components/CircularDiagram";
@@ -25,6 +24,8 @@ import PreferencesPanel from "@/app/components/panels/PreferencesPanel";
 import SymbolsPanel from "@/app/components/panels/SymbolsPanel";
 import ProjectPanel from "@/app/components/panels/ProjectPanel";
 import PatternPanel from "@/app/components/panels/PatternPanel";
+import { parsePatternFlat } from "./lib/flat/parsePatternFlat";
+import { parsePatternCircular } from "./lib/circular/parsePatternCircular";
 
 const SYMBOL_LABELS: Record<string, string> =
   Object.values(CROCHET_SYMBOLS)
@@ -71,7 +72,13 @@ setHasMR(
   pattern.toLowerCase().includes("cercle magique")
 );
 
-  const result = parsePatternV2(pattern);
+let result;
+
+if (diagramType === "flat") {
+  result = parsePatternFlat(pattern);
+} else {
+  result = parsePatternCircular(pattern);
+}
 
   console.log("result", result);
   console.log("roundStitches", result.roundStitches);
