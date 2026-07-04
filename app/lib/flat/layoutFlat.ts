@@ -1,3 +1,6 @@
+import {Stitch,PositionedStitch,} from "../types";
+export const ROW_SPACING = 40;
+
 export function layoutFlat(
   rounds: Stitch[][]
 ): PositionedStitch[][] {
@@ -13,11 +16,9 @@ export function layoutFlat(
   console.log("Nombre de rangs :", rounds.length);
   console.log("Dernier rang :", rounds[rounds.length - 1]);
 
-  const spacingX = 50;
-  const spacingY = 70;
-
   const result: PositionedStitch[][] = [];
-
+const spacingX = 50;
+const spacingY = ROW_SPACING;
   // ====================================
   // Dernier rang
   // ====================================

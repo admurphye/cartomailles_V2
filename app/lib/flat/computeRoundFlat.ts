@@ -57,9 +57,9 @@ export function computeRoundFlat(
         stitchesPerRepeat += instruction.count;
 
         for (let i = 0; i < instruction.count; i++) {
-          symbols.push("┬");
+          symbols.push("DB");
           stitches.push({
-            symbol: "┬",
+            symbol: "DB",
             parents: [],
             produces: 1,
             consumes: 1,
@@ -73,9 +73,9 @@ export function computeRoundFlat(
         stitchesPerRepeat += instruction.count;
 
         for (let i = 0; i < instruction.count; i++) {
-          symbols.push("●");
+          symbols.push("MC");
           stitches.push({
-            symbol: "●",
+            symbol: "MC",
             parents: [],
             produces: 1,
             consumes: 1,
@@ -89,9 +89,9 @@ export function computeRoundFlat(
         stitchesPerRepeat += instruction.count;
 
         for (let i = 0; i < instruction.count; i++) {
-          symbols.push("○");
+          symbols.push("ML");
           stitches.push({
-            symbol: "○",
+            symbol: "ML",
             parents: [],
             produces: 1,
             consumes: 1,
@@ -107,10 +107,10 @@ export function computeRoundFlat(
 
   for (let i = 0; i < instruction.count; i++) {
 
-    symbols.push("V");
+    symbols.push("AUG");
 
     stitches.push({
-      symbol: "V",
+      symbol: "AUG",
       parents: [],
       consumes: 1,
       produces: 2,
@@ -120,18 +120,15 @@ export function computeRoundFlat(
 
   break;
 
-
-
-  
       case "dim":
 
         stitchesPerRepeat += instruction.count;
 
         for (let i = 0; i < instruction.count; i++) {
-         symbols.push("Λ");
+         symbols.push("DIM");
 
             stitches.push({
-            symbol: "Λ",
+            symbol: "DIM",
             parents: [],
             produces: 1,
             consumes: 2,

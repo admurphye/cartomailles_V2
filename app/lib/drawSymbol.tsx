@@ -27,10 +27,10 @@ export function drawSymbol(
  if (cell === "T") {
   return drawBR(x, y, color);
 }
-if (cell === "V") {
+if (cell === "AUG") {
   return drawAUG(x, y, color);
 }
-if (cell === "A") {
+if (cell === "DIM") {
   return drawDIM(x, y, color);
 }
 if (cell === "MC") {
@@ -46,7 +46,7 @@ if (cell === "DBR") {
 if (cell === "TBR") {
   return drawTBR(x, y, color);
 }
-  if (cell === "O") {
+  if (cell === "ML") {
   return drawML(x, y, color);
 }
   return (

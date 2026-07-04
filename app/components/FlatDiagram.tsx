@@ -1,6 +1,7 @@
 import { drawSymbol } from "../lib/drawSymbol";
 import { Stitch } from "../lib/types";
-import { layoutFlat } from "../lib/flat/layoutFlat";
+import { colors } from "@/app/theme/colors";
+import {layoutFlat,ROW_SPACING,} from "../lib/flat/layoutFlat";
 
 type FlatDiagramProps = {
   roundStitches: Stitch[][];
@@ -21,10 +22,9 @@ console.log(positioned);
 
       {positioned.map((row, rowIndex) => (
         <g key={rowIndex}>
-
           <text
             x={10}
-            y={rowIndex * 60 + 25}
+            y={rowIndex * 40 + 25}
             fill="white"
             fontSize="16"
             fontWeight="bold"
@@ -37,9 +37,11 @@ console.log(positioned);
 
               {drawSymbol(
                 stitch.symbol,
-                50 + stitch.x,
+               50 + stitch.x,
                 stitch.y,
-                "#ffffff",
+                rowIndex % 2 === 0
+                  ? colors.text
+                  : colors.primary,
                 0
               )}
 

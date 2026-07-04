@@ -92,21 +92,23 @@ if (diagramType === "flat") {
   
 //console.log(result);
     
-   if (lines.length === 0) {
-  setFirstRoundCount(0);
-} else {
-  const firstNumbers = lines[0].match(/\d+/g);
+   const firstLineWithNumber = lines.find(line => /\d/.test(line));
+
+if (firstLineWithNumber) {
+
+  const firstNumbers = firstLineWithNumber.match(/\d+/g);
 
   if (firstNumbers) {
+
     const value =
       firstNumbers.length > 1
         ? parseInt(firstNumbers[1])
         : parseInt(firstNumbers[0]);
 
     setFirstRoundCount(value);
-  } else {
-    setFirstRoundCount(0);
+
   }
+
 }
   };
 const handleExportPDF = () =>
