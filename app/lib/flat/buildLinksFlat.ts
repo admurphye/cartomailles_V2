@@ -25,24 +25,19 @@ export function buildLinksFlat(
 
     }
 
-    // Augmentation (2 mailles issues du même parent)
-    if (stitch.symbol === "V") {
+   // Augmentation
+if (stitch.produces === 2) {
 
-      parents = [parentIndex];
+  parents = [parentIndex];
 
-      childOfCurrentParent++;
+  parentIndex++;
 
-      if (childOfCurrentParent === 2) {
-        parentIndex++;
-        childOfCurrentParent = 0;
-      }
+  return {
+    ...stitch,
+    parents,
+  };
 
-      return {
-        ...stitch,
-        parents,
-      };
-
-    }
+}
 
     // Cas normal
     parents = [parentIndex];

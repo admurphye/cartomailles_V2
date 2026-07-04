@@ -100,27 +100,20 @@ export function computeRoundFlat(
 
         break;
 
-    case "aug":
+   case "aug":
 
+  // Le rang produit 2 mailles par augmentation
   stitchesPerRepeat += instruction.count * 2;
 
   for (let i = 0; i < instruction.count; i++) {
 
     symbols.push("V");
-    symbols.push("V");
 
     stitches.push({
       symbol: "V",
       parents: [],
-      produces: 1,
       consumes: 1,
-    });
-
-    stitches.push({
-      symbol: "V",
-      parents: [],
-      produces: 1,
-      consumes: 1,
+      produces: 2,
     });
 
   }

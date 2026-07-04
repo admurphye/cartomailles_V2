@@ -1,11 +1,17 @@
-import {
-  Stitch,
-  PositionedStitch,
-} from "./types";
-
 export function layoutFlat(
   rounds: Stitch[][]
 ): PositionedStitch[][] {
+
+  console.log("=== layoutFlat ===");
+  console.log(rounds);
+
+  if (!rounds || rounds.length === 0) {
+    console.log("Aucun rang");
+    return [];
+  }
+
+  console.log("Nombre de rangs :", rounds.length);
+  console.log("Dernier rang :", rounds[rounds.length - 1]);
 
   const spacingX = 50;
   const spacingY = 70;
@@ -102,29 +108,40 @@ console.log(
 }
 let x = 0;
 
-if (children.length === 0) {
+// Cas augmentation
+if (stitch.produces === 2) {
 
-  x =
-    stitchIndex *
-    spacingX;
+  const firstProduced =
+    nextRow[stitchIndex * 2];
 
-} else if (
-  children.length === 1
-) {
+  const secondProduced =
+    nextRow[stitchIndex * 2 + 1];
 
+  if (firstProduced && secondProduced) {
 
-  x =
-    children[0].x;
+    x =
+      (
+        firstProduced.x +
+        secondProduced.x
+      ) / 2;
 
-} else {
+  } else {
 
-  x =
-    (
-      children[0].x +
-      children[
-        children.length - 1
-      ].x
-    ) / 2;
+    x = stitchIndex * spacingX;
+
+  }
+
+}
+
+// Cas normal
+else if (children.length === 0) {
+
+  x = stitchIndex * spacingX;
+
+}
+else {
+
+  x = children[0].x;
 
 }
 
