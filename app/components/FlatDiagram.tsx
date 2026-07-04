@@ -1,6 +1,6 @@
 import { drawSymbol } from "../lib/drawSymbol";
 import { Stitch } from "../lib/types";
-import { layoutFlat } from "../lib/layoutEngine";
+import { layoutFlat } from "../lib/flat/layoutFlat";
 
 type FlatDiagramProps = {
   roundStitches: Stitch[][];
