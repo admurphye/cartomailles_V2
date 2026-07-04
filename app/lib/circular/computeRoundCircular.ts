@@ -7,7 +7,7 @@ export type RoundResult = {
   stitches: Stitch[];
 };
 
-export function computeRoundFlat(
+export function computeRoundcircular(
   parsed: ParsedLine
 ): RoundResult {
 
