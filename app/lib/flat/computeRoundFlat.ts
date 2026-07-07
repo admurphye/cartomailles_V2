@@ -67,7 +67,40 @@ export function computeRoundFlat(
         }
 
         break;
+case "dbr":
 
+  stitchesPerRepeat += instruction.count;
+
+  for (let i = 0; i < instruction.count; i++) {
+    symbols.push("DBR");
+
+    stitches.push({
+      symbol: "DBR",
+      parents: [],
+      produces: 1,
+      consumes: 1,
+    });
+  }
+
+  break;
+
+case "tbr":
+
+  stitchesPerRepeat += instruction.count;
+
+  for (let i = 0; i < instruction.count; i++) {
+    symbols.push("TBR");
+
+    stitches.push({
+      symbol: "TBR",
+      parents: [],
+      produces: 1,
+      consumes: 1,
+    });
+  }
+
+  break;
+  
       case "mc":
 
         stitchesPerRepeat += instruction.count;
