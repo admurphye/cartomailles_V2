@@ -53,12 +53,12 @@ export const CROCHET_SYMBOLS: Record<
     produces: 1,
   },
 
-  b: {
+  br: {
     name: "Bride",
     code: "T",
     svg: "doubleCrochet",
     category: "basic",
-    aliases: ["bride", "brides", "b"],
+    aliases: ["bride", "brides", "br"],
     consumes: 1,
     produces: 1,
   },

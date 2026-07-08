@@ -170,10 +170,47 @@ case "tbr":
 
         break;
 
-    }
+  
+case "reliefavant":
+
+  stitchesPerRepeat += instruction.count;
+
+  for (let i = 0; i < instruction.count; i++) {
+
+    symbols.push("RAV");
+
+    stitches.push({
+      symbol: "RAV",
+      parents: [],
+      produces: 1,
+      consumes: 1,
+    });
 
   }
 
+  break;
+
+case "reliefarriere":
+
+  stitchesPerRepeat += instruction.count;
+
+  for (let i = 0; i < instruction.count; i++) {
+
+    symbols.push("RAR");
+
+    stitches.push({
+      symbol: "RAR",
+      parents: [],
+      produces: 1,
+      consumes: 1,
+    });
+
+  }
+ 
+  break;
+   }
+
+  }
   const stitchCount =
     stitchesPerRepeat * parsed.repeat;
 

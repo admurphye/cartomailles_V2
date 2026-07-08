@@ -64,10 +64,19 @@ export function drawMC(
 export function drawDB(
   x: number,
   y: number,
-  color: string
+  color: string,
+  rotation = 0
 ) {
   return (
-    <>
+    <g
+      transform={`
+        rotate(
+          ${rotation}
+          ${x + 20}
+          ${y + 20}
+        )
+      `}
+    >
       <line
         x1={x + 20}
         y1={y + 8}
@@ -76,6 +85,7 @@ export function drawDB(
         stroke={color}
         strokeWidth="2"
       />
+
       <line
         x1={x + 12}
         y1={y + 8}
@@ -84,7 +94,7 @@ export function drawDB(
         stroke={color}
         strokeWidth="2"
       />
-    </>
+    </g>
   );
 }
 export function drawBR(
@@ -300,6 +310,128 @@ export function drawAUG(
         stroke={color}
         strokeWidth="2"
       />
+    </g>
+  );
+}
+export function drawReliefavant(
+  x: number,
+  y: number,
+  color: string,
+  rotation = 0
+) {
+  return (
+    <g
+      transform={`
+        rotate(
+          ${rotation}
+          ${x + 20}
+          ${y + 20}
+        )
+      `}
+    >
+      {/* Tige */}
+      <line
+        x1={x + 20}
+        y1={y + 8}
+        x2={x + 20}
+        y2={y + 30}
+        stroke={color}
+        strokeWidth="2"
+      />
+
+      {/* Barre supérieure */}
+      <line
+        x1={x + 12}
+        y1={y + 8}
+        x2={x + 28}
+        y2={y + 8}
+        stroke={color}
+        strokeWidth="2"
+      />
+
+      {/* Barre de bride */}
+      <line
+        x1={x + 16}
+        y1={y + 18}
+        x2={x + 24}
+        y2={y + 18}
+        stroke={color}
+        strokeWidth="2"
+      />
+
+      {/* Crochet relief */}
+      <path
+  d={`
+    M ${x + 20} ${y + 22}
+    C ${x + 20} ${y + 36},
+      ${x + 6} ${y + 36},
+      ${x + 6} ${y + 22}
+  `}
+  fill="none"
+  stroke={color}
+  strokeWidth="2"
+/>
+    </g>
+  );
+}
+export function drawReliefarriere(
+  x: number,
+  y: number,
+  color: string,
+  rotation = 0
+) {
+  return (
+    <g
+      transform={`
+        rotate(
+          ${rotation}
+          ${x + 20}
+          ${y + 20}
+        )
+      `}
+    >
+      {/* Tige */}
+      <line
+        x1={x + 20}
+        y1={y + 8}
+        x2={x + 20}
+        y2={y + 30}
+        stroke={color}
+        strokeWidth="2"
+      />
+
+      {/* Barre supérieure */}
+      <line
+        x1={x + 12}
+        y1={y + 8}
+        x2={x + 28}
+        y2={y + 8}
+        stroke={color}
+        strokeWidth="2"
+      />
+
+      {/* Barre de bride */}
+      <line
+        x1={x + 16}
+        y1={y + 18}
+        x2={x + 24}
+        y2={y + 18}
+        stroke={color}
+        strokeWidth="2"
+      />
+
+      {/* Crochet relief */}
+     <path
+  d={`
+    M ${x + 20} ${y + 22}
+    C ${x + 20} ${y + 36},
+      ${x + 34} ${y + 36},
+      ${x + 34} ${y + 22}
+  `}
+  fill="none"
+  stroke={color}
+  strokeWidth="2"
+/>
     </g>
   );
 }

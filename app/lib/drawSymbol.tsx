@@ -9,6 +9,8 @@ import {
   drawTBR,
   drawAUG,
   drawDIM,
+  drawReliefavant,
+  drawReliefarriere,
 } from "./drawCrochetSymbol";
 
 export function drawSymbol(
@@ -55,6 +57,13 @@ export function drawSymbol(
   if (cell === "O") {
     return drawML(x, y, color);
   }
+  if (cell === "RAV") {
+  return drawReliefavant(x,y,color,rotation);
+}
+
+if (cell === "RAR") {
+  return drawReliefarriere(x,y,color,rotation);
+}
 
   return (
     <text
