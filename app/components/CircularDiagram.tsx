@@ -1,5 +1,6 @@
 import { drawSymbol } from "../lib/drawSymbol";
 import { Stitch } from "../lib/types";
+import { layoutCircular } from "../lib/circular/layoutCircular";
 
 type CircularDiagramProps = {
   roundStitches: Stitch[][];
@@ -17,6 +18,7 @@ export default function CircularDiagram({
 
   const centerX = svgSize / 2;
   const centerY = svgSize / 2;
+  const positioned = layoutCircular(roundStitches);
 
   return (
     <svg
@@ -24,65 +26,30 @@ export default function CircularDiagram({
       height={svgSize}
     >
 
-      {/* Cercles guides */}
-
-      {roundStitches.map((_, ringIndex) => {
-
-        if (hasMR && ringIndex === 0) {
-          return null;
-        }
-
-        const maxRadius = 300;
-
-        const step =
-          maxRadius /
-          Math.max(roundStitches.length, 1);
-
-        const radius =
-          hasMR
-            ? 20 + ringIndex * step
-            : 45 + ringIndex * step;
-
-        return (
-          <circle
-            key={ringIndex}
-            cx={centerX}
-            cy={centerY}
-            r={radius}
-            fill="none"
-            stroke="#555"
-          />
-        );
-      })}
-{/* Cercles guides des rangs */}
-       {roundStitches.map((_, ringIndex) => {
+     {/* Cercles guides */}
+{positioned.map((round, ringIndex) => {
 
   if (hasMR && ringIndex === 0) {
     return null;
   }
 
-const maxRadius = 300;
-
-const step =
-  maxRadius / Math.max(roundStitches.length, 1);
-
-const radius =
-  hasMR
-    ? 20 + ringIndex * step
-    : 45 + ringIndex * step;
+  if (round.length === 0) {
+    return null;
+  }
 
   return (
-    <g key={`guide-${ringIndex}`}>
-      <circle
-       cx={centerX}
-       cy={centerY}
-        r={radius}
-        fill="none"
-        stroke="#555"
-      />
-    </g>
+    <circle
+      key={ringIndex}
+      cx={centerX}
+      cy={centerY}
+      r={round[0].radius}
+      fill="none"
+      stroke="#555"
+    />
   );
+
 })}
+
 {/* Cercle magique */}
 {hasMR && (
   <>
@@ -108,46 +75,25 @@ const radius =
   </>
 )}
 {/* Symboles crochet */}
-{roundStitches.map((round, ringIndex) => {
- const maxRadius = 300;
+{positioned.map((round, ringIndex) => (
 
-const step =
-  maxRadius / Math.max(roundStitches.length, 1);
+  round.map((stitch, index) => (
 
-const radius =
-  hasMR
-    ? 20 + ringIndex * step
-    : 45 + ringIndex * step;
-console.log(
-  "Rang",
-  ringIndex + 1,
-  "taille =",
-  round.length,
-  round
-);
-  return round.map((stitch, index) => {
-    const angle =
-      (index / round.length) * Math.PI * 2;
+    <g key={`${ringIndex}-${index}`}>
 
-    const x =
-      centerX + Math.cos(angle) * radius;
+      {drawSymbol(
+        stitch.symbol,
+        stitch.x - 20,
+        stitch.y - 12,
+        exportMode ? "black" : "white",
+        stitch.rotation
+      )}
 
-    const y =
-      centerY + Math.sin(angle) * radius;
+    </g>
 
-    return (
-      <g key={`${ringIndex}-${index}`}>
-    {drawSymbol(
-  stitch.symbol,
-  x - 20,
-  y - 12,
-  exportMode ? "black" : "white",
-  angle
-)}
-  </g>
-);
-    });
-  })}
+  ))
+
+))}
     </svg>
   );
 }

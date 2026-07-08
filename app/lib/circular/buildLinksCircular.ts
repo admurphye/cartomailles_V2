@@ -19,9 +19,11 @@ export function buildLinksCircular(
       parentIndex += 2;
 
       return {
-        ...stitch,
-        parents,
-      };
+  ...stitch,
+  parents,
+  childIndex: 0,
+  childCount: 1,
+};
 
     }
 
@@ -38,9 +40,11 @@ export function buildLinksCircular(
       }
 
       return {
-        ...stitch,
-        parents,
-      };
+  ...stitch,
+  parents,
+  childIndex: 0,
+  childCount: 1,
+};
 
     }
 
@@ -49,9 +53,11 @@ export function buildLinksCircular(
     parentIndex++;
 
     return {
-      ...stitch,
-      parents,
-    };
+  ...stitch,
+  parents,
+  childIndex: 0,
+  childCount: 1,
+};
 
   });
 

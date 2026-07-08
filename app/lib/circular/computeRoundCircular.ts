@@ -31,7 +31,7 @@ export function computeRoundCircular(
             parents: [],
             produces: 1,
             consumes: 1,
-            });
+          });
         }
 
         break;
@@ -47,7 +47,7 @@ export function computeRoundCircular(
             parents: [],
             produces: 1,
             consumes: 1,
-            });
+          });
         }
 
         break;
@@ -57,13 +57,45 @@ export function computeRoundCircular(
         stitchesPerRepeat += instruction.count;
 
         for (let i = 0; i < instruction.count; i++) {
-          symbols.push("┬");
+          symbols.push("DB");
           stitches.push({
-            symbol: "┬",
+            symbol: "DB",
             parents: [],
             produces: 1,
             consumes: 1,
-            });
+          });
+        }
+
+        break;
+
+      case "dbr":
+
+        stitchesPerRepeat += instruction.count;
+
+        for (let i = 0; i < instruction.count; i++) {
+          symbols.push("DBR");
+          stitches.push({
+            symbol: "DBR",
+            parents: [],
+            produces: 1,
+            consumes: 1,
+          });
+        }
+
+        break;
+
+      case "tbr":
+
+        stitchesPerRepeat += instruction.count;
+
+        for (let i = 0; i < instruction.count; i++) {
+          symbols.push("TBR");
+          stitches.push({
+            symbol: "TBR",
+            parents: [],
+            produces: 1,
+            consumes: 1,
+          });
         }
 
         break;
@@ -73,13 +105,13 @@ export function computeRoundCircular(
         stitchesPerRepeat += instruction.count;
 
         for (let i = 0; i < instruction.count; i++) {
-          symbols.push("●");
+          symbols.push("MC");
           stitches.push({
-            symbol: "●",
+            symbol: "MC",
             parents: [],
             produces: 1,
             consumes: 1,
-            });
+          });
         }
 
         break;
@@ -89,95 +121,78 @@ export function computeRoundCircular(
         stitchesPerRepeat += instruction.count;
 
         for (let i = 0; i < instruction.count; i++) {
-          symbols.push("○");
+          symbols.push("O");
           stitches.push({
-            symbol: "○",
+            symbol: "O",
             parents: [],
             produces: 1,
             consumes: 1,
-            });
+          });
         }
 
         break;
 
-    case "aug":
+      case "aug":
 
-  stitchesPerRepeat += instruction.count * 2;
+        stitchesPerRepeat += instruction.count * 2;
 
-  for (let i = 0; i < instruction.count; i++) {
+        for (let i = 0; i < instruction.count; i++) {
 
-    symbols.push("V");
-    symbols.push("V");
+          symbols.push("V");
 
-    stitches.push({
-      symbol: "V",
-      parents: [],
-      produces: 1,
-      consumes: 1,
-    });
+          stitches.push({
+            symbol: "V",
+            parents: [],
+            produces: 2,
+            consumes: 1,
+          });
 
-    stitches.push({
-      symbol: "V",
-      parents: [],
-      produces: 1,
-      consumes: 1,
-    });
+        }
 
-  }
+        break;
 
-  break;
-
-
-
-  
       case "dim":
 
         stitchesPerRepeat += instruction.count;
 
         for (let i = 0; i < instruction.count; i++) {
-         symbols.push("Λ");
 
-            stitches.push({
-            symbol: "Λ",
+          symbols.push("A");
+
+          stitches.push({
+            symbol: "A",
             parents: [],
             produces: 1,
             consumes: 2,
-            });
+          });
+
         }
 
         break;
-
     }
-
   }
 
   const stitchCount =
     stitchesPerRepeat * parsed.repeat;
 
- const finalSymbols: string[] = [];
-const finalStitches: Stitch[] = [];
+  const finalSymbols: string[] = [];
+  const finalStitches: Stitch[] = [];
 
-for (let i = 0; i < parsed.repeat; i++) {
+  for (let i = 0; i < parsed.repeat; i++) {
 
-  finalSymbols.push(...symbols);
+    finalSymbols.push(...symbols);
 
-  finalStitches.push(
-    ...stitches.map(stitch => ({
-      ...stitch,
-      parents: [],
-    }))
-  );
+    finalStitches.push(
+      ...stitches.map(stitch => ({
+        ...stitch,
+        parents: [],
+      }))
+    );
+  }
 
-}
-
- return {
-
-  stitchCount,
-
-  symbols: finalSymbols,
-
-  stitches: finalStitches,
-
-};
-
+  return {
+    stitchCount,
+    symbols: finalSymbols,
+    stitches: finalStitches,
+  };
 }
