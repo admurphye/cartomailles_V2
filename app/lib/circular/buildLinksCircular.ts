@@ -1,4 +1,4 @@
-import { Stitch } from "./types";
+import { Stitch } from "../types";
 
 export function buildLinksCircular(
   previous: Stitch[],
