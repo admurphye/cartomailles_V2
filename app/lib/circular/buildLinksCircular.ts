@@ -1,4 +1,4 @@
-import { Stitch } from "../types";
+import { Stitch } from "./types";
 
 export function buildLinksCircular(
   previous: Stitch[],
@@ -6,58 +6,57 @@ export function buildLinksCircular(
 ): Stitch[] {
 
   let parentIndex = 0;
-  let childOfCurrentParent = 0;
+  let childrenCreated = 0;
 
   return current.map((stitch) => {
 
     let parents: number[] = [];
 
+    // ==========================
     // Diminution
+    // ==========================
+
     if (stitch.consumes === 2) {
 
-      parents = [parentIndex, parentIndex + 1];
+      parents = [
+        parentIndex,
+        parentIndex + 1,
+      ];
+
       parentIndex += 2;
 
       return {
-  ...stitch,
-  parents,
-  childIndex: 0,
-  childCount: 1,
-};
+        ...stitch,
+        parents,
+      };
 
     }
 
-    // Augmentation (2 mailles issues du même parent)
-    if (stitch.symbol === "V") {
+    // ==========================
+    // Cas général
+    // ==========================
 
-      parents = [parentIndex];
-
-      childOfCurrentParent++;
-
-      if (childOfCurrentParent === 2) {
-        parentIndex++;
-        childOfCurrentParent = 0;
-      }
-
-      return {
-  ...stitch,
-  parents,
-  childIndex: 0,
-  childCount: 1,
-};
-
-    }
-
-    // Cas normal
     parents = [parentIndex];
-    parentIndex++;
+
+    childrenCreated++;
+
+    const maxChildren =
+      previous[parentIndex]?.produces || 1;
+
+    if (childrenCreated >= maxChildren) {
+
+      parentIndex++;
+      childrenCreated = 0;
+
+    }
 
     return {
-  ...stitch,
-  parents,
-  childIndex: 0,
-  childCount: 1,
-};
+
+      ...stitch,
+
+      parents,
+
+    };
 
   });
 

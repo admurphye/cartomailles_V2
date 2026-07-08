@@ -90,10 +90,19 @@ export function drawDB(
 export function drawBR(
   x: number,
   y: number,
-  color: string
+  color: string,
+  rotation = 0
 ) {
   return (
-    <>
+    <g
+      transform={`
+        rotate(
+          ${rotation}
+          ${x + 20}
+          ${y + 20}
+        )
+      `}
+    >
       <line
         x1={x + 20}
         y1={y + 8}
@@ -120,16 +129,25 @@ export function drawBR(
         stroke={color}
         strokeWidth="2"
       />
-    </>
+    </g>
   );
 }
 export function drawDBR(
   x: number,
   y: number,
-  color: string
+  color: string,
+  rotation = 0
 ) {
   return (
-    <>
+    <g
+      transform={`
+        rotate(
+          ${rotation}
+          ${x + 20}
+          ${y + 20}
+        )
+      `}
+    >
       <line
         x1={x + 20}
         y1={y + 8}
@@ -165,16 +183,25 @@ export function drawDBR(
         stroke={color}
         strokeWidth="2"
       />
-    </>
+    </g>
   );
 }
 export function drawTBR(
   x: number,
   y: number,
-  color: string
+  color: string,
+  rotation = 0
 ) {
   return (
-    <>
+    <g
+      transform={`
+        rotate(
+          ${rotation}
+          ${x + 20}
+          ${y + 20}
+        )
+      `}
+    >
       <line
         x1={x + 20}
         y1={y + 8}
@@ -219,16 +246,25 @@ export function drawTBR(
         stroke={color}
         strokeWidth="2"
       />
-    </>
+    </g>
   );
 }
 export function drawAUG(
   x: number,
   y: number,
-  color: string
+  color: string,
+  rotation = 0
 ) {
   return (
-    <>
+    <g
+      transform={`
+        rotate(
+          ${rotation}
+          ${x + 20}
+          ${y + 20}
+        )
+      `}
+    >
       <line
         x1={x + 12}
         y1={y + 28}
@@ -264,16 +300,25 @@ export function drawAUG(
         stroke={color}
         strokeWidth="2"
       />
-    </>
+    </g>
   );
 }
 export function drawDIM(
   x: number,
   y: number,
-  color: string
+  color: string,
+  rotation = 0
 ) {
   return (
-    <>
+    <g
+      transform={`
+        rotate(
+          ${rotation}
+          ${x + 20}
+          ${y + 20}
+        )
+      `}
+    >
       <line
         x1={x + 12}
         y1={y + 10}
@@ -309,6 +354,6 @@ export function drawDIM(
         stroke={color}
         strokeWidth="2"
       />
-    </>
+    </g>
   );
 }

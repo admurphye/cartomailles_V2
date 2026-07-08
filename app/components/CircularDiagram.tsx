@@ -56,7 +56,7 @@ export default function CircularDiagram({
     <circle
       cx={centerX}
       cy={centerY}
-      r={10}
+      r={12}
       fill="none"
       stroke={exportMode ? "black" : "white"}
       strokeWidth="2"
@@ -67,7 +67,7 @@ export default function CircularDiagram({
       y={centerY + 4}
       textAnchor="middle"
       fill={exportMode ? "black" : "white"}
-      fontSize="10"
+      fontSize="9"
       fontWeight="bold"
     >
       MR
@@ -77,21 +77,27 @@ export default function CircularDiagram({
 {/* Symboles crochet */}
 {positioned.map((round, ringIndex) => (
 
-  round.map((stitch, index) => (
+  round.map((stitch, index) => {
 
-    <g key={`${ringIndex}-${index}`}>
+    const symbolColor = exportMode
+      ? "black"
+      : ringIndex % 2 === 0
+        ? "white"
+        : "#D98CA8";
 
-      {drawSymbol(
-        stitch.symbol,
-        stitch.x - 20,
-        stitch.y - 12,
-        exportMode ? "black" : "white",
-        stitch.rotation
-      )}
+    return (
+      <g key={`${ringIndex}-${index}`}>
+        {drawSymbol(
+          stitch.symbol,
+          stitch.x - 20,
+          stitch.y - 12,
+          symbolColor,
+          (stitch.rotation * 180) / Math.PI + 90
+        )}
+      </g>
+    );
 
-    </g>
-
-  ))
+  })
 
 ))}
     </svg>

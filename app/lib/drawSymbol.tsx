@@ -16,39 +16,46 @@ export function drawSymbol(
   x: number,
   y: number,
   color = "black",
-  angle = 0
+  rotation = 0
 ) {
   if (!cell) return null;
 
   if (cell === "X") {
-  return drawMS(x, y, color);
-}
+    return drawMS(x, y, color);
+  }
 
- if (cell === "T") {
-  return drawBR(x, y, color);
-}
-if (cell === "AUG") {
-  return drawAUG(x, y, color);
-}
-if (cell === "DIM") {
-  return drawDIM(x, y, color);
-}
-if (cell === "MC") {
-  return drawMC(x, y, color);
-}
-if (cell === "DB") {
-  return drawDB(x, y, color);
-}
-if (cell === "DBR") {
-  return drawDBR(x, y, color);
-}
+  if (cell === "T") {
+    return drawBR(x, y, color, rotation);
+  }
 
-if (cell === "TBR") {
-  return drawTBR(x, y, color);
-}
-  if (cell === "ML") {
-  return drawML(x, y, color);
-}
+  if (cell === "V") {
+    return drawAUG(x, y, color, rotation);
+  }
+
+  if (cell === "A") {
+    return drawDIM(x, y, color, rotation);
+  }
+
+  if (cell === "MC") {
+    return drawMC(x, y, color);
+  }
+
+  if (cell === "DB") {
+    return drawDB(x, y, color, rotation);
+  }
+
+  if (cell === "DBR") {
+    return drawDBR(x, y, color, rotation);
+  }
+
+  if (cell === "TBR") {
+    return drawTBR(x, y, color, rotation);
+  }
+
+  if (cell === "O") {
+    return drawML(x, y, color);
+  }
+
   return (
     <text
       x={x + 20}
@@ -56,6 +63,7 @@ if (cell === "TBR") {
       textAnchor="middle"
       fontSize="24"
       fontWeight="bold"
+      fill={color}
     >
       {cell}
     </text>

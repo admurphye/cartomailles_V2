@@ -30,8 +30,8 @@ export function layoutCircular(
   const centerX = 350;
   const centerY = 350;
 
-  const firstRadius = 40;
-  const ringSpacing = 55;
+  const firstRadius = 30;
+  const ringSpacing = 36;
 
   const result: PositionedCircularStitch[][] = [];
   const roundAngles: number[][] = [];
