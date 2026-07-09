@@ -1,3 +1,5 @@
+import { SYMBOL_ALIAS_MAP } from "./symbolAliasMap";
+
 export type Instruction = {
   type: string;
   count: number;
@@ -34,10 +36,19 @@ export function parseLine(line: string): ParsedLine {
 
     if (!match) continue;
 
-    instructions.push({
-      count: parseInt(match[1]),
-      type: match[2],
-    });
+    const rawType = match[2].toLowerCase();
+
+const type = SYMBOL_ALIAS_MAP[rawType];
+
+if (!type) {
+  console.warn(`Symbole inconnu : ${rawType}`);
+  continue;
+}
+
+instructions.push({
+  count: parseInt(match[1]),
+  type,
+});
 
   }
 
