@@ -1,5 +1,6 @@
 import { ParsedLine } from "../parseLine";
 import { Stitch } from "../types";
+import { CROCHET_SYMBOLS } from "../crochetSymbols";
 
 export type RoundResult = {
   stitchCount: number;
@@ -17,121 +18,36 @@ export function computeRoundFlat(
   const stitches: Stitch[] = [];
 
   for (const instruction of parsed.instructions) {
+const symbol = CROCHET_SYMBOLS[instruction.type];
 
-    switch (instruction.type) {
+if (!symbol) {
+  console.warn(`Symbole inconnu : ${instruction.type}`);
+  continue;
+}
+// Tous les symboles "simples"
+if (
+  instruction.type !== "aug" &&
+  instruction.type !== "dim"
+) {
 
-      case "ms":
-
-        stitchesPerRepeat += instruction.count;
-
-        for (let i = 0; i < instruction.count; i++) {
-          symbols.push("X");
-          stitches.push({
-            symbol: "X",
-            parents: [],
-            produces: 1,
-            consumes: 1,
-            });
-        }
-
-        break;
-
-      case "br":
-
-        stitchesPerRepeat += instruction.count;
-
-        for (let i = 0; i < instruction.count; i++) {
-          symbols.push("T");
-          stitches.push({
-            symbol: "T",
-            parents: [],
-            produces: 1,
-            consumes: 1,
-            });
-        }
-
-        break;
-
-      case "db":
-
-        stitchesPerRepeat += instruction.count;
-
-        for (let i = 0; i < instruction.count; i++) {
-          symbols.push("DB");
-          stitches.push({
-            symbol: "DB",
-            parents: [],
-            produces: 1,
-            consumes: 1,
-            });
-        }
-
-        break;
-case "dbr":
-
-  stitchesPerRepeat += instruction.count;
+  stitchesPerRepeat += instruction.count * symbol.produces;
 
   for (let i = 0; i < instruction.count; i++) {
-    symbols.push("DBR");
+
+    symbols.push(symbol.code);
 
     stitches.push({
-      symbol: "DBR",
+      symbol: symbol.code,
       parents: [],
-      produces: 1,
-      consumes: 1,
+      produces: symbol.produces,
+      consumes: symbol.consumes,
     });
+
   }
 
-  break;
-
-case "tbr":
-
-  stitchesPerRepeat += instruction.count;
-
-  for (let i = 0; i < instruction.count; i++) {
-    symbols.push("TBR");
-
-    stitches.push({
-      symbol: "TBR",
-      parents: [],
-      produces: 1,
-      consumes: 1,
-    });
-  }
-
-  break;
-  
-      case "mc":
-
-        stitchesPerRepeat += instruction.count;
-
-        for (let i = 0; i < instruction.count; i++) {
-          symbols.push("MC");
-          stitches.push({
-            symbol: "MC",
-            parents: [],
-            produces: 1,
-            consumes: 1,
-            });
-        }
-
-        break;
-
-      case "ml":
-
-        stitchesPerRepeat += instruction.count;
-
-        for (let i = 0; i < instruction.count; i++) {
-          symbols.push("ML");
-          stitches.push({
-            symbol: "ML",
-            parents: [],
-            produces: 1,
-            consumes: 1,
-            });
-        }
-
-        break;
+  continue;
+}
+switch (instruction.type) {
 
    case "aug":
 
@@ -171,43 +87,9 @@ case "tbr":
         break;
 
   
-case "reliefavant":
 
-  stitchesPerRepeat += instruction.count;
 
-  for (let i = 0; i < instruction.count; i++) {
 
-    symbols.push("RAV");
-
-    stitches.push({
-      symbol: "RAV",
-      parents: [],
-      produces: 1,
-      consumes: 1,
-    });
-
-  }
-
-  break;
-
-case "reliefarriere":
-
-  stitchesPerRepeat += instruction.count;
-
-  for (let i = 0; i < instruction.count; i++) {
-
-    symbols.push("RAR");
-
-    stitches.push({
-      symbol: "RAR",
-      parents: [],
-      produces: 1,
-      consumes: 1,
-    });
-
-  }
- 
-  break;
    }
 
   }

@@ -32,11 +32,13 @@ export function parseLine(line: string): ParsedLine {
     }
 
     // quantité + type
-    const match = clean.match(/(\d+)\s*([a-z]+)/);
+    const match = clean.match(/^(\d+)\s*(.+)$/);
 
     if (!match) continue;
 
-    const rawType = match[2].toLowerCase();
+    const rawType = match[2]
+  .trim()
+  .toLowerCase();
 
 const type = SYMBOL_ALIAS_MAP[rawType];
 
