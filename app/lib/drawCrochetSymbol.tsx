@@ -6,6 +6,7 @@ import {
   drawHalfBar,
   drawDiagonal,
   drawOpenCircle,
+  drawBackPostArc,
   drawFrontPostArc,
 
 } from "./crochetPrimitives";
@@ -264,48 +265,13 @@ export function drawReliefarriere(
         )
       `}
     >
-      {/* Tige */}
-      <line
-        x1={x + 20}
-        y1={y + 8}
-        x2={x + 20}
-        y2={y + 30}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawStem(x, y, color)}
 
-      {/* Barre supérieure */}
-      <line
-        x1={x + 12}
-        y1={y + 8}
-        x2={x + 28}
-        y2={y + 8}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawBar(x, y, color, 1)}
 
-      {/* Barre de bride */}
-      <line
-        x1={x + 16}
-        y1={y + 18}
-        x2={x + 24}
-        y2={y + 18}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawDiagonal(x, y, color)}
 
-      {/* Crochet relief */}
-     <path
-  d={`
-    M ${x + 20} ${y + 22}
-    C ${x + 20} ${y + 36},
-      ${x + 34} ${y + 36},
-      ${x + 34} ${y + 22}
-  `}
-  fill="none"
-  stroke={color}
-  strokeWidth="2"
-/>
+      {drawBackPostArc(x, y, color)}
     </g>
   );
 }

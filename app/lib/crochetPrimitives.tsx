@@ -172,11 +172,11 @@ export function drawFrontPostArc(
   return (
     <path
       d={`
-        M ${x + 24} ${y + 28}
+     M ${x + 20} ${y + 36}
 
-        A 8 8 0 1 0 ${x + 16} ${y + 36}
-
-        A 8 8 0 0 0 ${x + 24} ${y + 44}
+      C ${x + 10} ${y + 36},
+        ${x + 10} ${y + 48},
+        ${x + 20} ${y + 48}
       `}
       fill="none"
       stroke={color}
@@ -198,17 +198,19 @@ export function drawBackPostArc(
   y: number,
   color: string
 ) {
-
   return (
     <path
       d={`
-        M ${x + 20} ${y + 12}
-        A 9 9 0 0 0 ${x + 20} ${y + 30}
+        M ${x + 20} ${y + 36}
+
+        C ${x + 27} ${y + 34},
+        ${x + 27} ${y + 46},
+        ${x + 20} ${y + 46}
       `}
       fill="none"
       stroke={color}
       strokeWidth="2"
+      strokeLinecap="round"
     />
   );
-
 }
