@@ -1,5 +1,13 @@
 import React from "react";
 
+import {
+  drawStem,
+  drawBar,
+  drawHalfBar,
+  drawFrontPostArc,
+  drawFrontPostHook,
+} from "./crochetPrimitives";
+
 export function drawMS(
   x: number,
   y: number,
@@ -77,23 +85,9 @@ export function drawDB(
         )
       `}
     >
-      <line
-        x1={x + 20}
-        y1={y + 8}
-        x2={x + 20}
-        y2={y + 32}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawStem(x, y, color)}
 
-      <line
-        x1={x + 12}
-        y1={y + 8}
-        x2={x + 28}
-        y2={y + 8}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawHalfBar(x, y, color)}
     </g>
   );
 }
@@ -113,35 +107,14 @@ export function drawBR(
         )
       `}
     >
-      <line
-        x1={x + 20}
-        y1={y + 8}
-        x2={x + 20}
-        y2={y + 32}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawStem(x, y, color)}
 
-      <line
-        x1={x + 12}
-        y1={y + 8}
-        x2={x + 28}
-        y2={y + 8}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawBar(x, y, color, 1)}
 
-      <line
-        x1={x + 16}
-        y1={y + 18}
-        x2={x + 24}
-        y2={y + 18}
-        stroke={color}
-        strokeWidth="2"
-      />
     </g>
   );
 }
+
 export function drawDBR(
   x: number,
   y: number,
@@ -158,41 +131,11 @@ export function drawDBR(
         )
       `}
     >
-      <line
-        x1={x + 20}
-        y1={y + 8}
-        x2={x + 20}
-        y2={y + 32}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawStem(x, y, color)}
 
-      <line
-        x1={x + 12}
-        y1={y + 8}
-        x2={x + 28}
-        y2={y + 8}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawBar(x, y, color, 1)}
 
-      <line
-        x1={x + 16}
-        y1={y + 18}
-        x2={x + 24}
-        y2={y + 18}
-        stroke={color}
-        strokeWidth="2"
-      />
-
-      <line
-        x1={x + 16}
-        y1={y + 24}
-        x2={x + 24}
-        y2={y + 24}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawBar(x, y, color, 2)}
     </g>
   );
 }
@@ -212,53 +155,17 @@ export function drawTBR(
         )
       `}
     >
-      <line
-        x1={x + 20}
-        y1={y + 8}
-        x2={x + 20}
-        y2={y + 32}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawStem(x, y, color)}
 
-      <line
-        x1={x + 12}
-        y1={y + 8}
-        x2={x + 28}
-        y2={y + 8}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawBar(x, y, color, 1)}
 
-      <line
-        x1={x + 16}
-        y1={y + 18}
-        x2={x + 24}
-        y2={y + 18}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawBar(x, y, color, 2)}
 
-      <line
-        x1={x + 16}
-        y1={y + 24}
-        x2={x + 24}
-        y2={y + 24}
-        stroke={color}
-        strokeWidth="2"
-      />
-
-      <line
-        x1={x + 16}
-        y1={y + 30}
-        x2={x + 24}
-        y2={y + 30}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawBar(x, y, color, 3)}
     </g>
   );
 }
+
 export function drawAUG(
   x: number,
   y: number,
@@ -329,48 +236,11 @@ export function drawReliefavant(
         )
       `}
     >
-      {/* Tige */}
-      <line
-        x1={x + 20}
-        y1={y + 8}
-        x2={x + 20}
-        y2={y + 30}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawStem(x, y, color)}
 
-      {/* Barre supérieure */}
-      <line
-        x1={x + 12}
-        y1={y + 8}
-        x2={x + 28}
-        y2={y + 8}
-        stroke={color}
-        strokeWidth="2"
-      />
+      {drawBar(x, y, color, 1)}
 
-      {/* Barre de bride */}
-      <line
-        x1={x + 16}
-        y1={y + 18}
-        x2={x + 24}
-        y2={y + 18}
-        stroke={color}
-        strokeWidth="2"
-      />
-
-      {/* Crochet relief */}
-      <path
-  d={`
-    M ${x + 20} ${y + 22}
-    C ${x + 20} ${y + 36},
-      ${x + 6} ${y + 36},
-      ${x + 6} ${y + 22}
-  `}
-  fill="none"
-  stroke={color}
-  strokeWidth="2"
-/>
+      {drawFrontPostHook(x, y, color)}
     </g>
   );
 }
