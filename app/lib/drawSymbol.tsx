@@ -12,7 +12,7 @@ import {
   drawReliefavant,
   drawReliefarriere,
   drawDeuxBridesEnsemble,
-  drawTroisBridesEnsemble,
+  
 } from "./drawCrochetSymbol";
 
 const DRAWERS = {
@@ -27,8 +27,8 @@ const DRAWERS = {
   A: drawDIM,
   RAV: drawReliefavant,
   RAR: drawReliefarriere,
-  2BE: drawDeuxBridesEnsemble,
-  3BE: drawTroisBridesEnsemble,
+  "2BE": drawDeuxBridesEnsemble,
+ 
 } as const;
 
 export function drawSymbol(

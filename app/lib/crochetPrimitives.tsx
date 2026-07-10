@@ -216,36 +216,45 @@ export function drawBackPostArc(
 }
 //
 // ======================================================
-// JONCTION
+// TIGE INCLINÉE GAUCHE
 // ======================================================
-// Utilisée pour les mailles travaillées ensemble.
 //
-export function drawJoin(
+export function drawTigeInclineeGauche(
   x: number,
   y: number,
   color: string
 ) {
   return (
-    <>
-      <line
-        x1={x + 16}
-        y1={y + 24}
-        x2={x + 20}
-        y2={y + 32}
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-
-      <line
-        x1={x + 24}
-        y1={y + 24}
-        x2={x + 20}
-        y2={y + 32}
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </>
+    <line
+      x1={x + 18}
+      y1={y + 6}
+      x2={x + 24}
+      y2={y + 34}
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  );
+}
+//
+// ======================================================
+// TIGE INCLINÉE DROITE
+// ======================================================
+//
+export function drawTigeInclineeDroite(
+  x: number,
+  y: number,
+  color: string
+) {
+  return (
+    <line
+      x1={x + 30}
+      y1={y + 6}
+      x2={x + 24}
+      y2={y + 34}
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
   );
 }

@@ -5,9 +5,11 @@ import {
   drawBar,
   drawHalfBar,
   drawDiagonal,
-  drawJoin,
   drawFrontPostArc,
   drawBackPostArc,
+  drawTigeInclineeGauche,
+  drawTigeInclineeDroite
+ 
 } from "./crochetPrimitives";
 
 export function drawMS(
@@ -274,6 +276,32 @@ export function drawReliefarriere(
     </g>
   );
 }
+//
+// ======================================================
+// DEUX BRIDES ENSEMBLE
+// ======================================================
+//
+export function drawDeuxBridesEnsemble(
+  x: number,
+  y: number,
+  color: string,
+  rotation = 0
+) {
+  return (
+    <g
+      transform={`rotate(${rotation} ${x + 20} ${y + 20})`}
+    >
+      {/* Bride inclinée gauche */}
+      {drawTigeInclineeGauche(x, y, color)}
+      {drawBar(x - 4, y, color, 1)}
+
+      {/* Bride inclinée droite */}
+      {drawTigeInclineeDroite(x, y, color)}
+      {drawBar(x + 4, y, color, 1)}
+    </g>
+  );
+}
+
 export function drawDIM(
   x: number,
   y: number,
@@ -325,40 +353,6 @@ export function drawDIM(
         stroke={color}
         strokeWidth="2"
       />
-    </g>
-  );
-}
-//
-// ======================================================
-// DEUX BRIDES ENSEMBLE
-// ======================================================
-//
-export function drawDeuxBridesEnsemble(
-  x: number,
-  y: number,
-  color: string,
-  rotation = 0
-) {
-  return (
-    <g
-      transform={`
-        rotate(
-          ${rotation}
-          ${x + 20}
-          ${y + 20}
-        )
-      `}
-    >
-      {/* Bride de gauche */}
-      {drawStem(x - 4, y, color)}
-      {drawBar(x - 4, y, color, 1)}
-
-      {/* Bride de droite */}
-      {drawStem(x + 4, y, color)}
-      {drawBar(x + 4, y, color, 1)}
-
-      {/* Jonction */}
-      {drawJoin(x, y, color)}
     </g>
   );
 }
