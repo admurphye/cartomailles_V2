@@ -80,13 +80,91 @@ export function drawHalfBar(
     />
   );
 }
+
+//
+// ======================================================
+// DIAGONALE DE LA BRIDE
+// ======================================================
+// Utilisée par :
+// - Bride relief avant
+// - Bride relief arrière
+//
+export function drawDiagonal(
+  x: number,
+  y: number,
+  color: string
+) {
+  return (
+    <line
+      x1={x + 16}
+      y1={y + 20}
+      x2={x + 24}
+      y2={y + 28}
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  );
+}
+//
+// ======================================================
+// CERCLE
+// ======================================================
+// Cercle SVG parfait.
+// Servira de base aux boucles des symboles.
+//
+export function drawCircle(
+  x: number,
+  y: number,
+  color: string,
+  radius = 8
+) {
+  return (
+    <circle
+      cx={x}
+      cy={y}
+      r={radius}
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+    />
+  );
+}
+//
+// ======================================================
+// CERCLE OUVERT
+// ======================================================
+// Cercle incomplet.
+// opening = ouverture en degrés.
+//
+export function drawOpenCircle(
+  x: number,
+  y: number,
+  color: string,
+  radius = 8
+) {
+  return (
+    <path
+      d={`
+        M ${x} ${y - radius}
+
+        A ${radius} ${radius} 0 1 1 ${x - 0.01} ${y - radius}
+      `}
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeDasharray="38 12"
+    />
+  );
+}
 //
 // ======================================================
 // ARC RELIEF AVANT
 // ======================================================
 // À peaufiner jusqu'à obtenir le vrai symbole.
 //
-export function drawFrontPostHook(
+export function drawFrontPostArc(
   x: number,
   y: number,
   color: string
@@ -94,10 +172,11 @@ export function drawFrontPostHook(
   return (
     <path
       d={`
-        M ${x + 20} ${y + 18}
-        C ${x + 6} ${y + 18},
-          ${x + 6} ${y + 36},
-          ${x + 20} ${y + 36}
+        M ${x + 24} ${y + 28}
+
+        A 8 8 0 1 0 ${x + 16} ${y + 36}
+
+        A 8 8 0 0 0 ${x + 24} ${y + 44}
       `}
       fill="none"
       stroke={color}

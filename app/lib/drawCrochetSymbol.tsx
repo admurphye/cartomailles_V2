@@ -4,8 +4,10 @@ import {
   drawStem,
   drawBar,
   drawHalfBar,
+  drawDiagonal,
+  drawOpenCircle,
   drawFrontPostArc,
-  drawFrontPostHook,
+
 } from "./crochetPrimitives";
 
 export function drawMS(
@@ -240,7 +242,9 @@ export function drawReliefavant(
 
       {drawBar(x, y, color, 1)}
 
-      {drawFrontPostHook(x, y, color)}
+      {drawDiagonal(x, y, color)}
+
+      {drawFrontPostArc(x, y, color)}
     </g>
   );
 }
