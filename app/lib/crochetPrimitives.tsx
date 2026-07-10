@@ -214,3 +214,38 @@ export function drawBackPostArc(
     />
   );
 }
+//
+// ======================================================
+// JONCTION
+// ======================================================
+// Utilisée pour les mailles travaillées ensemble.
+//
+export function drawJoin(
+  x: number,
+  y: number,
+  color: string
+) {
+  return (
+    <>
+      <line
+        x1={x + 16}
+        y1={y + 24}
+        x2={x + 20}
+        y2={y + 32}
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+
+      <line
+        x1={x + 24}
+        y1={y + 24}
+        x2={x + 20}
+        y2={y + 32}
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </>
+  );
+}
