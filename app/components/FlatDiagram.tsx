@@ -1,7 +1,9 @@
 import { drawSymbol } from "../lib/drawSymbol";
 import { Stitch } from "../lib/types";
 import { colors } from "@/app/theme/colors";
-import {layoutFlat,ROW_SPACING,} from "../lib/flat/layoutFlat";
+import {
+  layoutFlat,
+} from "../lib/flat/layoutFlat";
 
 type FlatDiagramProps = {
   roundStitches: Stitch[][];
@@ -11,45 +13,63 @@ export default function FlatDiagram({
   roundStitches,
 }: FlatDiagramProps) {
 
-  console.log("roundStitches", roundStitches);
-  
-  const positioned =
-  layoutFlat(roundStitches);
-console.log("POSITIONED", positioned);
-console.log(positioned);
+  const positioned = layoutFlat(roundStitches);
+
+  // Affichage du bas vers le haut
+  const displayedRows = positioned;
+
   return (
-    <svg width={800} height={800}>
+   <svg
+  id="diagramme-flat"
+  width={800}
+  height={800}
+  viewBox="0 0 800 800"
+>
 
-      {positioned.map((row, rowIndex) => (
-        <g key={rowIndex}>
-          <text
-            x={10}
-            y={rowIndex * 40 + 25}
-            fill="white"
-            fontSize="16"
-            fontWeight="bold"
-          >
-            {rowIndex + 1}
-          </text>
+      {displayedRows.map((row, displayIndex) => {
 
-          {row.map((stitch, stitchIndex) => (
-            <g key={`${rowIndex}-${stitchIndex}`}>
+       const originalRow = displayIndex;
 
-              {drawSymbol(
-                stitch.symbol,
-               50 + stitch.x,
-                stitch.y,
-                rowIndex % 2 === 0
-                  ? colors.text
-                  : colors.primary,
-                0
-              )}
+        const y =
+          row.length > 0 ? row[0].y : 0;
 
-            </g>
-          ))}
+        return (
 
-        </g>
-      ))}
+          <g key={originalRow}>
+
+            <text
+              x={10}
+              y={y + 5}
+              fill="white"
+              fontSize="16"
+              fontWeight="bold"
+            >
+              {originalRow + 1}
+            </text>
+
+            {row.map((stitch, stitchIndex) => (
+
+              <g key={`${originalRow}-${stitchIndex}`}>
+
+                {drawSymbol(
+                  stitch.symbol,
+                  50 + stitch.x,
+                  stitch.y,
+                  originalRow % 2 === 0
+                    ? colors.text
+                    : colors.primary,
+                  0
+                )}
+
+              </g>
+
+            ))}
+
+          </g>
+
+        );
+
+      })}
 
     </svg>
   );

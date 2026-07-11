@@ -19,6 +19,8 @@ export function layoutFlat(
   const result: PositionedStitch[][] = [];
 const spacingX = 50;
 const spacingY = ROW_SPACING;
+// Origine du diagramme (rang 1)
+const BASE_Y = 700;
   // ====================================
   // Dernier rang
   // ====================================
@@ -32,10 +34,10 @@ const spacingY = ROW_SPACING;
     (stitch, i) => {
 
       result[lastRow].push({
-        ...stitch,
-        x: i * spacingX,
-        y: lastRow * spacingY,
-      });
+  ...stitch,
+  x: i * spacingX,
+  y: BASE_Y - lastRow * spacingY,
+});
 
     }
   );
@@ -69,7 +71,7 @@ if (
   result[row].push({
     ...stitch,
     x: stitchIndex * spacingX,
-    y: row * spacingY,
+    y: BASE_Y - row * spacingY,
   });
 
   return;
@@ -102,7 +104,7 @@ console.log(
   result[row].push({
     ...stitch,
     x,
-    y: row * spacingY,
+    y: BASE_Y - row * spacingY,
   });
 
   return;
@@ -149,7 +151,7 @@ else {
 result[row].push({
   ...stitch,
   x,
-  y: row * spacingY,
+  y: BASE_Y - row * spacingY,
 });
 
       }
