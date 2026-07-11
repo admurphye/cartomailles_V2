@@ -7,6 +7,7 @@ export type CrochetSymbol = {
 
   consumes: number;
   produces: number;
+  needsParent: boolean;
 };
 
 export const CROCHET_SYMBOLS: Record<
@@ -19,8 +20,9 @@ export const CROCHET_SYMBOLS: Record<
     svg: "chain",
     category: "basic",
     aliases: ["maille en l'air", "mailles en l'air", "ml"],
-    consumes: 1,
+    consumes: 0,
     produces: 1,
+    needsParent: false,
   },
 
   mc: {
@@ -31,6 +33,7 @@ export const CROCHET_SYMBOLS: Record<
     aliases: ["maille coulée", "mailles coulées", "mc"],
     consumes: 1,
     produces: 1,
+    needsParent: true,
   },
 
   ms: {
@@ -41,6 +44,7 @@ export const CROCHET_SYMBOLS: Record<
     aliases: ["maille serrée", "mailles serrées", "ms"],
     consumes: 1,
      produces: 1,
+     needsParent: true,
   },
 
   db: {
@@ -51,16 +55,18 @@ export const CROCHET_SYMBOLS: Record<
     aliases: ["demi-bride", "demi-brides", "db"],
     consumes: 1,
     produces: 1,
+    needsParent: true,
   },
 
-  b: {
+  br: {
     name: "Bride",
     code: "T",
     svg: "doubleCrochet",
     category: "basic",
-    aliases: ["bride", "brides", "b"],
+    aliases: ["bride", "brides", "br"],
     consumes: 1,
     produces: 1,
+    needsParent: true,
   },
 
  dbr: {
@@ -75,6 +81,7 @@ export const CROCHET_SYMBOLS: Record<
   ],
   consumes: 1,
   produces: 1,
+  needsParent: true,
 },
 
 tbr: {
@@ -89,6 +96,7 @@ tbr: {
   ],
   consumes: 1,
   produces: 1,
+  needsParent: true,
 },
 
   aug: {
@@ -99,6 +107,7 @@ tbr: {
     aliases: ["augmentation", "augmentations", "aug"],
     consumes: 1,
     produces: 2,
+    needsParent: true,
   },
 
   dim: {
@@ -109,6 +118,7 @@ tbr: {
     aliases: ["diminution", "diminutions", "dim"],
     consumes: 2,
     produces: 1,
+    needsParent: true,
   },
   deuxBridesEns: {
     name: "2 brides ensemble",
@@ -122,6 +132,7 @@ tbr: {
   ],
      consumes: 2,
      produces: 1,
+     needsParent: true,
 },
   troisBridesEns: {
   name: "3 brides ensemble",
@@ -136,6 +147,7 @@ tbr: {
 
   consumes: 3,
   produces: 1,
+  needsParent: true,
 },
   picot: {
     name: "Picot",
@@ -145,6 +157,7 @@ tbr: {
     aliases: ["picot", "picots"],
     consumes: 1,
     produces: 1,
+    needsParent: true,
   },
 
   arceau: {
@@ -155,6 +168,7 @@ tbr: {
     aliases: ["arceau", "arceaux"],
     consumes: 1,
     produces: 1,
+    needsParent: true,
   },
 
   reliefAvant: {
@@ -169,6 +183,7 @@ tbr: {
     ],
     consumes: 1,
   produces: 1,
+  needsParent: true,
   },
 
   reliefArriere: {
@@ -183,6 +198,7 @@ tbr: {
     ],
     consumes: 1,
   produces: 1,
+  needsParent: true,
   },
 
   cercleMagique: {
@@ -198,5 +214,15 @@ tbr: {
     ],
     consumes: 1,
   produces: 1,
+  needsParent: true,
   },
-};
+  };
+ // ====================================================
+// Recherche d'un symbole à partir de son code
+// ====================================================
+
+export function getSymbolDefinition(code: string) {
+  return Object.values(CROCHET_SYMBOLS).find(
+    symbol => symbol.code === code
+  );
+}

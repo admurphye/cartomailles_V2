@@ -8,8 +8,9 @@ export async function exportSVG(
   );
 
   const svg =
-    document.querySelector("svg");
-
+  document.getElementById(
+    "diagramme-flat"
+  ) as SVGSVGElement | null;
   if (!svg) return;
 
   const serializer =

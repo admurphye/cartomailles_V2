@@ -1,9 +1,9 @@
-import { parseLine } from "./parseLine";
-import { computeRound } from "./computeRound";
-import { buildLinks } from "./buildLinks";
-import { Stitch } from "./types";
+import { parseLine } from "../parseLine";
+import { computeRoundFlat } from "./computeRoundFlat";
+import { buildLinksFlat } from "./buildLinksFlat";
+import { Stitch } from "../types";
 
-export function parsePatternV2(pattern: string) {
+export function parsePatternFlat(pattern: string) {
 
   const lines = pattern
     .split("\n")
@@ -29,14 +29,14 @@ export function parsePatternV2(pattern: string) {
 
     const parsed = parseLine(text);
 
- const round = computeRound(parsed);
+ const round = computeRoundFlat(parsed);
 
 counts.push(round.stitchCount);
 
 let stitches = round.stitches;
 
 if (roundStitches.length > 0) {
-  stitches = buildLinks(
+  stitches = buildLinksFlat(
     roundStitches[roundStitches.length - 1],
     stitches
   );

@@ -1,14 +1,22 @@
-import { Stitch } from "./types";
+import { Stitch } from "../types";
+import { getSymbolDefinition } from "../crochetSymbols";
 
-export function buildLinks(
+export function buildLinksFlat(
   previous: Stitch[],
   current: Stitch[]
 ): Stitch[] {
 
   let parentIndex = 0;
-  let childOfCurrentParent = 0;
 
   return current.map((stitch) => {
+const definition = getSymbolDefinition(stitch.symbol);
+
+if (definition && !definition.needsParent) {
+  return {
+    ...stitch,
+    parents: [],
+  };
+}
 
     let parents: number[] = [];
 
@@ -25,24 +33,19 @@ export function buildLinks(
 
     }
 
-    // Augmentation (2 mailles issues du même parent)
-    if (stitch.symbol === "V") {
+   // Augmentation
+if (stitch.produces === 2) {
 
-      parents = [parentIndex];
+  parents = [parentIndex];
 
-      childOfCurrentParent++;
+  parentIndex++;
 
-      if (childOfCurrentParent === 2) {
-        parentIndex++;
-        childOfCurrentParent = 0;
-      }
+  return {
+    ...stitch,
+    parents,
+  };
 
-      return {
-        ...stitch,
-        parents,
-      };
-
-    }
+}
 
     // Cas normal
     parents = [parentIndex];

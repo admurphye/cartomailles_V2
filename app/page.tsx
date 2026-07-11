@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { CROCHET_SYMBOLS } from "./lib/crochetSymbols";
 import { drawSymbol } from "./lib/drawSymbol";
-import { parsePatternV2 } from "./lib/parserV2";
 import DiagramToolbar from "./components/DiagramToolbar";
 import SummaryPanel from "./components/SummaryPanel";
 import CircularDiagram from "./components/CircularDiagram";
@@ -25,6 +24,8 @@ import PreferencesPanel from "@/app/components/panels/PreferencesPanel";
 import SymbolsPanel from "@/app/components/panels/SymbolsPanel";
 import ProjectPanel from "@/app/components/panels/ProjectPanel";
 import PatternPanel from "@/app/components/panels/PatternPanel";
+import { parsePatternFlat } from "./lib/flat/parsePatternFlat";
+import { parsePatternCircular } from "./lib/circular/parsePatternCircular";
 
 const SYMBOL_LABELS: Record<string, string> =
   Object.values(CROCHET_SYMBOLS)
@@ -49,7 +50,7 @@ export default function Home() {
   const [diagramType, setDiagramType] =
   useState("circular");
   const [analysis, setAnalysis] = useState("");
-  const [firstRoundCount, setFirstRoundCount] = useState(6);
+ const [firstRoundCount, setFirstRoundCount] = useState<number>(0);
   const [roundCounts, setRoundCounts] = useState<number[]>([]);
     const [cells, setCells] = useState<(string | null)[][]>([]);
   const [zoom, setZoom] = useState(1);
@@ -70,7 +71,13 @@ setHasMR(
   pattern.toLowerCase().includes("cercle magique")
 );
 
-  const result = parsePatternV2(pattern);
+let result;
+
+if (diagramType === "flat") {
+  result = parsePatternFlat(pattern);
+} else {
+  result = parsePatternCircular(pattern);
+}
 
   console.log("result", result);
   console.log("roundStitches", result.roundStitches);
@@ -83,17 +90,23 @@ setHasMR(
   
 //console.log(result);
     
-    if (lines.length > 0) {
-  const firstNumbers = lines[0].match(/\d+/g);
+   const firstLineWithNumber = lines.find(line => /\d/.test(line));
+
+if (firstLineWithNumber) {
+
+  const firstNumbers = firstLineWithNumber.match(/\d+/g);
 
   if (firstNumbers) {
-        const value =
+
+    const value =
       firstNumbers.length > 1
         ? parseInt(firstNumbers[1])
         : parseInt(firstNumbers[0]);
 
     setFirstRoundCount(value);
+
   }
+
 }
   };
 const handleExportPDF = () =>
@@ -263,8 +276,9 @@ const handleOpenProject = () => {
     DIAGRAMME PLAT
 ===================================================== */}
  {diagramType === "flat" && (
- <FlatDiagram
+<FlatDiagram
   roundStitches={roundStitches}
+  exportMode={exportMode}
 />
 )}
 {/* =====================================================

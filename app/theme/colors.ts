@@ -11,6 +11,10 @@ export const colors = {
   // Bordures
   border: "#5B2E4D",
 
+   // Alternance des rangs
+  rowEven: "#2C2633",
+  rowOdd: "#4A3342",
+  
   // Couleurs principales
   primary: "#D98CA8",
   secondary: "#A7B8A1",

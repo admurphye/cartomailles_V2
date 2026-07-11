@@ -1,3 +1,5 @@
+import { SYMBOL_ALIAS_MAP } from "./symbolAliasMap";
+
 export type Instruction = {
   type: string;
   count: number;
@@ -7,15 +9,33 @@ export type ParsedLine = {
   instructions: Instruction[];
   repeat: number;
 };
+function expandRepeats(text: string): string {
 
+  return text.replace(
+    /(\d+)\s*x\s*\((.*?)\)/gi,
+    (_, repeat, content) => {
+
+      return Array(Number(repeat))
+        .fill(content.trim())
+        .join(" ");
+
+    }
+  );
+}
 export function parseLine(line: string): ParsedLine {
 
-  const text = line.toLowerCase();
+  let text = line.toLowerCase();
 
-  const parts = text.split(",");
+  text = expandRepeats(text);
 
+  const normalized = text.replace(
+    /(\d+\s+[a-z0-9]+)\s+(?=\d+\s+[a-z0-9]+)/gi,
+    "$1,"
+  );
+
+  const parts = normalized.split(",");
   const instructions: Instruction[] = [];
-
+  
   let repeat = 1;
 
   for (const part of parts) {
@@ -30,14 +50,25 @@ export function parseLine(line: string): ParsedLine {
     }
 
     // quantité + type
-    const match = clean.match(/(\d+)\s*([a-z]+)/);
+    const match = clean.match(/^(\d+)\s*(.+)$/);
 
     if (!match) continue;
 
-    instructions.push({
-      count: parseInt(match[1]),
-      type: match[2],
-    });
+    const rawType = match[2]
+  .trim()
+  .toLowerCase();
+
+const type = SYMBOL_ALIAS_MAP[rawType];
+
+if (!type) {
+  console.warn(`Symbole inconnu : ${rawType}`);
+  continue;
+}
+
+instructions.push({
+  count: parseInt(match[1]),
+  type,
+});
 
   }
 
