@@ -279,8 +279,9 @@ const handleOpenProject = () => {
     DIAGRAMME PLAT
 ===================================================== */}
  {diagramType === "flat" && (
- <FlatDiagram
+<FlatDiagram
   roundStitches={roundStitches}
+  exportMode={exportMode}
 />
 )}
 {/* =====================================================

@@ -7,10 +7,11 @@ import {
 
 type FlatDiagramProps = {
   roundStitches: Stitch[][];
+  exportMode: boolean;
 };
-
 export default function FlatDiagram({
   roundStitches,
+  exportMode,
 }: FlatDiagramProps) {
 
   const positioned = layoutFlat(roundStitches);
@@ -55,10 +56,12 @@ export default function FlatDiagram({
                   stitch.symbol,
                   50 + stitch.x,
                   stitch.y,
-                  originalRow % 2 === 0
-                    ? colors.text
-                    : colors.primary,
-                  0
+                  exportMode
+  ? "#000000"
+  : originalRow % 2 === 0
+    ? colors.text
+    : colors.primary
+                  
                 )}
 
               </g>

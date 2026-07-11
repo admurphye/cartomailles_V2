@@ -49,42 +49,43 @@ if (
 }
 switch (instruction.type) {
 
-   case "aug":
+case "aug":
 
-  // Le rang produit 2 mailles par augmentation
-  stitchesPerRepeat += instruction.count * 2;
+  stitchesPerRepeat += instruction.count * symbol.produces;
 
   for (let i = 0; i < instruction.count; i++) {
 
-    symbols.push("AUG");
+    symbols.push(symbol.code);
 
     stitches.push({
-      symbol: "AUG",
+      symbol: symbol.code,
       parents: [],
-      consumes: 1,
-      produces: 2,
+      consumes: symbol.consumes,
+      produces: symbol.produces,
     });
 
   }
 
   break;
 
-      case "dim":
+    case "dim":
 
-        stitchesPerRepeat += instruction.count;
+  stitchesPerRepeat += instruction.count * symbol.produces;
 
-        for (let i = 0; i < instruction.count; i++) {
-         symbols.push("DIM");
+  for (let i = 0; i < instruction.count; i++) {
 
-            stitches.push({
-            symbol: "DIM",
-            parents: [],
-            produces: 1,
-            consumes: 2,
-            });
-        }
+    symbols.push(symbol.code);
 
-        break;
+    stitches.push({
+      symbol: symbol.code,
+      parents: [],
+      consumes: symbol.consumes,
+      produces: symbol.produces,
+    });
+
+  }
+
+  break;
 
    }
 

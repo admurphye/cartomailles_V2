@@ -288,16 +288,16 @@ export function drawDeuxBridesEnsemble(
   rotation = 0
 ) {
   return (
-    <g
-      transform={`rotate(${rotation} ${x + 20} ${y + 20})`}
-    >
-      {/* Bride inclinée gauche */}
-      {drawTigeInclineeGauche(x, y, color)}
-      {drawBar(x - 4, y, color, 1)}
+    <g transform={`rotate(${rotation} ${x + 20} ${y + 20})`}>
 
-      {/* Bride inclinée droite */}
+      {/* Les deux tiges */}
+      {drawTigeInclineeGauche(x, y, color)}
       {drawTigeInclineeDroite(x, y, color)}
-      {drawBar(x + 4, y, color, 1)}
+
+      {/* Puis les deux barres */}
+      {drawBar(x - 6, y - 2, color, 1)}
+      {drawBar(x + 12, y - 2, color, 1)}
+
     </g>
   );
 }

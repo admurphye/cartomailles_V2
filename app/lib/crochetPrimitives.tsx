@@ -226,7 +226,7 @@ export function drawTigeInclineeGauche(
 ) {
   return (
     <line
-      x1={x + 18}
+      x1={x + 12}
       y1={y + 6}
       x2={x + 24}
       y2={y + 34}
@@ -248,7 +248,7 @@ export function drawTigeInclineeDroite(
 ) {
   return (
     <line
-      x1={x + 30}
+      x1={x + 34}
       y1={y + 6}
       x2={x + 24}
       y2={y + 34}
