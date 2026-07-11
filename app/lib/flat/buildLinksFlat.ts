@@ -1,4 +1,5 @@
 import { Stitch } from "../types";
+import { getSymbolDefinition } from "../crochetSymbols";
 
 export function buildLinksFlat(
   previous: Stitch[],
@@ -6,9 +7,16 @@ export function buildLinksFlat(
 ): Stitch[] {
 
   let parentIndex = 0;
-  let childOfCurrentParent = 0;
 
   return current.map((stitch) => {
+const definition = getSymbolDefinition(stitch.symbol);
+
+if (definition && !definition.needsParent) {
+  return {
+    ...stitch,
+    parents: [],
+  };
+}
 
     let parents: number[] = [];
 
