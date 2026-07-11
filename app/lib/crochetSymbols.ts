@@ -21,7 +21,7 @@ export const CROCHET_SYMBOLS: Record<
     category: "basic",
     aliases: ["maille en l'air", "mailles en l'air", "ml"],
     consumes: 0,
-    produces: 0,
+    produces: 1,
     needsParent: false,
   },
 
