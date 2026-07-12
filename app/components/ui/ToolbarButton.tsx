@@ -22,7 +22,7 @@ export default function ToolbarButton({
         alignItems: "center",
         gap: spacing.xs,
         padding: "8px 14px",
-        background: colors.card,
+        background: colors.surface,
         color: colors.text,
         border: `1px solid ${colors.border}`,
         borderRadius: radius.medium,
