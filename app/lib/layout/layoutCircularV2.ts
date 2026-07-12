@@ -1,5 +1,5 @@
-import { TopologyNode } from "../topology/buildTopology";
-import { TopologyPosition } from "../topology/TopologyPosition";
+import { TopologyNode } from "../Topology/buildTopology";
+import { TopologyPosition } from "../Topology/TopologyPosition";
 
 const CENTER_X = 350;
 const CENTER_Y = 350;
