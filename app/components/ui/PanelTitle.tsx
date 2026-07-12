@@ -1,4 +1,4 @@
-import { ReactNode, cloneElement, isValidElement } from "react";
+import { ReactNode } from "react";
 import { colors } from "@/app/theme/colors";
 import { spacing } from "@/app/theme/spacing";
 import { typography } from "@/app/theme/typography";
@@ -12,15 +12,6 @@ export default function PanelTitle({
   title,
   icon,
 }: PanelTitleProps) {
-  const styledIcon =
-    isValidElement(icon)
-      ? cloneElement(icon as React.ReactElement, {
-          size: 18,
-          strokeWidth: 1.75,
-          color: colors.secondary,
-        })
-      : icon;
-
   return (
     <div
       style={{
@@ -30,10 +21,10 @@ export default function PanelTitle({
         marginBottom: spacing.xs,
         color: colors.text,
         fontWeight: 600,
-        fontSize: typography.subtitle,
+        fontSize: typography.h3,
       }}
     >
-      {styledIcon}
+      {icon}
       <span>{title}</span>
     </div>
   );
