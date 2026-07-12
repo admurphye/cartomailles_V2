@@ -220,4 +220,130 @@ const handleOpenProject = () => {
   });
 
 };
+  return (
+    <main
+      style={{
+        padding: "20px",
+        maxWidth: "1400px",
+        margin: "0 auto",
+        background: colors.background,
+        minHeight: "100vh",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          gap: "20px",
+          alignItems: "flex-start",
+        }}
+      >
+        {/* ==========================
+            COLONNE GAUCHE
+        ========================== */}
 
+        <div
+          style={{
+            width: "350px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "15px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginBottom: 20,
+            }}
+          >
+            <Image
+              src="/logo-cartomailles-v5.png"
+              alt="Cartomailles"
+              width={190}
+              height={190}
+              priority
+            />
+          </div>
+
+          <PreferencesPanel
+            diagramType={diagramType}
+            setDiagramType={setDiagramType}
+          />
+
+          <SymbolsPanel />
+
+          <div style={cardStyle}>
+            <ProjectPanel
+              projectName={projectName}
+              setProjectName={setProjectName}
+            />
+          </div>
+
+          <div style={cardStyle}>
+            <PatternPanel
+              pattern={pattern}
+              setPattern={setPattern}
+              generateFromText={generateFromText}
+            />
+          </div>
+        </div>
+
+        {/* ==========================
+            COLONNE DROITE
+        ========================== */}
+
+        <div
+          style={{
+            flex: 1,
+            borderRadius: "12px",
+            padding: "20px",
+            background: colors.workspace,
+            overflow: "auto",
+            border: `1px solid ${colors.border}`,
+          }}
+        >
+          <SummaryPanel
+            firstRoundCount={firstRoundCount}
+            roundCounts={roundCounts}
+            analysis={analysis}
+          />
+
+          <DiagramToolbar
+            diagramType={diagramType}
+            zoom={zoom}
+            setZoom={setZoom}
+            exportPNG={handleExportPNG}
+            exportSVG={handleExportSVG}
+            exportPDF={handleExportPDF}
+            openProject={handleOpenProject}
+            saveProject={handleSaveProject}
+          />
+
+          <div
+            id="diagram-container"
+            style={{
+              transform: `scale(${zoom})`,
+              transformOrigin: "top center",
+            }}
+          >
+            {diagramType === "flat" && (
+              <FlatDiagram
+                roundStitches={roundStitches}
+                exportMode={exportMode}
+              />
+            )}
+
+            {diagramType === "circular" && (
+              <CircularDiagram
+                roundStitches={roundStitches}
+                hasMR={hasMR}
+                exportMode={exportMode}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
