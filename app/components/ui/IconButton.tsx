@@ -20,7 +20,7 @@ export default function IconButton({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        background: colors.card,
+        background: colors.surface,
         border: `1px solid ${colors.border}`,
         borderRadius: radius.medium,
         color: colors.text,
