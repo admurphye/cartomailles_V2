@@ -21,7 +21,7 @@ export default function Card({
   return (
     <div
       style={{
-        background: colors.card,
+        background: colors.surface,
         border: `1px solid ${colors.border}`,
         borderRadius: radius.large,
         padding: spacing.lg,
