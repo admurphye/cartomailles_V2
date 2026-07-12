@@ -8,12 +8,13 @@ export function parsePatternFlat(pattern: string) {
   const lines = pattern
     .split("\n")
     .filter(line => line.trim() !== "");
-
+ 
   const counts: number[] = [];
-  let analysis = "";
-  let hasMR = false;
+const roundSymbols: string[][] = [];
+let analysis = "";
+let hasMR = false;
 
-  const roundStitches: Stitch[][] = [];
+const roundStitches: Stitch[][] = [];
 
   for (const line of lines) {
 
@@ -32,6 +33,7 @@ export function parsePatternFlat(pattern: string) {
  const round = computeRoundFlat(parsed);
 
 counts.push(round.stitchCount);
+roundSymbols.push(round.symbols);
 
 let stitches = round.stitches;
 
@@ -58,13 +60,22 @@ analysis +=
 
   }
 
-  return {
+return {
+
   lines,
+
   counts,
+
   analysis,
+
   cells: [],
+
+  roundSymbols,
+
   roundStitches,
+
   hasMR,
+
 };
 
 }
