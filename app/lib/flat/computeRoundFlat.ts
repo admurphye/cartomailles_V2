@@ -68,11 +68,16 @@ case "aug":
 
   break;
 
-    case "dim":
+case "dim":
 
-  stitchesPerRepeat += instruction.count * symbol.produces;
+  stitchesPerRepeat +=
+    instruction.count * symbol.produces;
 
-  for (let i = 0; i < instruction.count; i++) {
+  for (
+    let i = 0;
+    i < instruction.count;
+    i++
+  ) {
 
     symbols.push(symbol.code);
 

@@ -157,6 +157,12 @@ result[row].push({
       }
     );
   }
-
+console.table(
+  result[0].map((s, i) => ({
+    index: i,
+    x: s.x,
+    symbol: s.symbol,
+  }))
+);
   return result;
 }

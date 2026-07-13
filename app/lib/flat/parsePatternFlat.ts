@@ -43,7 +43,15 @@ if (roundStitches.length > 0) {
     stitches
   );
 }
-
+console.table(
+  stitches.map((s, i) => ({
+    index: i,
+    symbol: s.symbol,
+    parents: s.parents,
+    consumes: s.consumes,
+    produces: s.produces,
+  }))
+)
 roundStitches.push(stitches);
 
 console.table(

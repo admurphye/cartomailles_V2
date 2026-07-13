@@ -73,22 +73,28 @@ if (
 
       case "dim":
 
-        stitchesPerRepeat += instruction.count;
+  stitchesPerRepeat +=
+    instruction.count * symbol.produces;
 
-        for (let i = 0; i < instruction.count; i++) {
+  for (
+    let i = 0;
+    i < instruction.count;
+    i++
+  ) {
 
-          symbols.push("A");
+    symbols.push(symbol.code);
 
-          stitches.push({
-            symbol: "A",
-            parents: [],
-            produces: 1,
-            consumes: 2,
-          });
+    stitches.push({
+      symbol: symbol.code,
+      parents: [],
+      consumes: symbol.consumes,
+      produces: symbol.produces,
+    });
 
-        }
+  }
 
-        break;
+  break;
+
 
     }
   }
