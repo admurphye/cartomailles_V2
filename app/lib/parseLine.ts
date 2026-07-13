@@ -58,7 +58,9 @@ export function parseLine(line: string): ParsedLine {
   .trim()
   .toLowerCase();
 
-const type = SYMBOL_ALIAS_MAP[rawType];
+const cleanedType = rawType.replace(/\s*x\s*\d+$/i, "").trim();
+
+const type = SYMBOL_ALIAS_MAP[cleanedType];
 
 if (!type) {
   console.warn(`Symbole inconnu : ${rawType}`);

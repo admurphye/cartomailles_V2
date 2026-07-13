@@ -18,38 +18,19 @@ if (definition && !definition.needsParent) {
   };
 }
 
-    let parents: number[] = [];
+     const parents: number[] = [];
 
-    // Diminution
-    if (stitch.consumes === 2) {
+    for (
+      let i = 0;
+      i < stitch.consumes;
+      i++
+    ) {
 
-      parents = [parentIndex, parentIndex + 1];
-      parentIndex += 2;
-
-      return {
-        ...stitch,
-        parents,
-      };
+      parents.push(parentIndex + i);
 
     }
 
-   // Augmentation
-if (stitch.produces === 2) {
-
-  parents = [parentIndex];
-
-  parentIndex++;
-
-  return {
-    ...stitch,
-    parents,
-  };
-
-}
-
-    // Cas normal
-    parents = [parentIndex];
-    parentIndex++;
+    parentIndex += stitch.consumes;
 
     return {
       ...stitch,

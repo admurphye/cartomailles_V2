@@ -1,9 +1,7 @@
 import { drawSymbol } from "../lib/drawSymbol";
 import { Stitch } from "../lib/types";
 import { colors } from "@/app/theme/colors";
-import {
-  layoutFlat,
-} from "../lib/flat/layoutFlat";
+import {layoutFlatV2} from "../lib/flat/layoutFlatV2";
 
 type FlatDiagramProps = {
   roundStitches: Stitch[][];
@@ -13,8 +11,14 @@ export default function FlatDiagram({
   roundStitches,
   exportMode,
 }: FlatDiagramProps) {
-
-  const positioned = layoutFlat(roundStitches);
+  
+console.table(
+  roundStitches[1].map(s => ({
+    symbol: s.symbol,
+    parents: s.parents
+  }))
+);
+  const positioned = layoutFlatV2(roundStitches);
 
   // Affichage du bas vers le haut
   const displayedRows = positioned;
