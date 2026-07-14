@@ -32,4 +32,24 @@ export const colors = {
 
   // Erreur
   danger: "#D16A7C",
+  };
+  
+  export const website = {
+
+  background: "#FFF8F4",
+
+  surface: "#FFFFFF",
+
+  border: "#F2DCE6",
+
+  primary: "#D98CA8",
+
+  secondary: "#5B2E4D",
+
+  text: "#473642",
+
+  textSecondary: "#7D6A75",
+
+  hero: "#FFF3F8",
+
 };
