@@ -1,6 +1,7 @@
 "use client";
 
 import BetaPage from "./beta/page";
+import PasswordGate from "./components/PasswordGate";
 import { useState } from "react";
 import Image from "next/image";
 import { CircleHelp } from "lucide-react";
@@ -238,7 +239,9 @@ if (!showEditor) {
     />
   );
 }
-  return (
+return (
+  <PasswordGate>
+
     <main
       style={{
         padding: "20px",
@@ -381,6 +384,9 @@ if (!showEditor) {
   isOpen={helpOpen}
   onClose={() => setHelpOpen(false)}
 />
-    </main>
-  );
+        </main>
+
+  </PasswordGate>
+);
+
 }
