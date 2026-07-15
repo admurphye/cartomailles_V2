@@ -302,31 +302,6 @@ className="w-full bg-purple-700 hover:bg-purple-600 rounded-lg py-3 font-semibol
 )
 },
 
-support: {
-title: "❤️ Soutenir Cartomailles",
-content: (
-<div className="space-y-4">
-
-<p className="whitespace-pre-line">
-{`Cartomailles est développé de manière indépendante.
-
-Si vous appréciez le logiciel et souhaitez soutenir son évolution, plusieurs possibilités seront proposées prochainement.
-
-Votre soutien permettra d'ajouter de nouvelles fonctionnalités et d'améliorer encore le logiciel.
-
-Merci ❤️`}
-</p>
-
-<button
-disabled
-className="w-full bg-gray-600 rounded-lg py-3 font-semibold opacity-60 cursor-not-allowed"
->
-☕ Bientôt disponible
-</button>
-
-</div>
-)
-},
 
 about: {
 title: "ℹ️ À propos",
