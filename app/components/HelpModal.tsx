@@ -217,20 +217,151 @@ Pensez à indiquer :
   )
 },
 
-about: {
-title: "❤️ À propos",
+website: {
+title: "🌐 Cartomailles.com",
 content: (
-  <p className="whitespace-pre-line">
-{`Cartomailles est un logiciel imaginé et développé par Aurore
+<div className="space-y-4">
 
-Il est né de la volonté de proposer un outil moderne, simple et accessible permettant de créer facilement des diagrammes de crochet à partir de patrons écrits.
+<p className="whitespace-pre-line">
+{`Retrouvez toutes les informations concernant Cartomailles sur le site officiel.
 
-Le développement de Cartomailles se poursuit grâce aux retours de sa communauté de bêta-testeurs.
+Vous y trouverez :
 
-Merci de participer à cette aventure !`}
-  </p>
+• les dernières actualités
+• les nouvelles versions
+• les téléchargements
+• les tutoriels
+• les annonces importantes
+
+Le site sera régulièrement enrichi au fil du développement du logiciel.`}
+</p>
+
+<button
+onClick={() => window.open("https://www.cartomailles.com","_blank")}
+className="w-full bg-pink-700 hover:bg-pink-600 rounded-lg py-3 font-semibold transition"
+>
+🌐 Ouvrir le site officiel
+</button>
+
+</div>
 )
-}
+},
+
+community: {
+title: "👥 Rejoindre la communauté",
+content: (
+<div className="space-y-4">
+
+<p className="whitespace-pre-line">
+{`La communauté Cartomailles est le meilleur endroit pour :
+
+• partager vos créations
+• poser vos questions
+• découvrir les nouveautés
+• échanger avec d'autres passionnés de crochet
+
+Nous serons heureux de vous accueillir !`}
+</p>
+
+<button
+onClick={() => window.open("TON_LIEN_FACEBOOK","_blank")}
+className="w-full bg-blue-700 hover:bg-blue-600 rounded-lg py-3 font-semibold transition"
+>
+👥 Rejoindre Facebook
+</button>
+
+</div>
+)
+},
+
+contact: {
+title: "📧 Contact",
+content: (
+<div className="space-y-4">
+
+<p className="whitespace-pre-line">
+{`Une question ?
+
+Une suggestion ?
+
+Un problème ?
+
+N'hésitez pas à nous contacter.
+
+Nous répondrons dans les meilleurs délais.`}
+</p>
+
+<button
+onClick={() => window.location.href="mailto:contact@cartomailles.com"}
+className="w-full bg-purple-700 hover:bg-purple-600 rounded-lg py-3 font-semibold transition"
+>
+📧 contact@cartomailles.com
+</button>
+
+</div>
+)
+},
+
+support: {
+title: "❤️ Soutenir Cartomailles",
+content: (
+<div className="space-y-4">
+
+<p className="whitespace-pre-line">
+{`Cartomailles est développé de manière indépendante.
+
+Si vous appréciez le logiciel et souhaitez soutenir son évolution, plusieurs possibilités seront proposées prochainement.
+
+Votre soutien permettra d'ajouter de nouvelles fonctionnalités et d'améliorer encore le logiciel.
+
+Merci ❤️`}
+</p>
+
+<button
+disabled
+className="w-full bg-gray-600 rounded-lg py-3 font-semibold opacity-60 cursor-not-allowed"
+>
+☕ Bientôt disponible
+</button>
+
+</div>
+)
+},
+
+about: {
+title: "ℹ️ À propos",
+content: (
+<div className="space-y-4">
+
+<p className="whitespace-pre-line">
+{`Cartomailles est un logiciel imaginé et développé par Aurore alias AD Murphye.
+
+Son objectif est de proposer un outil moderne, intuitif et accessible permettant de créer facilement des diagrammes de crochet à partir de patrons écrits.
+
+Le logiciel évolue continuellement grâce aux retours des bêta-testeurs.
+
+Merci de faire partie de cette aventure !`}
+</p>
+
+<hr className="border-[#5d445e]" />
+
+<p className="text-sm text-gray-400">
+
+Cartomailles Bêta 0.9.0
+
+<br />
+
+© 2026 Aurore alias AD Murphye
+
+<br />
+
+Tous droits réservés.
+
+</p>
+
+</div>
+)
+},
 
 };
 
