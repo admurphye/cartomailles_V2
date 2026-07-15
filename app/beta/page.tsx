@@ -5,11 +5,19 @@ import Changelog from "../components/beta/Changelog";
 import Footer from "../components/beta/Footer";
 import BetaNotice from "../components/beta/BetaNotice";
 
-export default function BetaPage() {
+type BetaPageProps = {
+  onNewProject: () => void;
+  onOpenProject: () => void;
+};
+
+export default function BetaPage({
+  onNewProject,
+  onOpenProject,
+}: BetaPageProps) {
   return (
     <main className="min-h-screen bg-[#FFF9F5]">
 
-  <Hero />
+ <Hero onLaunch={onNewProject} />
 
   <div className="max-w-6xl mx-auto px-6">
     <div className="border-b border-pink-100"></div>

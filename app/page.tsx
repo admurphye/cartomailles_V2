@@ -1,5 +1,6 @@
 "use client";
 
+import BetaPage from "./beta/page";
 import { useState } from "react";
 import Image from "next/image";
 import { CircleHelp } from "lucide-react";
@@ -84,6 +85,7 @@ export default function Home() {
 
   
   const [helpOpen, setHelpOpen] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
 
 // =====================================================
 // ANALYSE DU PATRON
@@ -225,6 +227,17 @@ const handleOpenProject = () => {
   });
 
 };
+if (!showEditor) {
+  return (
+    <BetaPage
+      onNewProject={() => setShowEditor(true)}
+      onOpenProject={() => {
+        handleOpenProject();
+        setShowEditor(true);
+      }}
+    />
+  );
+}
   return (
     <main
       style={{

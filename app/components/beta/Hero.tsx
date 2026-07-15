@@ -1,7 +1,12 @@
 import Image from "next/image";
-import Link from "next/link";
 
-export default function Hero() {
+type HeroProps = {
+  onLaunch: () => void;
+};
+
+export default function Hero({
+  onLaunch,
+}: HeroProps) {
   return (
     <section className="bg-[#FFF9F5] py-20">
 
@@ -42,12 +47,12 @@ export default function Hero() {
 
             <div className="mt-12 flex flex-wrap gap-4">
 
-              <Link
-                href="/"
-                className="rounded-xl bg-[#D98CA8] hover:bg-[#E8A4BD] px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-1"
-              >
-                🚀 Ouvrir Cartomailles
-              </Link>
+              <button
+  onClick={onLaunch}
+  className="rounded-xl bg-[#D98CA8] hover:bg-[#E8A4BD] px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-1"
+>
+  🚀 Ouvrir Cartomailles
+</button>
 
             </div>
 
