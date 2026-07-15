@@ -42,7 +42,7 @@ export default function Feedback() {
             </p>
 
             <a
-              href="TON_LIEN_GOOGLE_FORMS_BUG"
+              href="https://docs.google.com/forms/d/e/1FAIpQLSckIAs1BYBPK15mz8ySauiN4DthzQnslDz7FdL7NmE-zZu4IQ/viewform?usp=publish-editor"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block mt-8 rounded-xl bg-[#D16A7C] hover:bg-[#BF5B6E] px-6 py-4 text-white font-semibold transition"

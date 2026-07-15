@@ -3,6 +3,7 @@ import Features from "../components/beta/Features";
 import Feedback from "../components/beta/Feedback";
 import Changelog from "../components/beta/Changelog";
 import Footer from "../components/beta/Footer";
+import BetaNotice from "../components/beta/BetaNotice";
 
 export default function BetaPage() {
   return (
@@ -13,6 +14,8 @@ export default function BetaPage() {
   <div className="max-w-6xl mx-auto px-6">
     <div className="border-b border-pink-100"></div>
   </div>
+
+<BetaNotice />
 
   <Features />
 
