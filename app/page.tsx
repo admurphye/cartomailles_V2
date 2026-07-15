@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { CircleHelp } from "lucide-react";
 
 import { CROCHET_SYMBOLS } from "./lib/crochetSymbols";
 import { exportPNG } from "./lib/exportPNG";
@@ -26,6 +27,7 @@ import ProjectPanel from "./components/panels/ProjectPanel";
 import PatternPanel from "./components/panels/PatternPanel";
 
 import { colors } from "./theme/colors";
+import HelpModal from "./components/HelpModal";
 
 const SYMBOL_LABELS: Record<string, string> =
   Object.values(CROCHET_SYMBOLS).reduce(
@@ -79,6 +81,9 @@ export default function Home() {
 
   const [roundSymbols, setRoundSymbols] =
     useState<string[][]>([]);
+
+  
+  const [helpOpen, setHelpOpen] = useState(false);
 
 // =====================================================
 // ANALYSE DU PATRON
@@ -237,6 +242,8 @@ const handleOpenProject = () => {
           alignItems: "flex-start",
         }}
       >
+
+ 
         {/* ==========================
             COLONNE GAUCHE
         ========================== */}
@@ -265,6 +272,19 @@ const handleOpenProject = () => {
               priority
             />
           </div>
+
+<button
+  onClick={() => setHelpOpen(true)}
+  className="w-full flex items-center justify-center gap-2
+             rounded-xl border border-[#6b3b63]
+             bg-[#2c2435]
+             hover:bg-pink-700/20
+             px-4 py-3
+             text-white
+             transition"
+>
+  <span>📖 Guide d'utilisation</span>
+</button>
 
           <PreferencesPanel
             diagramType={diagramType}
@@ -344,6 +364,10 @@ const handleOpenProject = () => {
           </div>
         </div>
       </div>
+      <HelpModal
+  isOpen={helpOpen}
+  onClose={() => setHelpOpen(false)}
+/>
     </main>
   );
 }
