@@ -264,7 +264,7 @@ Nous serons heureux de vous accueillir !`}
 </p>
 
 <button
-onClick={() => window.open("TON_LIEN_FACEBOOK","_blank")}
+onClick={() => window.open("https://facebook.com/share/15xfjJpp5xC/","_blank")}
 className="w-full bg-blue-700 hover:bg-blue-600 rounded-lg py-3 font-semibold transition"
 >
 👥 Rejoindre Facebook
