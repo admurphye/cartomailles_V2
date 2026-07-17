@@ -2,9 +2,9 @@
 
 import BetaPage from "./beta/page";
 import PasswordGate from "./components/PasswordGate";
-import { useState } from "react";
 import Image from "next/image";
 import { CircleHelp } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { CROCHET_SYMBOLS } from "./lib/crochetSymbols";
 import { exportPNG } from "./lib/exportPNG";
@@ -88,6 +88,24 @@ export default function Home() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
 
+    const PASSWORD = "Cartomailles2026";
+
+const [authorized, setAuthorized] = useState(false);
+const [password, setPassword] = useState("");
+
+useEffect(() => {
+  if (localStorage.getItem("cartomailles-auth") === "ok") {
+    setAuthorized(true);
+  }
+}, []);
+function checkPassword() {
+  if (password === PASSWORD) {
+    localStorage.setItem("cartomailles-auth", "ok");
+    setAuthorized(true);
+  } else {
+    alert("Mot de passe incorrect.");
+  }
+}
 // =====================================================
 // ANALYSE DU PATRON
 // =====================================================
@@ -237,6 +255,37 @@ if (!showEditor) {
         setShowEditor(true);
       }}
     />
+  );
+}
+if (!authorized) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#231D29]">
+      <div className="bg-[#2C2433] p-8 rounded-2xl shadow-xl border border-pink-500 w-[380px]">
+
+        <h2 className="text-2xl font-bold text-white mb-6 text-center">
+          Accès bêta Cartomailles
+        </h2>
+
+        <input
+          type="password"
+          placeholder="Mot de passe"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") checkPassword();
+          }}
+          className="w-full rounded-lg bg-[#1F1A24] border border-pink-400 px-4 py-3 text-white outline-none"
+        />
+
+        <button
+          onClick={checkPassword}
+          className="w-full mt-5 rounded-lg bg-[#D98CA8] hover:bg-[#E8A4BD] text-white font-semibold py-3 transition"
+        >
+          Entrer
+        </button>
+
+      </div>
+    </div>
   );
 }
 return (

@@ -88,21 +88,30 @@ export function layoutFlatV2(
         // Maille normale
         // ================================
 
-        else if (parentCount === 1) {
+        const parent =
+    result[row + 1][stitch.parents[0]];
 
-          const parent =
-            result[row + 1][stitch.parents[0]];
-
-          x = parent.x;
-
+if (!parent) {
+    console.error(
+        "Parent introuvable",
+        {
+            row,
+            stitchIndex,
+            parents: stitch.parents,
+            nextRowLength: result[row + 1].length,
         }
+    );
+    return;
+}
+
+
 
         // ================================
         // Premier rang
         // ================================
 
         else {
-
+x = parent.x;
           x =
             stitchIndex *
             spacingX;
