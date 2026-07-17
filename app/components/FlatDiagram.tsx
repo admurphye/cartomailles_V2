@@ -12,23 +12,40 @@ export default function FlatDiagram({
   exportMode,
 }: FlatDiagramProps) {
   
-console.table(
-  roundStitches[1].map(s => ({
-    symbol: s.symbol,
-    parents: s.parents
-  }))
-);
+if (roundStitches[1]) {
+  console.table(
+    roundStitches[1].map(s => ({
+      symbol: s.symbol,
+      parents: s.parents,
+    }))
+  );
+}
   const positioned = layoutFlatV2(roundStitches);
+
+const maxStitches = Math.max(
+  ...roundStitches.map(row => row.length),
+  1
+);
+
+const svgWidth = Math.max(
+  800,
+  maxStitches * 50 + 150
+);
+
+const LEFT_MARGIN = 120;
 
   // Affichage du bas vers le haut
   const displayedRows = positioned;
 
   return (
-   <svg
+
+<div className="overflow-x-auto">
+
+<svg
   id="diagramme-flat"
-  width={800}
+  width={svgWidth}
   height={800}
-  viewBox="0 0 800 800"
+  viewBox={`0 0 ${svgWidth} 800`}
 >
 
       {displayedRows.map((row, displayIndex) => {
@@ -42,12 +59,13 @@ console.table(
 
           <g key={originalRow}>
 
-            <text
-              x={10}
+          <text
+              x={0}
               y={y + 5}
               fill="white"
               fontSize="16"
               fontWeight="bold"
+              textAnchor="start"
             >
               {originalRow + 1}
             </text>
@@ -58,7 +76,7 @@ console.table(
 
                 {drawSymbol(
                   stitch.symbol,
-                  50 + stitch.x,
+                  LEFT_MARGIN + stitch.x,
                   stitch.y,
                   exportMode
   ? "#000000"
@@ -79,5 +97,8 @@ console.table(
       })}
 
     </svg>
-  );
+
+</div>
+
+);
 }

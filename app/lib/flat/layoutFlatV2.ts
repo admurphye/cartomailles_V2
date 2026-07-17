@@ -126,7 +126,25 @@ export function layoutFlatV2(
     );
 
   }
+const SVG_WIDTH = 700;
+const CENTER_X = SVG_WIDTH / 2;
 
+for (let row = 0; row < result.length; row++) {
+
+  if (result[row].length === 0) continue;
+
+  const minX = Math.min(...result[row].map(s => s.x));
+  const maxX = Math.max(...result[row].map(s => s.x));
+
+  const rowCenter = (minX + maxX) / 2;
+
+  const offset = CENTER_X - rowCenter;
+
+  result[row].forEach(stitch => {
+    stitch.x += offset;
+  });
+
+}
   return result;
 
 }
