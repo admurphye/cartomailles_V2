@@ -20,6 +20,17 @@ if (roundStitches[1]) {
     }))
   );
 }
+
+console.log(
+  roundStitches.map((r, i) => ({
+    row: i,
+    count: r.length,
+    first: r[0]?.symbol,
+    last: r[r.length - 1]?.symbol,
+  }))
+);
+
+
   const positioned = layoutFlatV2(roundStitches);
 
 const maxStitches = Math.max(

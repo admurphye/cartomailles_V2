@@ -51,14 +51,7 @@ export function layoutFlatV2(
 
     rounds[row].forEach(
       (stitch, stitchIndex) => {
- console.log(
-    "ROW",
-    row,
-    "STITCH",
-    stitchIndex,
-    stitch.symbol,
-    stitch.parents
-  );
+ 
         let x = 0;
 
         const parentCount =
@@ -84,40 +77,47 @@ export function layoutFlatV2(
 
         }
 
-        // ================================
+         // ================================
         // Maille normale
         // ================================
 
-        const parent =
-    result[row + 1][stitch.parents[0]];
+        else if (parentCount === 1) {
 
-if (!parent) {
-    console.error(
-        "Parent introuvable",
-        {
-            row,
-            stitchIndex,
-            parents: stitch.parents,
-            nextRowLength: result[row + 1].length,
+          const parent =
+            result[row + 1][stitch.parents[0]];
+
+          if (!parent) {
+
+            console.error(
+              "Parent introuvable",
+              {
+                row,
+                stitchIndex,
+                parents: stitch.parents,
+                nextRowLength: result[row + 1].length,
+              }
+            );
+
+            // On place provisoirement la maille
+            x = stitchIndex * spacingX;
+
+          } else {
+
+            x = parent.x;
+
+          }
+
         }
-    );
-    return;
-}
-
-
 
         // ================================
-        // Premier rang
+        // Premier rang (aucun parent)
         // ================================
 
         else {
-x = parent.x;
-          x =
-            stitchIndex *
-            spacingX;
+
+          x = stitchIndex * spacingX;
 
         }
-
         result[row].push({
 
           ...stitch,
