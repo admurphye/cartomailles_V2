@@ -1,28 +1,3 @@
-import {
-  Stitch,
-  PositionedCircularStitch,
-} from "../types";
-
-function getNextParentAngle(
-  previousAngles: number[],
-  parentIndex: number
-) {
-  const current =
-    previousAngles[parentIndex];
-
-  const next =
-    previousAngles[
-      (parentIndex + 1) %
-      previousAngles.length
-    ];
-
-  // Gestion du passage 360° -> 0°
-  if (next < current) {
-    return next + Math.PI * 2;
-  }
-
-  return next;
-}
 export function layoutCircular(
   rounds: Stitch[][]
 ): PositionedCircularStitch[][] {
@@ -30,35 +5,52 @@ export function layoutCircular(
   const centerX = 350;
   const centerY = 350;
 
-  const firstRadius = 30;
-  const ringSpacing = 36;
+  const symbolSize = 18; // largeur moyenne d'un symbole
+  const minRadius = 40;
+  
+const firstRadius = Math.max(
+  40,
+  (rounds[0]?.length ?? 1) * symbolSize / (2 * Math.PI)
+);
+  const ringSpacing = symbolSize * 2;
 
   const result: PositionedCircularStitch[][] = [];
   const roundAngles: number[][] = [];
 
-  rounds.forEach((round, roundIndex) => {
+  let radius = firstRadius;
 
-    const radius =
-      firstRadius + roundIndex * ringSpacing;
+  for (let roundIndex = 0; roundIndex < rounds.length; roundIndex++) {
+
+    const round = rounds[roundIndex];
+
+    if (round.length === 0) {
+      result.push([]);
+      roundAngles.push([]);
+      continue;
+    }
+
+    if (roundIndex > 0) {
+      const requiredRadius = Math.max(
+  minRadius,
+  round.length * symbolSize / (2 * Math.PI)
+);
+
+radius = Math.max(
+  radius + ringSpacing,
+  requiredRadius
+);
+    }
 
     result.push([]);
     roundAngles.push([]);
 
-    if (round.length === 0) return;
-
-    const sectorSize =
-      (Math.PI * 2) / round.length;
+    const sectorSize = (Math.PI * 2) / round.length;
 
     round.forEach((stitch, stitchIndex) => {
 
-      const startAngle =
-        stitchIndex * sectorSize;
-
-      const endAngle =
-        startAngle + sectorSize;
-
-      const centerAngle =
-        (startAngle + endAngle) / 2;
+      const startAngle = stitchIndex * sectorSize;
+      const endAngle = startAngle + sectorSize;
+      const centerAngle = (startAngle + endAngle) / 2;
 
       const x =
         centerX +
@@ -69,25 +61,20 @@ export function layoutCircular(
         Math.sin(centerAngle) * radius;
 
       result[roundIndex].push({
-
         ...stitch,
-
         x,
         y,
-
         radius,
-
         startAngle,
         endAngle,
-
         rotation: centerAngle,
-
       });
-roundAngles[roundIndex].push(centerAngle);
+
+      roundAngles[roundIndex].push(centerAngle);
+
     });
 
-  });
+  }
 
   return result;
-
 }
