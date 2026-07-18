@@ -1,3 +1,8 @@
+import {
+  Stitch,
+  PositionedCircularStitch,
+} from "../types";
+
 export function layoutCircular(
   rounds: Stitch[][]
 ): PositionedCircularStitch[][] {
@@ -7,7 +12,7 @@ export function layoutCircular(
 
   const symbolSize = 18; // largeur moyenne d'un symbole
   const minRadius = 40;
-  
+
 const firstRadius = Math.max(
   40,
   (rounds[0]?.length ?? 1) * symbolSize / (2 * Math.PI)
