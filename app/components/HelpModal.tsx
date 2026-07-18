@@ -96,25 +96,63 @@ Conseils :
 symbols: {
   title: "🧶 Symboles",
   content: (
-    <p className="whitespace-pre-line">
-{`Cartomailles reconnaît actuellement les symboles suivants :
+    <div className="space-y-8">
 
-ml   → Maille en l'air
-mc   → Maille coulée
-ms   → Maille serrée
-db   → Demi-bride
-br   → Bride
-dbr  → Double bride
-tbr  → Triple bride
+      <div>
+        <h3 className="text-pink-300 font-bold text-lg mb-3">
+          🧵 Mailles de base
+        </h3>
 
-aug  → Augmentation
-dim  → Diminution
+        <div className="space-y-2 font-mono">
+          <div><span className="font-bold text-pink-200 w-16 inline-block">ml</span> Maille en l'air</div>
+          <div><span className="font-bold text-pink-200 w-16 inline-block">mc</span> Maille coulée</div>
+          <div><span className="font-bold text-pink-200 w-16 inline-block">ms</span> Maille serrée</div>
+        </div>
+      </div>
 
-2BE  → Deux brides ensemble
-3BE  → Trois brides ensemble
+      <div>
+        <h3 className="text-pink-300 font-bold text-lg mb-3">
+          🪡 Brides
+        </h3>
 
-De nouveaux symboles seront régulièrement ajoutés lors des prochaines mises à jour.`}
-    </p>
+        <div className="space-y-2 font-mono">
+          <div><span className="font-bold text-pink-200 w-16 inline-block">db</span> Demi-bride</div>
+          <div><span className="font-bold text-pink-200 w-16 inline-block">br</span> Bride</div>
+          <div><span className="font-bold text-pink-200 w-16 inline-block">dbr</span> Double bride</div>
+          <div><span className="font-bold text-pink-200 w-16 inline-block">tbr</span> Triple bride</div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-pink-300 font-bold text-lg mb-3">
+          ➕ Augmentations & diminutions
+        </h3>
+
+        <div className="space-y-2 font-mono">
+          <div><span className="font-bold text-pink-200 w-16 inline-block">aug</span> Augmentation</div>
+          <div><span className="font-bold text-pink-200 w-16 inline-block">dim</span> Diminution</div>
+          <div><span className="font-bold text-pink-200 w-16 inline-block">2BE</span> Deux brides ensemble</div>
+          <div><span className="font-bold text-pink-200 w-16 inline-block">3BE</span> Trois brides ensemble</div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-pink-300 font-bold text-lg mb-3">
+          ✨ Éléments spéciaux
+        </h3>
+
+        <div className="space-y-2 font-mono">
+          <div><span className="font-bold text-pink-200 w-16 inline-block">CM</span> Cercle magique</div>
+          <div><span className="font-bold text-pink-200 w-16 inline-block">brAV</span> Bride relief avant</div>
+          <div><span className="font-bold text-pink-200 w-16 inline-block">brAR</span> Bride relief arrière</div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4 text-sm">
+        💡 <strong>Important :</strong> les abréviations doivent être saisies exactement comme indiquées ci-dessus afin d'être reconnues par Cartomailles.
+      </div>
+
+    </div>
   )
 },
 
