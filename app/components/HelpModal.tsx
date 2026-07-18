@@ -367,7 +367,7 @@ return(
         key={key}
         onClick={() => setPage(key as keyof typeof pages)}
 
-        className={`w-full text-left rounded-lg px-3 py-2 transition
+        className={`w-full text-left rounded-lg px-3 py-2 transition text-[#FBF7F2]
 ${
   page === key
     ? "bg-[#3a2c48] text-pink-300"
@@ -383,11 +383,17 @@ ${
 
 </div>
 
-<div className="flex-1 p-8 overflow-y-auto">
+<div
+  className="flex-1 p-8 overflow-y-auto"
+  style={{ color: "#FBF7F2" }}
+>
 
 <div className="flex justify-between">
 
-<h2 className="text-2xl font-bold">
+<h2
+  className="text-2xl font-bold"
+  style={{ color: "#FBF7F2" }}
+>
 
 {pages[page].title}
 

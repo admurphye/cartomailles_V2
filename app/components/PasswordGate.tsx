@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type PasswordGateProps = {
   children: React.ReactNode;
@@ -12,12 +12,21 @@ export default function PasswordGate({
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    const saved = localStorage.getItem("cartomailles_authorized");
+
+    if (saved === "true") {
+      setAuthorized(true);
+    }
+  }, []);
+
   const PASSWORD = "Cartomailles2026";
 
   const handleLogin = () => {
     if (password === PASSWORD) {
-  setAuthorized(true);
-} else {
+      localStorage.setItem("cartomailles_authorized", "true");
+      setAuthorized(true);
+    } else {
       setError("Mot de passe incorrect.");
     }
   };
