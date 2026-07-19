@@ -44,10 +44,10 @@ export default function PatternPanel({
         placeholder={`Exemple :
 
 Cercle magique
-6 mailles serrées
-6 augmentations
-2 mailles serrées, 1 augmentation x6
-3 mailles serrées, 1 augmentation x6`}
+6 ms
+6 aug
+12 br
+12tbr`}
       />
 
       <p
