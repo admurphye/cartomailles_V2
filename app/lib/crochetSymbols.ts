@@ -17,7 +17,7 @@ export const CROCHET_SYMBOLS: Record<
   ml: {
     name: "Maille en l'air",
     code: "O",
-    svg: "chain",
+    svg: "mailleEnLAir",
     category: "basic",
     aliases: ["maille en l'air", "mailles en l'air", "ml"],
     consumes: 0,
@@ -28,7 +28,7 @@ export const CROCHET_SYMBOLS: Record<
   mc: {
     name: "Maille coulée",
     code: "MC",
-    svg: "slipStitch",
+    svg: "mailleCoulee",
     category: "basic",
     aliases: ["maille coulée", "mailles coulées", "mc"],
     consumes: 1,
@@ -39,7 +39,7 @@ export const CROCHET_SYMBOLS: Record<
   ms: {
     name: "Maille serrée",
     code: "X",
-    svg: "singleCrochet",
+    svg: "mailleSerree",
     category: "basic",
     aliases: ["maille serrée", "mailles serrées", "ms"],
     consumes: 1,
@@ -50,7 +50,7 @@ export const CROCHET_SYMBOLS: Record<
   db: {
     name: "Demi-bride",
     code: "DB",
-    svg: "halfDoubleCrochet",
+    svg: "demiBride",
     category: "basic",
     aliases: ["demi-bride", "demi-brides", "db"],
     consumes: 1,
@@ -61,7 +61,7 @@ export const CROCHET_SYMBOLS: Record<
   br: {
     name: "Bride",
     code: "T",
-    svg: "doubleCrochet",
+    svg: "bride",
     category: "basic",
     aliases: ["bride", "brides", "br"],
     consumes: 1,
@@ -72,7 +72,7 @@ export const CROCHET_SYMBOLS: Record<
  dbr: {
   name: "Double bride",
   code: "DBR",
-  svg: "trebleCrochet",
+  svg: "doubleBride",
   category: "basic",
   aliases: [
     "double bride",
@@ -87,7 +87,7 @@ export const CROCHET_SYMBOLS: Record<
 tbr: {
   name: "Triple bride",
   code: "TBR",
-  svg: "doubleTrebleCrochet",
+  svg: "tripleBride",
   category: "basic",
   aliases: [
     "triple bride",
@@ -102,7 +102,7 @@ tbr: {
   aug: {
     name: "Augmentation",
     code: "V",
-    svg: "increase",
+    svg: "augmentation",
     category: "construction",
     aliases: ["augmentation", "augmentations", "aug"],
     consumes: 1,
@@ -113,7 +113,7 @@ tbr: {
   dim: {
     name: "Diminution",
     code: "A",
-    svg: "decrease",
+    svg: "diminution",
     category: "construction",
     aliases: ["diminution", "diminutions", "dim"],
     consumes: 2,
@@ -123,7 +123,7 @@ tbr: {
   deuxBridesEns: {
     name: "2 brides ensemble",
     code: "2BE",
-    svg: "doubleCrochetTogether",
+    svg: "deuxBridesEnsemble",
     category: "construction",
      aliases: [
     "2 brides ensemble",
@@ -137,7 +137,7 @@ tbr: {
   troisBridesEns: {
   name: "3 brides ensemble",
   code: "3BE",
-  svg: "tripleCrochetTogether",
+  svg: "3BridesEnsemble",
   category: "construction",
   aliases: [
     "3 brides ensemble",
@@ -163,7 +163,7 @@ tbr: {
   arceau: {
     name: "Arceau",
     code: "ARC",
-    svg: "chainSpace",
+    svg: "Arceau",
     category: "decorative",
     aliases: ["arceau", "arceaux"],
     consumes: 1,
@@ -174,7 +174,7 @@ tbr: {
   reliefAvant: {
     name: "Bride relief avant",
     code: "RAV",
-    svg: "frontPost",
+    svg: "brideReliefAvant",
     category: "relief",
     aliases: [
       "relief avant",
@@ -189,7 +189,7 @@ tbr: {
   reliefArriere: {
     name: "Bride relief arrière",
     code: "RAR",
-    svg: "backPost",
+    svg: "brideReliefArriere",
     category: "relief",
     aliases: [
       "relief arrière",
@@ -204,7 +204,7 @@ tbr: {
   cercleMagique: {
     name: "Cercle magique",
     code: "MR",
-    svg: "magicRing",
+    svg: "cercleMagique",
     category: "foundation",
     aliases: [
       "cercle magique",

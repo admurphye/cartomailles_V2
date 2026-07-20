@@ -11,7 +11,7 @@ import {
   drawTigeInclineeDroite
  
 } from "./crochetPrimitives";
-
+console.log("drawCrochetSymbol chargé");
 export function drawMS(
   x: number,
   y: number,
@@ -73,6 +73,7 @@ export function drawMC(
     />
   );
 }
+
 export function drawDB(
   x: number,
   y: number,

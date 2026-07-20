@@ -30,26 +30,68 @@ const DRAWERS = {
   "2BE": drawDeuxBridesEnsemble,
  
 } as const;
+const SVG_DRAWERS = {
+  mailleEnLAir: drawML,
+  mailleCoulee: drawMC,
+  mailleSerree: drawMS,
+  demiBride: drawDB,
+  bride: drawBR,
+  doubleBride: drawDBR,
+  tripleBride: drawTBR,
+  augmentation: drawAUG,
+  diminution: drawDIM,
+  brideReliefAvant: drawReliefavant,
+  brideReliefArriere: drawReliefarriere,
+  deuxBridesEnsemble: drawDeuxBridesEnsemble,
+} as const;
 
+export function drawSvgSymbol(
+  svg: string | null,
+  x: number,
+  y: number,
+  color = "black",
+  rotation = 0
+) {
+  if (!svg) return null;
+
+  const drawer =
+    SVG_DRAWERS[svg as keyof typeof SVG_DRAWERS];
+console.log("svg =", svg);
+console.log("clés =", Object.keys(SVG_DRAWERS));
+  if (drawer) {
+    return drawer(
+      x,
+      y,
+      color,
+      rotation
+    );
+  }
+
+  return null;
+}
 export function drawSymbol(
   cell: string | null,
   x: number,
   y: number,
   color = "black",
   rotation = 0
-) 
-
-{
+) {
   if (!cell) return null;
 
-const drawer = DRAWERS[cell as keyof typeof DRAWERS];
-if (drawer) {
-  return drawer(
-    x,
-    y,
-    color,
-    rotation
-  );
+  const drawer =
+    DRAWERS[cell as keyof typeof DRAWERS];
+
+  if (drawer) {
+    return drawer(
+      x,
+      y,
+      color,
+      rotation
+    );
+  }
+
+  return null;
 }
-}
+
+
  

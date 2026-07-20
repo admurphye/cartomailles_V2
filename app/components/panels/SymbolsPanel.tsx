@@ -1,6 +1,7 @@
 import Card from "@/app/components/ui/Card";
 import { CROCHET_SYMBOLS } from "@/app/lib/crochetSymbols";
 import { Shapes } from "lucide-react";
+import { drawSvgSymbol } from "@/app/lib/drawSymbol";
 
 export default function SymbolsPanel() {
   return (
@@ -32,20 +33,42 @@ export default function SymbolsPanel() {
         background: "#2B2334",
         border: "1px solid #4A3A57",
         borderRadius: "12px",
-        padding: "12px",
+        minHeight: "110px",
+        padding: "10px",
         cursor: "pointer",
         transition: "0.2s",
+        textAlign: "center",
       }}
     >
-      <div
-        style={{
-          fontWeight: "bold",
-          fontSize: "18px",
-          color: "#FBF7F2",
-        }}
-      >
-        {key}
-      </div>
+      <>
+      
+ <svg
+  width="60"
+  height="60"
+  viewBox="0 0 40 40"
+  style={{
+    display: "block",
+    margin: "0 auto 6px auto",
+  }}
+>
+    {drawSvgSymbol(
+      value.svg,
+      0,
+      0,
+      "#FBF7F2"
+    )}
+  </svg>
+
+  <div
+    style={{
+      fontWeight: "bold",
+      fontSize: "16px",
+      color: "#FBF7F2",
+    }}
+  >
+    {key}
+  </div>
+</>
 
       <div
         style={{
