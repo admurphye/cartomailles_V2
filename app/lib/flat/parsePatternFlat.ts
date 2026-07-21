@@ -30,7 +30,9 @@ const roundStitches: Stitch[][] = [];
 
     const parsed = parseLine(text);
 
- const round = computeRoundFlat(parsed);
+const roundNumber = roundStitches.length + 1;
+
+const round = computeRoundFlat(parsed, roundNumber);
 
 counts.push(round.stitchCount);
 roundSymbols.push(round.symbols);

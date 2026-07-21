@@ -1,6 +1,37 @@
 import { ParsedLine } from "../parseLine";
 import { Stitch } from "../types";
 import { CROCHET_SYMBOLS } from "../crochetSymbols";
+import { Instruction } from "../parseLine";
+
+function createStitch(
+  symbol: (typeof CROCHET_SYMBOLS)[keyof typeof CROCHET_SYMBOLS],
+  options: Partial<Stitch> = {}
+): Stitch {
+  return {
+    symbol: symbol.code,
+    parents: [],
+    produces: symbol.produces,
+    consumes: symbol.consumes,
+    ...options,
+  };
+}
+
+function createStitches(
+  instruction: Instruction,
+  instructions: Instruction[],
+  instructionIndex: number,
+  symbol: (typeof CROCHET_SYMBOLS)[keyof typeof CROCHET_SYMBOLS],
+  roundNumber: number
+): Stitch[] {
+
+  const stitches: Stitch[] = [];
+
+  for (let i = 0; i < instruction.count; i++) {
+    stitches.push(createStitch(symbol));
+  }
+
+  return stitches;
+}
 
 export type RoundResult = {
   stitchCount: number;
@@ -9,7 +40,8 @@ export type RoundResult = {
 };
 
 export function computeRoundFlat(
-  parsed: ParsedLine
+  parsed: ParsedLine,
+  roundNumber: number
 ): RoundResult {
 
   let stitchesPerRepeat = 0;
@@ -32,19 +64,17 @@ if (
 
   stitchesPerRepeat += instruction.count * symbol.produces;
 
-  for (let i = 0; i < instruction.count; i++) {
+  const created = createStitches(
+  instruction,
+  parsed.instructions,
+  parsed.instructions.indexOf(instruction),
+  symbol,
+  roundNumber
+);
 
-    symbols.push(symbol.code);
+symbols.push(...created.map(s => s.symbol));
 
-    stitches.push({
-      symbol: symbol.code,
-      parents: [],
-      produces: symbol.produces,
-      consumes: symbol.consumes,
-    });
-
-  }
-
+stitches.push(...created);
   continue;
 }
 switch (instruction.type) {
@@ -57,12 +87,7 @@ case "aug":
 
     symbols.push(symbol.code);
 
-    stitches.push({
-      symbol: symbol.code,
-      parents: [],
-      consumes: symbol.consumes,
-      produces: symbol.produces,
-    });
+    stitches.push(createStitch(symbol));
 
   }
 
@@ -81,12 +106,7 @@ case "dim":
 
     symbols.push(symbol.code);
 
-    stitches.push({
-      symbol: symbol.code,
-      parents: [],
-      consumes: symbol.consumes,
-      produces: symbol.produces,
-    });
+    stitches.push(createStitch(symbol));
 
   }
 
