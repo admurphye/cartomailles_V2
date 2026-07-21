@@ -47,10 +47,16 @@ export function layoutFlatV2(
     row--
   ) {
 
-    result[row] = [];
+  result[row] = [];
 
-    rounds[row].forEach(
-      (stitch, stitchIndex) => {
+const reverse = row % 2 === 1;
+
+const displayRow = reverse
+  ? [...rounds[row]].reverse()
+  : rounds[row];
+
+displayRow.forEach(
+  (stitch, stitchIndex) => {
  
         let x = 0;
 
@@ -152,7 +158,16 @@ for (let row = 0; row < result.length; row++) {
   result[row].forEach(stitch => {
     stitch.x += offset;
   });
+const reverse = row % 2 === 1;
 
+if (reverse) {
+  const minX = Math.min(...result[row].map(s => s.x));
+  const maxX = Math.max(...result[row].map(s => s.x));
+
+  result[row].forEach(stitch => {
+    stitch.x = maxX - (stitch.x - minX);
+  });
+}
 }
   return result;
 
