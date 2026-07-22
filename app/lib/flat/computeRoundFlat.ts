@@ -1,7 +1,7 @@
-import { ParsedLine } from "../parseLine";
 import { Stitch } from "../types";
 import { CROCHET_SYMBOLS } from "../crochetSymbols";
-import { Instruction } from "../parseLine";
+import type { ChainRole } from "../crochetTypes";
+import { Instruction, ParsedLine } from "../parseLine";
 
 function createStitch(
   symbol: (typeof CROCHET_SYMBOLS)[keyof typeof CROCHET_SYMBOLS],
@@ -26,8 +26,28 @@ function createStitches(
 
   const stitches: Stitch[] = [];
 
+  // Maille de montée
+  if (instruction.role === "turning") {
+
+    for (let i = 0; i < instruction.count; i++) {
+
+      stitches.push(
+        createStitch(symbol, {
+    role: instruction.role,
+})
+      );
+
+    }
+
+    return stitches;
+
+  }
+
+  // Cas général
   for (let i = 0; i < instruction.count; i++) {
+
     stitches.push(createStitch(symbol));
+
   }
 
   return stitches;

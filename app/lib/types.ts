@@ -1,3 +1,5 @@
+import type { ChainRole } from "./crochetTypes";
+
 export type Stitch = {
   symbol: string;
 
@@ -16,9 +18,9 @@ export type Stitch = {
   count?: number;
 
   /**
-   * Type particulier de la maille.
+   * Rôle de la maille dans le diagramme.
    */
-  kind?: "normal" | "turningChain";
+  role?: ChainRole;
 };
 
 export type PositionedStitch = Stitch & {
