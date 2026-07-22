@@ -2,6 +2,7 @@ import { parseLine } from "../parseLine";
 import { buildLinksCircular } from "./buildLinksCircular";
 import { computeRoundCircular } from "./computeRoundCircular";
 import { Stitch } from "../types";
+import { analyzeChainRoles } from "../analyzeChainRoles";
 
 export function parsePatternCircular(pattern: string) {
 
@@ -28,9 +29,16 @@ export function parsePatternCircular(pattern: string) {
       continue;
     }
 
-    const parsed = parseLine(text);
+   const parsed = parseLine(text);
 
- const round = computeRoundCircular(parsed);
+const roundNumber = roundStitches.length + 1;
+
+parsed.instructions = analyzeChainRoles(
+  parsed.instructions,
+  roundNumber
+);
+
+const round = computeRoundCircular(parsed, roundNumber);
 
 counts.push(round.stitchCount);
 

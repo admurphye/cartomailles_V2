@@ -1,29 +1,34 @@
 import { SYMBOL_ALIAS_MAP } from "./symbolAliasMap";
 
+export type ChainRole =
+  | "foundation"
+  | "turning"
+  | "chainSpace"
+  | "free";
+
 export type Instruction = {
   type: string;
   count: number;
+  role?: ChainRole;
 };
 
 export type ParsedLine = {
   instructions: Instruction[];
   repeat: number;
 };
-function expandRepeats(text: string): string {
 
+function expandRepeats(text: string): string {
   return text.replace(
     /(\d+)\s*x\s*\((.*?)\)/gi,
     (_, repeat, content) => {
-
       return Array(Number(repeat))
         .fill(content.trim())
         .join(" ");
-
     }
   );
 }
-export function parseLine(line: string): ParsedLine {
 
+export function parseLine(line: string): ParsedLine {
   let text = line.toLowerCase();
 
   text = expandRepeats(text);
@@ -35,11 +40,10 @@ export function parseLine(line: string): ParsedLine {
 
   const parts = normalized.split(",");
   const instructions: Instruction[] = [];
-  
+
   let repeat = 1;
 
   for (const part of parts) {
-
     const clean = part.trim();
 
     // répétition
@@ -55,28 +59,26 @@ export function parseLine(line: string): ParsedLine {
     if (!match) continue;
 
     const rawType = match[2]
-  .trim()
-  .toLowerCase();
+      .trim()
+      .toLowerCase();
 
-const cleanedType = rawType.replace(/\s*x\s*\d+$/i, "").trim();
+    const cleanedType = rawType.replace(/\s*x\s*\d+$/i, "").trim();
 
-const type = SYMBOL_ALIAS_MAP[cleanedType];
+    const type = SYMBOL_ALIAS_MAP[cleanedType];
 
-if (!type) {
-  console.warn(`Symbole inconnu : ${rawType}`);
-  continue;
-}
+    if (!type) {
+      console.warn(`Symbole inconnu : ${rawType}`);
+      continue;
+    }
 
-instructions.push({
-  count: parseInt(match[1]),
-  type,
-});
-
+    instructions.push({
+      count: parseInt(match[1]),
+      type,
+    });
   }
 
   return {
     instructions,
     repeat,
   };
-
 }

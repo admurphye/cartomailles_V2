@@ -2,6 +2,7 @@ import { parseLine } from "../parseLine";
 import { computeRoundFlat } from "./computeRoundFlat";
 import { buildLinksFlat } from "./buildLinksFlat";
 import { Stitch } from "../types";
+import { analyzeChainRoles } from "../analyzeChainRoles";
 
 export function parsePatternFlat(pattern: string) {
 
@@ -31,6 +32,11 @@ const roundStitches: Stitch[][] = [];
     const parsed = parseLine(text);
 
 const roundNumber = roundStitches.length + 1;
+
+parsed.instructions = analyzeChainRoles(
+  parsed.instructions,
+  roundNumber
+);
 
 const round = computeRoundFlat(parsed, roundNumber);
 

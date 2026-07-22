@@ -9,7 +9,9 @@ export type RoundResult = {
 };
 
 export function computeRoundCircular(
-  parsed: ParsedLine
+  parsed: ParsedLine,
+  roundNumber: number
+
 ): RoundResult {
 
   let stitchesPerRepeat = 0;
