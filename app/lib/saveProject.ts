@@ -1,8 +1,12 @@
-export function saveProject(data: {
+export type CartomaillesProject = {
+  format: "cartomailles";
+  version: 1;
   projectName: string;
   pattern: string;
-  diagramType: string;
-}) {
+  diagramType: "circular" | "flat";
+};
+
+export function saveProject(data: CartomaillesProject) {
 
   const blob = new Blob(
     [
@@ -26,7 +30,7 @@ export function saveProject(data: {
   link.href = url;
 
   link.download =
-    `${data.projectName || "projet"}.json`;
+    `${data.projectName || "projet"}.cartomailles`;
 
   link.click();
 

@@ -1,5 +1,5 @@
 export function openProject(
-  callback: (data: any) => void
+  callback: (data: unknown | null) => void
 ) {
 
   const input =
@@ -7,7 +7,7 @@ export function openProject(
 
   input.type = "file";
 
-  input.accept = ".json";
+  input.accept = ".cartomailles,.json";
 
   input.onchange = (event) => {
 
@@ -21,14 +21,16 @@ export function openProject(
       new FileReader();
 
     reader.onload = () => {
-
-      const content =
-        JSON.parse(
-          reader.result as string
+      try {
+        callback(
+          JSON.parse(reader.result as string)
         );
-
-      callback(content);
+      } catch {
+        callback(null);
+      }
     };
+
+    reader.onerror = () => callback(null);
 
     reader.readAsText(file);
   };

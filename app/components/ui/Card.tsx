@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { CSSProperties, ReactNode } from "react";
 import { colors } from "@/app/theme/colors";
 import { radius } from "@/app/theme/radius";
 import { spacing } from "@/app/theme/spacing";
@@ -10,6 +10,7 @@ type CardProps = {
   subtitle?: string;
   icon?: ReactNode;
   children: ReactNode;
+  style?: CSSProperties;
 };
 
 export default function Card({
@@ -17,6 +18,7 @@ export default function Card({
   subtitle,
   icon,
   children,
+  style,
 }: CardProps) {
   return (
     <div
@@ -26,6 +28,7 @@ export default function Card({
         borderRadius: radius.large,
         padding: spacing.lg,
         boxShadow: shadows.card,
+        ...style,
       }}
     >
       {title && (

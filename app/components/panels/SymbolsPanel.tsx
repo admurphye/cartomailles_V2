@@ -1,5 +1,5 @@
 import Card from "@/app/components/ui/Card";
-import { CROCHET_SYMBOLS } from "@/app/lib/crochetSymbols";
+import { CROCHET_SYMBOLS } from "@/app/components/renderer/crochetSymbols";
 import { Shapes } from "lucide-react";
 import { drawSvgSymbol } from "@/app/lib/drawSymbol";
 

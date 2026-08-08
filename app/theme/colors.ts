@@ -8,13 +8,25 @@ export const colors = {
   // Zone de travail
   workspace: "#241F2B",
 
+  // Toile du diagramme ⭐
+  canvas: "#F6F2F8",
+
+  // Quadrillage ⭐
+  grid: "#E6DFE8",
+
+  // Point central ⭐
+  center: "#D98CA8",
+
+  // Sélection ⭐
+  selection: "#FFD166",
+
   // Bordures
   border: "#5B2E4D",
 
-   // Alternance des rangs
-  rowEven: "#2C2633",
-  rowOdd: "#4A3342",
-  
+  // Alternance des rangs
+  rowOdd: "#2F2F35",
+  rowEven: "#C05A90",
+
   // Couleurs principales
   primary: "#D98CA8",
   secondary: "#A7B8A1",
@@ -32,24 +44,15 @@ export const colors = {
 
   // Erreur
   danger: "#D16A7C",
-  };
-  
-  export const website = {
 
-  background: "#FFF8F4",
+  hover: "#F6C6D8",
 
-  surface: "#FFFFFF",
+selected: "#FFD166",
 
-  border: "#F2DCE6",
+link: "#7D6A75",
 
-  primary: "#D98CA8",
+linkSelected: "#D98CA8",
 
-  secondary: "#5B2E4D",
-
-  text: "#473642",
-
-  textSecondary: "#7D6A75",
-
-  hero: "#FFF3F8",
+rowAlternate: "#D85F9D",
 
 };

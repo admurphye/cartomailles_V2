@@ -1,4 +1,4 @@
-import { CROCHET_SYMBOLS } from "./crochetSymbols";
+import { CROCHET_SYMBOLS } from "../components/renderer/crochetSymbols";
 
 export const SYMBOL_ALIAS_MAP: Record<string, string> = {};
 
