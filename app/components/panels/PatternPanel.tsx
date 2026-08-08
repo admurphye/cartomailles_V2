@@ -23,6 +23,12 @@ export default function PatternPanel({
     <Card
       title="Patron"
       icon={<FileText size={17} strokeWidth={1.75} />}
+      style={{
+        height: "100%",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
       <p
         style={{
@@ -41,6 +47,11 @@ export default function PatternPanel({
           setPattern(e.target.value)
         }
         rows={10}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          resize: "none",
+        }}
         placeholder={`Exemple :
 
 Cercle magique

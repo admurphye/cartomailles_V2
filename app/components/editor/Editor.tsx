@@ -12,6 +12,8 @@ import { openProject } from "@/app/lib/openProject";
 import { exportPNG } from "@/app/components/renderer/exports/exportPNG";
 import { exportSVG } from "@/app/components/renderer/exports/exportSVG";
 import { exportPDF } from "@/app/components/renderer/exports/exportPDF";
+import { Instruction } from "@/app/lib/engine/model/Instruction";
+import { StitchType } from "@/app/lib/engine/model/Stitch";
 
 type ProjectState = Pick<
   CartomaillesProject,
@@ -19,6 +21,91 @@ type ProjectState = Pick<
 >;
 
 type HistoryEntry = Pick<ProjectState, "pattern" | "diagramType">;
+
+const STITCH_CODES: Record<StitchType, string> = {
+  mr: "mr",
+  ch: "ml",
+  slst: "mc",
+  sc: "ms",
+  hdc: "db",
+  dc: "br",
+  tr: "tb",
+  dtr: "dtr",
+};
+
+type PatternItem = {
+  type: StitchType;
+  operation: Instruction["operation"];
+};
+
+function formatRound(
+  roundNumber: number,
+  instructions: Instruction[],
+  selectedOrder: number,
+  selectedRound: number,
+  nextType: StitchType
+) {
+  const items: PatternItem[] = [];
+  let order = 1;
+
+  instructions.forEach((instruction) => {
+    for (let repeat = 0; repeat < instruction.count; repeat++) {
+      if (instruction.operation !== "normal") {
+        items.push({
+          type: instruction.type,
+          operation: instruction.operation,
+        });
+        order += instruction.produces;
+        continue;
+      }
+
+      for (let output = 0; output < instruction.produces; output++) {
+        items.push({
+          type:
+            roundNumber === selectedRound &&
+            order === selectedOrder
+              ? nextType
+              : instruction.type,
+          operation: instruction.operation,
+        });
+        order++;
+      }
+    }
+  });
+
+  const groups: PatternItem[][] = [];
+
+  items.forEach((item) => {
+    const previousGroup = groups.at(-1);
+    const previousItem = previousGroup?.[0];
+
+    if (
+      previousItem &&
+      previousItem.type === item.type &&
+      previousItem.operation === item.operation
+    ) {
+      previousGroup.push(item);
+      return;
+    }
+
+    groups.push([item]);
+  });
+
+  return groups.map((group) => {
+    const { type, operation } = group[0];
+    const code = STITCH_CODES[type];
+
+    if (operation === "increase") {
+      return `${group.length} aug(${code})`;
+    }
+
+    if (operation === "decrease") {
+      return `${group.length} dim(${code})`;
+    }
+
+    return `${group.length} ${code}`;
+  }).join(" ");
+}
 
 function isProjectState(value: unknown): value is ProjectState {
   if (typeof value !== "object" || value === null) {
@@ -43,6 +130,25 @@ function isProjectState(value: unknown): value is ProjectState {
     project.format === "cartomailles" && project.version === 1;
 
   return isLegacyProject || isCurrentProject;
+}
+
+function isStitchAdjustments(value: unknown): value is StitchAdjustments {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return Object.values(value).every((adjustment) => {
+    if (typeof adjustment !== "object" || adjustment === null) {
+      return false;
+    }
+
+    const entry = adjustment as Record<string, unknown>;
+    return (
+      typeof entry.stitchId === "string" &&
+      typeof entry.offsetX === "number" &&
+      typeof entry.offsetY === "number"
+    );
+  });
 }
 
 export default function Editor() {
@@ -75,7 +181,8 @@ export default function Editor() {
   } = useCrochetEngine(
     pattern,
     selectedId,
-    diagramType
+    diagramType,
+    adjustments
   );
 
   const handleNewProject = () => {
@@ -111,6 +218,46 @@ export default function Editor() {
 
     saveHistoryEntry();
     setDiagramType(value);
+  };
+
+  const handleChangeStitchType = (nextType: StitchType) => {
+    if (!selected || selected.operation !== "normal" || selected.type === nextType) {
+      return;
+    }
+
+    const nextPattern = graph.rounds
+      .map((round) =>
+        formatRound(
+          round.number,
+          round.instructions,
+          selected.order,
+          selected.round,
+          nextType
+        )
+      )
+      .join("\n");
+
+    saveHistoryEntry();
+    setPattern(nextPattern);
+  };
+
+  const handleUpdateStitchPosition = (
+    stitchId: string,
+    offsetX: number,
+    offsetY: number
+  ) => {
+    setAdjustments((current) => ({
+      ...current,
+      [stitchId]: { stitchId, offsetX, offsetY },
+    }));
+  };
+
+  const handleResetStitchPosition = (stitchId: string) => {
+    setAdjustments((current) => {
+      const remaining = { ...current };
+      delete remaining[stitchId];
+      return remaining;
+    });
   };
 
   const handleUndo = () => {
@@ -154,6 +301,7 @@ export default function Editor() {
       projectName,
       pattern,
       diagramType,
+      adjustments,
     });
   };
 
@@ -166,6 +314,13 @@ export default function Editor() {
       setProjectName(data.projectName);
       setPattern(data.pattern);
       setDiagramType(data.diagramType);
+      setAdjustments(
+        isStitchAdjustments(
+          (data as Record<string, unknown>).adjustments
+        )
+          ? (data as Record<string, unknown>).adjustments as StitchAdjustments
+          : {}
+      );
       setSelectedId(null);
       setUndoHistory([]);
       setRedoHistory([]);
@@ -200,6 +355,10 @@ export default function Editor() {
       onExportPDF={handleExportPDF}
       onUndo={handleUndo}
       onRedo={handleRedo}
+      canUndo={undoHistory.length > 0}
+      canRedo={redoHistory.length > 0}
+      projectName={projectName}
+      setProjectName={setProjectName}
     >
       <Workspace
         pattern={pattern}
@@ -218,6 +377,9 @@ export default function Editor() {
         selected={selected}
         selectedId={selectedId}
         onSelect={setSelectedId}
+        onChangeStitchType={handleChangeStitchType}
+        onUpdateStitchPosition={handleUpdateStitchPosition}
+        onResetStitchPosition={handleResetStitchPosition}
 
         adjustments={adjustments}
         setAdjustments={setAdjustments}

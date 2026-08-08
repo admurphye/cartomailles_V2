@@ -7,6 +7,7 @@ type IconButtonProps = {
   onClick: () => void;
   active?: boolean;
   label?: string;
+  disabled?: boolean;
 };
 
 export default function IconButton({
@@ -14,6 +15,7 @@ export default function IconButton({
   onClick,
   active = false,
   label,
+  disabled = false,
 }: IconButtonProps) {
   const [hover, setHover] = useState(false);
 
@@ -22,6 +24,7 @@ export default function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      disabled={disabled}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
@@ -30,22 +33,25 @@ export default function IconButton({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: active
+        backgroundColor: disabled
+  ? colors.surface
+  : active
   ? colors.primary
   : hover
   ? colors.rowOdd
   : colors.surface,
         border: `1px solid ${colors.border}`,
         borderRadius: radius.medium,
-        color: colors.text,
-        cursor: "pointer",
+        color: disabled ? colors.textSecondary : colors.text,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.45 : 1,
         transition: "all 0.15s ease",
         boxShadow: active
   ? "0 0 0 2px rgba(255,255,255,0.15)"
   : hover
           ? "0 4px 10px rgba(0,0,0,0.20)"
           : "0 1px 3px rgba(0,0,0,0.10)",
-        transform: hover ? "translateY(-1px)" : "translateY(0)",
+        transform: !disabled && hover ? "translateY(-1px)" : "translateY(0)",
       }}
     >
       {icon}

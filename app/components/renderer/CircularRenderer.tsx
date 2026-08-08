@@ -2,14 +2,19 @@ import { PositionedStitch } from "@/app/lib/engine/model/PositionedStitch";
 import { Link } from "@/app/lib/engine/model/Link";
 import { drawCrochetSymbol } from "./drawCrochetSymbol";
 import { colors } from "@/app/theme/colors";
-import type { RefObject } from "react";
+import { useState, type RefObject } from "react";
+import { Tool } from "@/app/lib/engine/model/Tool";
 
 interface Props {
   stitches: PositionedStitch[];
   links: Link[];
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string | null) => void;
   diagramRef: RefObject<SVGSVGElement | null>;
+  showRoundLabels?: boolean;
+  showRoundGuides?: boolean;
+  tool: Tool;
+  onMoveStitch: (stitchId: string, offsetX: number, offsetY: number) => void;
 }
 
 export default function CircularRenderer({
@@ -18,7 +23,29 @@ export default function CircularRenderer({
   selectedId,
   onSelect,
   diagramRef,
+  showRoundLabels = false,
+  showRoundGuides = true,
+  tool,
+  onMoveStitch,
 }: Props) {
+  const [dragging, setDragging] = useState<{
+    id: string;
+    startX: number;
+    startY: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
+
+  const getDiagramPoint = (event: React.PointerEvent<SVGSVGElement>) => {
+    const svg = event.currentTarget;
+    const bounds = svg.getBoundingClientRect();
+    const viewBox = svg.viewBox.baseVal;
+
+    return {
+      x: viewBox.x + (event.clientX - bounds.left) * viewBox.width / bounds.width,
+      y: viewBox.y + (event.clientY - bounds.top) * viewBox.height / bounds.height,
+    };
+  };
 
   // --------------------------------------------------
   // CALCUL AUTOMATIQUE DE LA ZONE DU DIAGRAMME
@@ -44,6 +71,56 @@ export default function CircularRenderer({
   const viewBoxWidth = Math.max(100, maxX - minX);
   const viewBoxHeight = Math.max(100, maxY - minY);
 
+  const roundLabels = showRoundLabels
+    ? [...new Set(stitches.map((stitch) => stitch.round))].map((round) => {
+        const roundStitches = stitches.filter(
+          (stitch) => stitch.round === round
+        );
+        const minRoundX = Math.min(
+          ...roundStitches.map((stitch) => stitch.x)
+        );
+        const maxRoundX = Math.max(
+          ...roundStitches.map((stitch) => stitch.x)
+        );
+        const averageRoundY =
+          roundStitches.reduce((total, stitch) => total + stitch.y, 0) /
+          roundStitches.length;
+        const isRightToLeft = round % 2 === 0;
+        const textAnchor: "start" | "end" = isRightToLeft
+          ? "start"
+          : "end";
+
+        return {
+          round,
+          x: isRightToLeft ? maxRoundX + 20 : minRoundX - 20,
+          y: averageRoundY + 5,
+          textAnchor,
+        };
+      })
+    : [];
+
+  const roundGuides = showRoundGuides
+    ? [...new Set(stitches.map((stitch) => stitch.round))].flatMap((round) => {
+        const roundStitches = stitches.filter(
+          (stitch) =>
+            stitch.round === round && stitch.role !== "turningChain"
+        );
+
+        if (roundStitches.length === 0) {
+          return [];
+        }
+
+        const radius =
+          roundStitches.reduce(
+            (total, stitch) =>
+              total + Math.hypot(stitch.x - 350, stitch.y - 350),
+            0
+          ) / roundStitches.length;
+
+        return [{ round, radius }];
+      })
+    : [];
+
   return (
     <svg
       ref={diagramRef}
@@ -51,7 +128,44 @@ export default function CircularRenderer({
       height="100%"
       viewBox={`${minX} ${minY} ${viewBoxWidth} ${viewBoxHeight}`}
       preserveAspectRatio="xMidYMid meet"
+      onPointerMove={(event) => {
+        if (!dragging) return;
+
+        const point = getDiagramPoint(event);
+        onMoveStitch(
+          dragging.id,
+          dragging.offsetX + point.x - dragging.startX,
+          dragging.offsetY + point.y - dragging.startY
+        );
+      }}
+      onPointerUp={() => setDragging(null)}
     >
+      {roundGuides.map((guide) => (
+        <circle
+          key={guide.round}
+          cx={350}
+          cy={350}
+          r={guide.radius}
+          fill="none"
+          stroke={colors.grid}
+          strokeWidth={1}
+        />
+      ))}
+
+      {roundLabels.map((label) => (
+        <text
+          key={label.round}
+          x={label.x}
+          y={label.y}
+          textAnchor={label.textAnchor}
+          fill={colors.rowOdd}
+          fontSize={14}
+          fontWeight={700}
+        >
+          R{label.round}
+        </text>
+      ))}
+
       {stitches.map((stitch) => {
 
         const symbolColor =
@@ -62,8 +176,35 @@ export default function CircularRenderer({
         return (
           <g
             key={stitch.id}
-            onClick={() => onSelect(stitch.id)}
-            style={{ cursor: "pointer" }}
+            onClick={() =>
+              onSelect(selectedId === stitch.id ? null : stitch.id)
+            }
+            onPointerDown={(event) => {
+              if (tool !== "moveStitch") return;
+
+              event.stopPropagation();
+              onSelect(stitch.id);
+              const svg = diagramRef.current;
+
+              if (!svg) return;
+
+              const bounds = svg.getBoundingClientRect();
+              const viewBox = svg.viewBox.baseVal;
+              const startX = viewBox.x +
+                (event.clientX - bounds.left) * viewBox.width / bounds.width;
+              const startY = viewBox.y +
+                (event.clientY - bounds.top) * viewBox.height / bounds.height;
+
+              event.currentTarget.setPointerCapture(event.pointerId);
+              setDragging({
+                id: stitch.id,
+                startX,
+                startY,
+                offsetX: stitch.offsetX ?? 0,
+                offsetY: stitch.offsetY ?? 0,
+              });
+            }}
+            style={{ cursor: tool === "moveStitch" ? "move" : "pointer" }}
           >
             {drawCrochetSymbol(
               stitch.type,

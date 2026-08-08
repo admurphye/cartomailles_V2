@@ -29,11 +29,16 @@ export function layoutFlatGroups(
     const structuralGroups = currentGroups.filter(
       (group) => group.role !== "turningChain"
     );
+    const isRightToLeft = round % 2 === 0;
 
     structuralGroups.forEach((group, index) => {
 
+      const displayIndex = isRightToLeft
+        ? structuralGroups.length - 1 - index
+        : index;
+
       const groupCenterX =
-        startX + index * spacingX;
+        startX + displayIndex * spacingX;
 
       const groupCenterY =
         startY + (round - 1) * spacingY;
@@ -65,6 +70,10 @@ export function layoutFlatGroups(
     });
 
     turningChains.forEach((group, index) => {
+      const startXForRound = isRightToLeft
+        ? startX + structuralGroups.length * spacingX + 18
+        : startX - 18;
+
       positionedGroups.push({
         id: group.id,
         round: group.round,
@@ -72,7 +81,7 @@ export function layoutFlatGroups(
         operation: group.operation,
         role: group.role,
         countsAsStitch: group.countsAsStitch,
-        centerX: startX - 18,
+        centerX: startXForRound,
         centerY: startY + (round - 1) * spacingY - (index + 1) * 18,
         rotation: 0,
         orientation: "horizontal",

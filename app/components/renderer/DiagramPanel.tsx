@@ -23,6 +23,7 @@ setTool: (tool: Tool) => void;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   diagramRef: RefObject<SVGSVGElement | null>;
+  onMoveStitch: (stitchId: string, offsetX: number, offsetY: number) => void;
 };
 
 export default function DiagramPanel({
@@ -35,6 +36,7 @@ export default function DiagramPanel({
   selectedId,
   onSelect,
   diagramRef,
+  onMoveStitch,
 }: Props) {
 
   const [zoom, setZoom] = useState(1);
@@ -97,6 +99,7 @@ export default function DiagramPanel({
     selectedId={selectedId}
     onSelect={onSelect}
     diagramRef={diagramRef}
+    onMoveStitch={onMoveStitch}
   />
 
 </DiagramCanvas>

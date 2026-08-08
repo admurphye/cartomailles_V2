@@ -4,11 +4,13 @@ import { useMemo } from "react";
 import { layoutCircularGroups } from "@/app/lib/engine/layout/layoutCircularGroups";
 import { parsePattern } from "../lib/engine/parser/parsePattern";
 import { layoutFlatGroups } from "../lib/engine/layout/layoutFlatGroups";
+import { StitchAdjustments } from "@/app/lib/engine/model/StitchAdjustments";
 
 export function useCrochetEngine(
   pattern: string,
   selectedId: string | null,
-  diagramType: "circular" | "flat"
+  diagramType: "circular" | "flat",
+  adjustments: StitchAdjustments
 ) {
   
  const graph = useMemo(() => {
@@ -19,12 +21,26 @@ export function useCrochetEngine(
 }, [pattern]);
 
   const positioned = useMemo(() => {
- if (diagramType === "flat") {
-    return layoutFlatGroups(graph);
-}
+    const layout = diagramType === "flat"
+      ? layoutFlatGroups(graph)
+      : layoutCircularGroups(graph);
 
-return layoutCircularGroups(graph);
-}, [graph, diagramType]);
+    return layout.map((stitch) => {
+      const adjustment = adjustments[stitch.id];
+
+      if (!adjustment) {
+        return stitch;
+      }
+
+      return {
+        ...stitch,
+        x: stitch.x + adjustment.offsetX,
+        y: stitch.y + adjustment.offsetY,
+        offsetX: adjustment.offsetX,
+        offsetY: adjustment.offsetY,
+      };
+    });
+  }, [graph, diagramType, adjustments]);
 
   const selected = useMemo(
     () =>

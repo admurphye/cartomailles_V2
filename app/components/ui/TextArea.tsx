@@ -1,3 +1,4 @@
+import { CSSProperties } from "react";
 import { colors } from "@/app/theme/colors";
 
 type TextAreaProps = {
@@ -7,6 +8,7 @@ type TextAreaProps = {
   ) => void;
   placeholder?: string;
   rows?: number;
+  style?: CSSProperties;
 };
 
 export default function TextArea({
@@ -14,6 +16,7 @@ export default function TextArea({
   onChange,
   placeholder,
   rows = 10,
+  style,
 }: TextAreaProps) {
   return (
     <textarea
@@ -32,6 +35,7 @@ export default function TextArea({
         resize: "vertical",
         fontSize: "15px",
         outline: "none",
+        ...style,
       }}
     />
   );

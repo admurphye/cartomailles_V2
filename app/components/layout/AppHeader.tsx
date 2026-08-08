@@ -18,6 +18,7 @@ import { colors } from "@/app/theme/colors";
 import { spacing } from "@/app/theme/spacing";
 import { shadows } from "@/app/theme/shadows";
 import HelpModal from "@/app/components/dialogs/HelpModal";
+import Input from "@/app/components/ui/Input";
 
 type AppHeaderProps = {
   onNewProject: () => void;
@@ -28,6 +29,10 @@ type AppHeaderProps = {
   onExportPDF: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  projectName: string;
+  setProjectName: (value: string) => void;
 };
 
 export default function AppHeader({
@@ -39,6 +44,10 @@ export default function AppHeader({
   onExportPDF,
   onUndo,
   onRedo,
+  canUndo,
+  canRedo,
+  projectName,
+  setProjectName,
 }: AppHeaderProps) {
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -93,11 +102,20 @@ export default function AppHeader({
 
             <div
               style={{
-                fontSize: 13,
-                color: colors.textSecondary,
+                width: 240,
+                marginTop: 2,
               }}
             >
-              Projet sans titre • Beta
+              <Input
+                value={projectName}
+                onChange={(event) => setProjectName(event.target.value)}
+                placeholder="Nom du projet"
+                ariaLabel="Nom du projet"
+                style={{
+                  padding: "4px 8px",
+                  fontSize: 13,
+                }}
+              />
             </div>
           </div>
         </div>
@@ -233,12 +251,14 @@ export default function AppHeader({
           icon={<Undo2 size={18} />}
           onClick={onUndo}
           label="Annuler"
+          disabled={!canUndo}
         />
 
         <IconButton
           icon={<Redo2 size={18} />}
           onClick={onRedo}
           label="Rétablir"
+          disabled={!canRedo}
         />
         
       </div>

@@ -4,14 +4,37 @@ import Card from "@/app/components/ui/Card";
 import { PositionedStitch } from "@/app/lib/engine/model/PositionedStitch";
 import { Settings2, MousePointerClick } from "lucide-react";
 import { colors } from "@/app/theme/colors";
+import Select from "@/app/components/ui/Select";
+import { StitchType } from "@/app/lib/engine/model/Stitch";
 
 interface PropertiesPanelProps {
   selected: PositionedStitch | null;
+  onChangeType: (type: StitchType) => void;
+  onUpdatePosition: (stitchId: string, offsetX: number, offsetY: number) => void;
+  onResetPosition: (stitchId: string) => void;
 }
+
+const STITCH_OPTIONS = [
+  { value: "ch", label: "ml — Maille en l'air" },
+  { value: "slst", label: "mc — Maille coulée" },
+  { value: "sc", label: "ms — Maille serrée" },
+  { value: "hdc", label: "db — Demi-bride" },
+  { value: "dc", label: "br — Bride" },
+  { value: "tr", label: "tb — Triple bride" },
+];
 
 export default function PropertiesPanel({
   selected,
+  onChangeType,
+  onUpdatePosition,
+  onResetPosition,
 }: PropertiesPanelProps) {
+  const canChangeType = Boolean(
+    selected &&
+      selected.operation === "normal" &&
+      STITCH_OPTIONS.some((option) => option.value === selected.type)
+  );
+
   return (
     <Card
       title="Propriétés"
@@ -57,6 +80,30 @@ export default function PropertiesPanel({
               className="text-xs uppercase mb-1"
               style={{ color: colors.textSecondary }}
             >
+              Maille sélectionnée
+            </div>
+            <div
+              className="font-semibold text-lg"
+              style={{ color: colors.text }}
+            >
+              {STITCH_OPTIONS.find((option) => option.value === selected.type)?.label ?? selected.type}
+            </div>
+            <div className="text-sm" style={{ color: colors.textSecondary }}>
+              Rang {selected.round} — Maille {selected.order}
+            </div>
+          </div>
+
+          <div
+            className="rounded-xl p-4"
+            style={{
+              background: colors.surface,
+              border: `1px solid ${colors.border}`,
+            }}
+          >
+            <div
+              className="text-xs uppercase mb-1"
+              style={{ color: colors.textSecondary }}
+            >
               Identifiant
             </div>
 
@@ -66,6 +113,68 @@ export default function PropertiesPanel({
             >
               {selected.id}
             </div>
+          </div>
+
+          <div
+            className="rounded-xl p-4 space-y-3"
+            style={{
+              background: colors.surface,
+              border: `1px solid ${colors.border}`,
+            }}
+          >
+            <div className="font-semibold" style={{ color: colors.text }}>
+              Position
+            </div>
+            <label className="block text-sm" style={{ color: colors.textSecondary }}>
+              Décalage horizontal
+              <input
+                type="number"
+                value={selected.offsetX ?? 0}
+                onChange={(event) =>
+                  onUpdatePosition(
+                    selected.id,
+                    Number(event.target.value),
+                    selected.offsetY ?? 0
+                  )
+                }
+                className="mt-1 w-full rounded-lg px-3 py-2"
+                style={{
+                  background: colors.workspace,
+                  border: `1px solid ${colors.border}`,
+                  color: colors.text,
+                }}
+              />
+            </label>
+            <label className="block text-sm" style={{ color: colors.textSecondary }}>
+              Décalage vertical
+              <input
+                type="number"
+                value={selected.offsetY ?? 0}
+                onChange={(event) =>
+                  onUpdatePosition(
+                    selected.id,
+                    selected.offsetX ?? 0,
+                    Number(event.target.value)
+                  )
+                }
+                className="mt-1 w-full rounded-lg px-3 py-2"
+                style={{
+                  background: colors.workspace,
+                  border: `1px solid ${colors.border}`,
+                  color: colors.text,
+                }}
+              />
+            </label>
+            <button
+              onClick={() => onResetPosition(selected.id)}
+              className="w-full rounded-lg px-3 py-2 text-sm font-semibold"
+              style={{
+                border: `1px solid ${colors.border}`,
+                color: colors.text,
+              }}
+            >
+              Réinitialiser la position
+            </button>
           </div>
 
           <div
@@ -86,8 +195,31 @@ export default function PropertiesPanel({
               className="font-semibold"
               style={{ color: colors.text }}
             >
-              {selected.type}
+              {canChangeType ? (
+                <Select
+                  value={selected.type}
+                  onChange={(event) =>
+                    onChangeType(event.target.value as StitchType)
+                  }
+                  options={STITCH_OPTIONS}
+                />
+              ) : (
+                selected.type
+              )}
             </div>
+
+            {!canChangeType && (
+              <p
+                className="mt-2 text-xs"
+                style={{ color: colors.textSecondary }}
+              >
+                {selected.operation === "normal"
+                  ? "Ce type spécial ne peut pas encore être modifié."
+                  : `Cette maille appartient à une ${selected.operation === "increase"
+                    ? "augmentation"
+                    : "diminution"} et ne peut pas encore être modifiée seule.`}
+              </p>
+            )}
           </div>
 
           <div

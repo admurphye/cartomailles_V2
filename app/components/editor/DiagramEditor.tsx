@@ -13,6 +13,7 @@ type Props = {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   diagramRef: RefObject<SVGSVGElement | null>;
+  onMoveStitch: (stitchId: string, offsetX: number, offsetY: number) => void;
 };
 
 export default function DiagramEditor({
@@ -23,6 +24,7 @@ export default function DiagramEditor({
   selectedId,
   onSelect,
   diagramRef,
+  onMoveStitch,
 }: Props) {
 
   return (
@@ -39,6 +41,8 @@ export default function DiagramEditor({
           selectedId={selectedId}
           onSelect={onSelect}
           diagramRef={diagramRef}
+          onMoveStitch={onMoveStitch}
+          tool={tool}
         />
       ) : (
         <CircularRenderer
@@ -47,6 +51,8 @@ export default function DiagramEditor({
           selectedId={selectedId}
           onSelect={onSelect}
           diagramRef={diagramRef}
+          onMoveStitch={onMoveStitch}
+          tool={tool}
         />
       )}
     </div>

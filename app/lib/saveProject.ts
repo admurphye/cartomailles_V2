@@ -1,9 +1,12 @@
+import { StitchAdjustments } from "./engine/model/StitchAdjustments";
+
 export type CartomaillesProject = {
   format: "cartomailles";
   version: 1;
   projectName: string;
   pattern: string;
   diagramType: "circular" | "flat";
+  adjustments?: StitchAdjustments;
 };
 
 export function saveProject(data: CartomaillesProject) {

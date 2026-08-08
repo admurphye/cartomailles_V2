@@ -10,6 +10,10 @@ type Props = {
   onExportPDF: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  projectName: string;
+  setProjectName: (value: string) => void;
 };
 
 export default function MainLayout({
@@ -22,6 +26,10 @@ export default function MainLayout({
   onExportPDF,
   onUndo,
   onRedo,
+  canUndo,
+  canRedo,
+  projectName,
+  setProjectName,
 }: Props) {
   return (
     <div className="flex flex-col h-screen min-h-0 bg-slate-100">
@@ -34,6 +42,10 @@ export default function MainLayout({
         onExportPDF={onExportPDF}
         onUndo={onUndo}
         onRedo={onRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        projectName={projectName}
+        setProjectName={setProjectName}
       />
       {children}
     </div>

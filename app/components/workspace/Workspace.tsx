@@ -7,6 +7,7 @@ import { Link } from "@/app/lib/engine/model/Link";
 import { StitchAdjustments } from "@/app/lib/engine/model/StitchAdjustments";
 import type { RefObject } from "react";
 import { ParseIssue } from "@/app/lib/engine/model/ParseIssue";
+import { StitchType } from "@/app/lib/engine/model/Stitch";
 
 type WorkspaceProps = {
    adjustments: StitchAdjustments;
@@ -29,6 +30,9 @@ type WorkspaceProps = {
 
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  onChangeStitchType: (type: StitchType) => void;
+  onUpdateStitchPosition: (stitchId: string, offsetX: number, offsetY: number) => void;
+  onResetStitchPosition: (stitchId: string) => void;
 
   diagramType: "circular" | "flat";
 setDiagramType: (
@@ -53,6 +57,9 @@ export default function Workspace({
   selected,
   selectedId,
   onSelect,
+  onChangeStitchType,
+  onUpdateStitchPosition,
+  onResetStitchPosition,
   adjustments,
   setAdjustments,
   diagramRef,
@@ -95,9 +102,15 @@ export default function Workspace({
   selectedId={selectedId}
   onSelect={onSelect}
   diagramRef={diagramRef}
+  onMoveStitch={onUpdateStitchPosition}
 />
 
-        <PropertiesPanel selected={selected} />
+        <PropertiesPanel
+          selected={selected}
+          onChangeType={onChangeStitchType}
+          onUpdatePosition={onUpdateStitchPosition}
+          onResetPosition={onResetStitchPosition}
+        />
       </div>
     </main>
   );
