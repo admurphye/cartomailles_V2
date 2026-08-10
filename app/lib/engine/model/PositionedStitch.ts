@@ -6,4 +6,5 @@ export interface PositionedStitch extends Stitch {
 
   offsetX?: number;
   offsetY?: number;
+  rotation?: number;
 }

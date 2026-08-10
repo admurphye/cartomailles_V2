@@ -42,6 +42,7 @@ if (group.orientation === "horizontal") {
         ...group.stitches[i],
         x,
         y,
+        rotation: group.rotation * 180 / Math.PI,
       });
 
     }

@@ -5,7 +5,7 @@ export type CartomaillesProject = {
   version: 1;
   projectName: string;
   pattern: string;
-  diagramType: "circular" | "flat";
+  diagramType: "circular" | "flat" | "granny";
   adjustments?: StitchAdjustments;
 };
 

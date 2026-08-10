@@ -34,9 +34,9 @@ type WorkspaceProps = {
   onUpdateStitchPosition: (stitchId: string, offsetX: number, offsetY: number) => void;
   onResetStitchPosition: (stitchId: string) => void;
 
-  diagramType: "circular" | "flat";
+  diagramType: "circular" | "flat" | "granny";
 setDiagramType: (
-  value: "circular" | "flat"
+  value: "circular" | "flat" | "granny"
 ) => void;
   diagramRef: RefObject<SVGSVGElement | null>;
 };

@@ -20,6 +20,8 @@ const STITCH_OPTIONS = [
   { value: "sc", label: "ms — Maille serrée" },
   { value: "hdc", label: "db — Demi-bride" },
   { value: "dc", label: "br — Bride" },
+  { value: "fpdc", label: "brAV — Bride relief avant" },
+  { value: "bpdc", label: "brAR — Bride relief arrière" },
   { value: "tr", label: "tb — Triple bride" },
 ];
 

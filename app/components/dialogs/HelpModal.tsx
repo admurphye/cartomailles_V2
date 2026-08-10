@@ -8,92 +8,214 @@ type HelpModalProps = {
 };
 
 const pages = {
-    welcome: {
-title: "📖 Bienvenue",
-content: (
-<>
-<p className="whitespace-pre-line">
-{`
-Bienvenue dans Cartomailles !
+  welcome: {
+    title: "📖 Bienvenue",
+    content: (
+      <div className="space-y-4">
+        <p>
+          Bienvenue dans <strong>Cartomailles</strong> !
+        </p>
 
-Cartomailles est un logiciel conçu pour transformer automatiquement un patron de 
-crochet écrit en diagramme graphique.
+        <p>
+          Cartomailles est un logiciel conçu pour transformer automatiquement
+          un patron de crochet écrit en un diagramme graphique.
+        </p>
 
-Son objectif est de simplifier la création de diagrammes 
-tout en respectant les conventions du crochet.
+        <p>
+          Son objectif est de simplifier la création et la lecture des
+          diagrammes tout en respectant les conventions du crochet.
+        </p>
 
-Cette version est actuellement en bêta. 
-Certaines fonctionnalités sont encore en cours d'amélioration. 
-Vos retours, suggestions et signalements de bugs sont précieux 
-et contribuent directement à l'évolution du logiciel.
+        <p>
+          Cette version est actuellement en <strong>bêta</strong>. Certaines
+          fonctionnalités sont encore en cours de développement ou
+          d&apos;amélioration.
+        </p>
 
-Merci de contribuer à son amélioration.
-`}
-</p>
-</>
-)
-},
+        <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4">
+          🧶 Vos essais, suggestions et signalements de bugs contribuent
+          directement à l&apos;évolution de Cartomailles. Merci de participer
+          à son développement !
+        </div>
+      </div>
+    ),
+  },
 
-start: {
-title: "🚀 Premiers pas",
-content: (
-<>
-<ol className="list-decimal ml-5 space-y-2">
+  start: {
+    title: "🚀 Premiers pas",
+    content: (
+      <div className="space-y-5">
+        <p>
+          Cartomailles transforme votre patron écrit en diagramme en quelques
+          étapes.
+        </p>
 
-<li>Créez un nouveau projet en lui donnant un nom (facultatif mais recommandé).</li>
+        <ol className="list-decimal ml-5 space-y-3">
+          <li>
+            <strong>Créez un nouveau projet</strong> à l&apos;aide du bouton
+            correspondant dans la barre d&apos;outils.
+          </li>
 
-<li>Choisissez le type de diagramme :
-   Plat ou Circulaire</li>
+          <li>
+            <strong>Choisissez le type de diagramme</strong> :
+            {" "}
+            <strong>Plat</strong>, <strong>Circulaire</strong> ou <strong>Granny</strong>.
+          </li>
 
-<li>Cliquez sur « Créer le diagramme ».</li>
+          <li>
+            <strong>Écrivez ou collez votre patron</strong> dans la zone
+            « Patron ».
+          </li>
 
-<li>Exportez votre diagramme.</li>
+          <li>
+            Cartomailles analyse les instructions et génère automatiquement
+            le diagramme correspondant.
+          </li>
 
-<p>Le logiciel analyse automatiquement votre patron, calcule le nombre de mailles de chaque rang et génère le diagramme correspondant.
-Vous pouvez ensuite enregistrer votre projet ou exporter votre diagramme.</p>
-</ol>
-</>
-)
-},
+          <li>
+            Utilisez les outils du diagramme pour zoomer, vous déplacer ou
+            recentrer votre travail.
+          </li>
 
-pattern: {
-title: "✍️ Écrire un patron",
-content: (
-<>
-<pre className="bg-[#1b1722] p-4 rounded">
+          <li>
+            Cliquez sur une maille pour la sélectionner et consulter ses
+            informations dans le panneau « Propriétés ».
+          </li>
 
-{`Cartomailles reconnaît une écriture simple et naturelle des patrons de crochet.
+          <li>
+            Enregistrez votre projet pour le reprendre ultérieurement ou
+            exportez votre diagramme lorsqu&apos;il est terminé.
+          </li>
+        </ol>
 
-Chaque ligne représente :
+        <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4 text-sm">
+          💡 Pour les grands diagrammes, utilisez les barres de défilement
+          horizontale et verticale afin de parcourir l&apos;ensemble de votre
+          travail.
+        </div>
+      </div>
+    ),
+  },
 
-• un rang pour un diagramme plat ;
-• un tour pour un diagramme circulaire.
+  pattern: {
+    title: "✍️ Écrire un patron",
+    content: (
+      <div className="space-y-6">
+        <p>
+          Cartomailles reconnaît une écriture <strong>simple et naturelle</strong>,
+          proche de celle utilisée habituellement pour rédiger un patron de
+          crochet.
+        </p>
 
-Les répétitions sont indiquées avec la lettre « x » suivie du nombre de répétitions.
+        <div>
+          <h3 className="text-pink-300 font-bold text-lg mb-3">
+            Une ligne = un rang ou un tour
+          </h3>
 
-Exemples :
+          <ul className="list-disc ml-5 space-y-2">
+            <li>
+              Une ligne représente <strong>un rang</strong> pour un diagramme
+              plat.
+            </li>
+            <li>
+              Une ligne représente <strong>un tour</strong> pour un diagramme
+              circulaire.
+            </li>
+          </ul>
+        </div>
 
-6 ms
+        <div>
+          <h3 className="text-pink-300 font-bold text-lg mb-3">
+            🧶 Exemples simples
+          </h3>
 
+          <pre className="bg-[#1b1722] p-4 rounded-lg font-mono">
+{`6 ms
 6 aug
+12 ms`}
+          </pre>
+        </div>
 
-2 ms 1 aug x6
+        <div>
+  <h3 className="text-pink-300 font-bold text-lg mb-3">
+    🔁 Répétitions
+  </h3>
 
-3 ms 1 dim x6
+  <p className="mb-3">
+    Pour répéter une séquence de plusieurs instructions, placez-la entre
+    <strong> parenthèses</strong>, puis ajoutez la lettre
+    <strong> x</strong> suivie du nombre de répétitions.
+  </p>
 
-Conseils :
+  <pre className="bg-[#1b1722] p-4 rounded-lg font-mono mb-3">
+{`(1 ms, 1 aug ms) x6`}
+  </pre>
 
-• Respectez les espaces entre les différents éléments.
-• Une ligne = un rang ou un tour.
-• Évitez les caractères inutiles.
-• Vérifiez l'orthographe des abréviations.`}
+  <p className="mb-4">
+    Cet exemple signifie :
+    {" "}
+    <strong>1 maille serrée puis 1 augmentation en mailles serrées</strong>,
+    le tout répété <strong>6 fois</strong>.
+  </p>
 
-</pre>
-</>
-)
-},
+  <pre className="bg-[#1b1722] p-4 rounded-lg font-mono mb-3">
+{`(2 ms, 1 aug ms) x6`}
+  </pre>
 
-symbols: {
+  <p className="mb-4">
+    Cet exemple signifie :
+    {" "}
+    <strong>2 mailles serrées puis 1 augmentation en mailles serrées</strong>,
+    le tout répété <strong>6 fois</strong>.
+  </p>
+
+  <pre className="bg-[#1b1722] p-4 rounded-lg font-mono mb-3">
+{`(3 ms, 1 dim ms) x6`}
+  </pre>
+
+  <p>
+    Cet exemple signifie :
+    {" "}
+    <strong>3 mailles serrées puis 1 diminution en mailles serrées</strong>,
+    le tout répété <strong>6 fois</strong>.
+  </p>
+
+  <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4 text-sm mt-5">
+    💡 <strong>Important :</strong> les augmentations et diminutions doivent
+    toujours préciser le type de maille concerné.
+    <div className="mt-2 font-mono">
+      aug ms → augmentation en mailles serrées
+      <br />
+      dim ms → diminution en mailles serrées
+      <br />
+      aug br → augmentation en brides
+      <br />
+      dim br → diminution en brides
+    </div>
+  </div>
+</div>
+
+        <div>
+          <h3 className="text-pink-300 font-bold text-lg mb-3">
+            💡 Conseils de saisie
+          </h3>
+
+          <ul className="list-disc ml-5 space-y-2">
+            <li>Utilisez une ligne par rang ou par tour.</li>
+            <li>Laissez des espaces entre les différentes instructions.</li>
+            <li>Respectez les abréviations reconnues par Cartomailles.</li>
+            <li>Évitez les caractères inutiles.</li>
+            <li>
+              En cas de résultat inattendu, vérifiez l&apos;orthographe des
+              abréviations et la structure de la ligne.
+            </li>
+          </ul>
+        </div>
+      </div>
+    ),
+  },
+
+  symbols: {
   title: "🧶 Symboles",
   content: (
     <div className="space-y-8">
@@ -104,9 +226,26 @@ symbols: {
         </h3>
 
         <div className="space-y-2 font-mono">
-          <div><span className="font-bold text-pink-200 w-16 inline-block">ml</span> Maille en l&apos;air</div>
-          <div><span className="font-bold text-pink-200 w-16 inline-block">mc</span> Maille coulée</div>
-          <div><span className="font-bold text-pink-200 w-16 inline-block">ms</span> Maille serrée</div>
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              ml
+            </span>
+            Maille en l&apos;air
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              mc
+            </span>
+            Maille coulée
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              ms
+            </span>
+            Maille serrée
+          </div>
         </div>
       </div>
 
@@ -116,23 +255,127 @@ symbols: {
         </h3>
 
         <div className="space-y-2 font-mono">
-          <div><span className="font-bold text-pink-200 w-16 inline-block">db</span> Demi-bride</div>
-          <div><span className="font-bold text-pink-200 w-16 inline-block">br</span> Bride</div>
-          <div><span className="font-bold text-pink-200 w-16 inline-block">dbr</span> Double bride</div>
-          <div><span className="font-bold text-pink-200 w-16 inline-block">tbr</span> Triple bride</div>
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              db
+            </span>
+            Demi-bride
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              br
+            </span>
+            Bride
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              dbr
+            </span>
+            Double bride
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              tbr
+            </span>
+            Triple bride
+          </div>
         </div>
       </div>
 
       <div>
         <h3 className="text-pink-300 font-bold text-lg mb-3">
-          ➕ Augmentations & diminutions
+          ➕ Augmentations
         </h3>
 
+        <p className="mb-3">
+          Une augmentation doit toujours être suivie du type de maille concerné.
+        </p>
+
         <div className="space-y-2 font-mono">
-          <div><span className="font-bold text-pink-200 w-16 inline-block">aug</span> Augmentation</div>
-          <div><span className="font-bold text-pink-200 w-16 inline-block">dim</span> Diminution</div>
-          <div><span className="font-bold text-pink-200 w-16 inline-block">2BE</span> Deux brides ensemble</div>
-          <div><span className="font-bold text-pink-200 w-16 inline-block">3BE</span> Trois brides ensemble</div>
+          <div>
+            <span className="font-bold text-pink-200 w-28 inline-block">
+              aug ms
+            </span>
+            Augmentation en mailles serrées
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-28 inline-block">
+              aug db
+            </span>
+            Augmentation en demi-brides
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-28 inline-block">
+              aug br
+            </span>
+            Augmentation en brides
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-28 inline-block">
+              aug dbr
+            </span>
+            Augmentation en doubles brides
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-28 inline-block">
+              aug tbr
+            </span>
+            Augmentation en triples brides
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-pink-300 font-bold text-lg mb-3">
+          ➖ Diminutions
+        </h3>
+
+        <p className="mb-3">
+          Une diminution doit également préciser le type de maille concerné.
+        </p>
+
+        <div className="space-y-2 font-mono">
+          <div>
+            <span className="font-bold text-pink-200 w-28 inline-block">
+              dim ms
+            </span>
+            Diminution en mailles serrées
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-28 inline-block">
+              dim db
+            </span>
+            Diminution en demi-brides
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-28 inline-block">
+              dim br
+            </span>
+            Diminution en brides
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-28 inline-block">
+              dim dbr
+            </span>
+            Diminution en doubles brides
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-28 inline-block">
+              dim tbr
+            </span>
+            Diminution en triples brides
+          </div>
         </div>
       </div>
 
@@ -142,324 +385,554 @@ symbols: {
         </h3>
 
         <div className="space-y-2 font-mono">
-          <div><span className="font-bold text-pink-200 w-16 inline-block">CM</span> Cercle magique</div>
-          <div><span className="font-bold text-pink-200 w-16 inline-block">brAV</span> Bride relief avant</div>
-          <div><span className="font-bold text-pink-200 w-16 inline-block">brAR</span> Bride relief arrière</div>
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              CM
+            </span>
+            Cercle magique
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              2BE
+            </span>
+            Deux brides ensemble
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              3BE
+            </span>
+            Trois brides ensemble
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              brAV
+            </span>
+            Bride relief avant
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              brAR
+            </span>
+            Bride relief arrière
+          </div>
         </div>
       </div>
 
       <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4 text-sm">
-        💡 <strong>Important :</strong> les abréviations doivent être saisies exactement comme indiquées ci-dessus afin d&apos;être reconnues par Cartomailles.
+        💡 <strong>Exemples :</strong>
+        <div className="mt-2 font-mono">
+          6 ms
+          <br />
+          6 aug ms
+          <br />
+          (1 ms, 1 aug ms) x6
+          <br />
+          (2 ms, 1 dim ms) x6
+          <br />
+          6 br
+          <br />
+          6 aug br
+          <br />
+          6 brAV — 6 brides relief avant
+          <br />
+          6 brAR — 6 brides relief arrière
+        </div>
       </div>
 
-    </div>
-  )
-},
+      <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4 text-sm">
+        ⚠️ <strong>Important :</strong> les abréviations doivent être saisies
+        exactement comme indiqué pour être reconnues par Cartomailles.
+      </div>
 
-flat: {
-title: "📐 Diagramme plat",
-content: (
-  <p className="whitespace-pre-line">
-{`Le diagramme plat représente un ouvrage travaillé en rangs.
-
-Chaque ligne du patron correspond à un rang.
-
-Les rangs sont affichés du bas vers le haut, conformément aux conventions des diagrammes de crochet.
-
-Cartomailles calcule automatiquement :
-
-• les mailles ;
-• les augmentations ;
-• les diminutions ;
-• les liaisons entre les rangs.
-
-Le placement des symboles est continuellement amélioré afin d'obtenir un diagramme clair et fidèle au patron.`}
-  </p>
-)
-},
-
-circle: {
-title: "🔵 Diagramme circulaire",
-content: (
-  <p className="whitespace-pre-line">
-{`Le diagramme circulaire représente les ouvrages travaillés en tours.
-
-Le premier tour est placé au centre puis chaque tour est ajouté autour du précédent.
-
-Le logiciel répartit automatiquement les mailles, les augmentations et les diminutions afin d'obtenir une représentation équilibrée.
-
-Les tours sont numérotés automatiquement.`}
-  </p>
-)
-},
-
-save: {
-title: "💾 Sauvegarder",
-content: (
-  <p className="whitespace-pre-line">
-{`Le bouton « Sauvegarder » permet d'enregistrer votre projet Cartomailles.
-
-Le fichier obtenu pourra être rouvert ultérieurement afin de poursuivre votre travail sans perdre vos modifications.`}
-  </p>
-)
-},
-
-export: {
-title: "📤 Export",
-content: (
-  <p className="whitespace-pre-line">
-{`Cartomailles permet d'exporter vos diagrammes dans plusieurs formats.
-
-PNG
-Image haute qualité adaptée au web et aux réseaux sociaux.
-
-SVG
-Format vectoriel idéal pour l'impression et les modifications graphiques.
-
-PDF
-Document prêt à être imprimé ou partagé.`}
-  </p>
-)
-},
-
-bug: {
-  title: "🐞 Signaler un bug",
-  content: (
-    <div className="space-y-4">
-
-      <p className="whitespace-pre-line">
-{`Vous avez rencontré un problème ?
-
-Merci de remplir le formulaire de signalement en décrivant le bug le plus précisément possible.
-
-Pensez à indiquer :
-• le patron utilisé ;
-• le résultat obtenu ;
-• le résultat attendu ;
-• une capture d'écran si possible.`}
+      <p className="text-sm text-gray-400">
+        De nouvelles mailles et constructions seront progressivement ajoutées
+        au logiciel.
       </p>
 
-      <button
-        onClick={() =>
-          window.open(
-            "https://docs.google.com/forms/d/e/1FAIpQLSckIAs1BYBPK15mz8ySauiN4DthzQnslDz7FdL7NmE-zZu4IQ/viewform?usp=header",
-            "_blank"
-          )
-        }
-        className="bg-pink-700 hover:bg-pink-600 text-white px-5 py-3 rounded-lg font-semibold transition"
-      >
-        🐞 Ouvrir le formulaire
-      </button>
-
     </div>
-  )
+  ),
 },
 
-website: {
-title: "🌐 Cartomailles.com",
-content: (
-<div className="space-y-4">
+  tools: {
+    title: "🖱️ Utiliser le diagramme",
+    content: (
+      <div className="space-y-6">
+        <p>
+          La barre d&apos;outils située au-dessus du diagramme permet de
+          contrôler son affichage et de naviguer dans votre travail.
+        </p>
 
-<p className="whitespace-pre-line">
-{`Retrouvez toutes les informations concernant Cartomailles sur le site officiel.
+        <div className="space-y-4">
+          <div className="rounded-lg bg-[#2d2436] p-4">
+            <strong className="text-pink-200">🔍 Zoom</strong>
+            <p className="mt-1">
+              Agrandissez ou réduisez l&apos;affichage du diagramme.
+            </p>
+          </div>
 
-Vous y trouverez :
+          <div className="rounded-lg bg-[#2d2436] p-4">
+            <strong className="text-pink-200">✋ Déplacement</strong>
+            <p className="mt-1">
+              Déplacez-vous librement dans l&apos;espace de travail.
+            </p>
+          </div>
 
-• les dernières actualités
-• les nouvelles versions
-• les téléchargements
-• les tutoriels
-• les annonces importantes
+          <div className="rounded-lg bg-[#2d2436] p-4">
+            <strong className="text-pink-200">🎯 Recentrer</strong>
+            <p className="mt-1">
+              Replacez le diagramme au centre de la zone de travail.
+            </p>
+          </div>
 
-Le site sera régulièrement enrichi au fil du développement du logiciel.`}
-</p>
+          <div className="rounded-lg bg-[#2d2436] p-4">
+            <strong className="text-pink-200">🖱️ Sélection</strong>
+            <p className="mt-1">
+              Cliquez sur une maille pour afficher ses informations dans le
+              panneau « Propriétés ».
+            </p>
+          </div>
+        </div>
 
-<button
-onClick={() => window.open("https://www.cartomailles.com","_blank")}
-className="w-full bg-pink-700 hover:bg-pink-600 rounded-lg py-3 font-semibold transition"
->
-🌐 Ouvrir le site officiel
-</button>
+        <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4">
+          Pour les grands diagrammes, utilisez les
+          {" "}
+          <strong>barres de défilement horizontale et verticale</strong> pour
+          naviguer dans l&apos;ensemble du diagramme.
+        </div>
+      </div>
+    ),
+  },
 
-</div>
-)
-},
+  flat: {
+    title: "📐 Diagramme plat",
+    content: (
+      <div className="space-y-4">
+        <p>
+          Le diagramme plat représente un ouvrage travaillé en
+          {" "}
+          <strong>rangs</strong>.
+        </p>
 
-community: {
-title: "👥 Rejoindre la communauté",
-content: (
-<div className="space-y-4">
+        <p>
+          Chaque ligne du patron correspond à un rang. Les rangs sont disposés
+          du bas vers le haut afin de construire progressivement le diagramme.
+        </p>
 
-<p className="whitespace-pre-line">
-{`La communauté Cartomailles est le meilleur endroit pour :
+        <p>Cartomailles calcule notamment :</p>
 
-• partager vos créations
-• poser vos questions
-• découvrir les nouveautés
-• échanger avec d'autres passionnés de crochet
+        <ul className="list-disc ml-5 space-y-2">
+          <li>les mailles ;</li>
+          <li>les augmentations ;</li>
+          <li>les diminutions ;</li>
+          <li>le placement des différents rangs.</li>
+        </ul>
 
-Nous serons heureux de vous accueillir !`}
-</p>
+        <p>
+          Les couleurs alternent entre les rangs afin de faciliter leur
+          identification et la lecture du diagramme.
+        </p>
 
-<button
-onClick={() => window.open("https://facebook.com/share/15xfjJpp5xC/","_blank")}
-className="w-full bg-blue-700 hover:bg-blue-600 rounded-lg py-3 font-semibold transition"
->
-👥 Rejoindre Facebook
-</button>
+        <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4 text-sm">
+          🧪 Le placement automatique continue d&apos;être amélioré pendant la
+          bêta.
+        </div>
+      </div>
+    ),
+  },
 
-</div>
-)
-},
+  circle: {
+    title: "🔵 Diagramme circulaire",
+    content: (
+      <div className="space-y-4">
+        <p>
+          Le diagramme circulaire représente les ouvrages travaillés en
+          {" "}
+          <strong>tours</strong>.
+        </p>
 
-contact: {
-title: "📧 Contact",
-content: (
-<div className="space-y-4">
+        <p>
+          Le premier tour est placé au centre, puis chaque nouveau tour est
+          disposé autour du précédent.
+        </p>
 
-<p className="whitespace-pre-line">
-{`Une question ?
+        <p>
+          Cartomailles répartit automatiquement les mailles afin de construire
+          progressivement le diagramme.
+        </p>
 
-Une suggestion ?
+        <p>
+          Les couleurs alternent entre les tours pour faciliter leur
+          identification.
+        </p>
 
-Un problème ?
+        <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4 text-sm">
+          💡 Sur un grand ouvrage, utilisez le zoom, le déplacement et les
+          barres de défilement pour explorer le diagramme.
+        </div>
+      </div>
+    ),
+  },
 
-N'hésitez pas à nous contacter.
+  granny: {
+    title: "◻ Diagramme granny",
+    content: (
+      <div className="space-y-4">
+        <p>
+          Le diagramme granny représente un ouvrage construit en
+          {" "}
+          <strong>tours carrés</strong> autour d&apos;un centre.
+        </p>
 
-Nous répondrons dans les meilleurs délais.`}
-</p>
+        <p>
+          Cartomailles regroupe automatiquement les brides séparées par des
+          mailles en l&apos;air, puis répartit ces groupes sur les quatre côtés.
+          Les espaces situés entre deux côtés sont placés dans les angles.
+        </p>
 
-<button
-onClick={() => window.location.href="mailto:contact@cartomailles.com"}
-className="w-full bg-purple-700 hover:bg-purple-600 rounded-lg py-3 font-semibold transition"
->
-📧 contact@cartomailles.com
-</button>
+        <p>Le placement automatique prend en charge :</p>
 
-</div>
-)
-},
+        <ul className="list-disc ml-5 space-y-2">
+          <li>les groupes compacts de trois brides ;</li>
+          <li>la répartition régulière des groupes sur chaque côté ;</li>
+          <li>les espaces en mailles en l&apos;air dans les quatre angles ;</li>
+          <li>l&apos;orientation des symboles selon le côté du carré ;</li>
+          <li>la maille coulée utilisée pour fermer le tour.</li>
+        </ul>
 
+        <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4 text-sm">
+          💡 <strong>Exemples :</strong>
+          <div className="mt-2 space-y-2 font-mono">
+            <div>(3 br 2 ml) x4 1 mc</div>
+            <div>(3 br 1 ml 3 br 2 ml) x4 1 mc</div>
+          </div>
+          <p className="mt-3 font-sans">
+            Le premier exemple crée un groupe par côté. Le second crée deux
+            groupes par côté. Une ligne du patron correspond à un nouveau tour.
+          </p>
+        </div>
+      </div>
+    ),
+  },
 
-about: {
-title: "ℹ️ À propos",
-content: (
-<div className="space-y-4">
+  save: {
+    title: "💾 Sauvegarder",
+    content: (
+      <div className="space-y-4">
+        <p>
+          Le bouton <strong>« Sauvegarder »</strong> permet d&apos;enregistrer
+          votre projet Cartomailles.
+        </p>
 
-<p className="whitespace-pre-line">
-{`Cartomailles est un logiciel imaginé et développé par Aurore alias AD Murphye.
+        <p>
+          Vous pourrez ensuite rouvrir votre projet afin de poursuivre votre
+          travail sans avoir à ressaisir votre patron.
+        </p>
 
-Son objectif est de proposer un outil moderne, intuitif et accessible permettant de créer facilement des diagrammes de crochet à partir de patrons écrits.
+        <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4 text-sm">
+          💡 Pensez à sauvegarder régulièrement votre travail pendant la
+          création d&apos;un diagramme important.
+        </div>
+      </div>
+    ),
+  },
 
-Le logiciel évolue continuellement grâce aux retours des bêta-testeurs.
+  export: {
+    title: "📤 Export",
+    content: (
+      <div className="space-y-5">
+        <p>
+          Cartomailles permet d&apos;exporter vos diagrammes afin de les
+          conserver, les imprimer ou les intégrer à vos patrons.
+        </p>
 
-Merci de faire partie de cette aventure !`}
-</p>
+        <div className="space-y-4">
+          <div className="rounded-lg bg-[#2d2436] p-4">
+            <strong className="text-pink-200">PNG</strong>
+            <p className="mt-1">
+              Format image pratique pour le web, les réseaux sociaux ou
+              l&apos;intégration dans un document.
+            </p>
+          </div>
 
-<hr className="border-[#5d445e]" />
+          <div className="rounded-lg bg-[#2d2436] p-4">
+            <strong className="text-pink-200">SVG</strong>
+            <p className="mt-1">
+              Format vectoriel particulièrement adapté à l&apos;impression et
+              aux modifications graphiques.
+            </p>
+          </div>
 
-<p className="text-sm text-gray-400">
+          <div className="rounded-lg bg-[#2d2436] p-4">
+            <strong className="text-pink-200">PDF</strong>
+            <p className="mt-1">
+              Format pratique pour imprimer, archiver ou partager votre
+              diagramme.
+            </p>
+          </div>
+        </div>
+      </div>
+    ),
+  },
 
-Cartomailles Bêta 0.9.0
+  beta: {
+    title: "🧪 Version bêta",
+    content: (
+      <div className="space-y-5">
+        <p>
+          Cartomailles est actuellement en <strong>version bêta</strong>.
+        </p>
 
-<br />
+        <p>
+          Certaines constructions de crochet peuvent être incomplètes, mal
+          interprétées ou ne pas encore être prises en charge.
+        </p>
 
-© 2026 Aurore alias AD Murphye
+        <p>
+          N&apos;hésitez pas à tester différents patrons, types de mailles et
+          configurations. Les situations inhabituelles sont particulièrement
+          utiles pour améliorer le logiciel.
+        </p>
 
-<br />
+        <div className="rounded-xl border border-pink-800 bg-[#2d2436] p-4">
+          Si un diagramme ne correspond pas au résultat attendu, pensez à
+          conserver le <strong>patron utilisé</strong> et, si possible, à faire
+          une <strong>capture d&apos;écran</strong>.
+        </div>
 
-Tous droits réservés.
+        <p>
+          Vos tests et vos retours contribuent directement à
+          l&apos;amélioration de Cartomailles. Merci ! 🧶
+        </p>
+      </div>
+    ),
+  },
 
-</p>
+  bug: {
+    title: "🐞 Signaler un bug",
+    content: (
+      <div className="space-y-4">
+        <p>Vous avez rencontré un problème ?</p>
 
-</div>
-)
-},
+        <p>
+          Merci de remplir le formulaire de signalement en décrivant le bug le
+          plus précisément possible.
+        </p>
 
+        <p>Pensez à indiquer :</p>
+
+        <ul className="list-disc ml-5 space-y-2">
+          <li>le patron utilisé ;</li>
+          <li>le résultat obtenu ;</li>
+          <li>le résultat attendu ;</li>
+          <li>une capture d&apos;écran si possible.</li>
+        </ul>
+
+        <button
+          onClick={() =>
+            window.open(
+              "https://docs.google.com/forms/d/e/1FAIpQLSckIAs1BYBPK15mz8ySauiN4DthzQnslDz7FdL7NmE-zZu4IQ/viewform?usp=header",
+              "_blank"
+            )
+          }
+          className="bg-pink-700 hover:bg-pink-600 text-white px-5 py-3 rounded-lg font-semibold transition"
+        >
+          🐞 Ouvrir le formulaire
+        </button>
+      </div>
+    ),
+  },
+
+  website: {
+    title: "🌐 Cartomailles.com",
+    content: (
+      <div className="space-y-4">
+        <p>
+          Retrouvez toutes les informations concernant Cartomailles sur le site
+          officiel.
+        </p>
+
+        <p>Vous y trouverez notamment :</p>
+
+        <ul className="list-disc ml-5 space-y-2">
+          <li>les dernières actualités ;</li>
+          <li>les nouvelles versions ;</li>
+          <li>les tutoriels ;</li>
+          <li>les annonces importantes.</li>
+        </ul>
+
+        <p>
+          Le site sera régulièrement enrichi au fil du développement de
+          Cartomailles.
+        </p>
+
+        <button
+          onClick={() =>
+            window.open("https://www.cartomailles.com", "_blank")
+          }
+          className="w-full bg-pink-700 hover:bg-pink-600 rounded-lg py-3 font-semibold transition"
+        >
+          🌐 Ouvrir le site officiel
+        </button>
+      </div>
+    ),
+  },
+
+  community: {
+    title: "👥 Rejoindre la communauté",
+    content: (
+      <div className="space-y-4">
+        <p>
+          La communauté Cartomailles permet d&apos;échanger autour du logiciel
+          et du crochet.
+        </p>
+
+        <p>Vous pouvez notamment :</p>
+
+        <ul className="list-disc ml-5 space-y-2">
+          <li>partager vos créations ;</li>
+          <li>poser vos questions ;</li>
+          <li>découvrir les nouveautés ;</li>
+          <li>échanger avec d&apos;autres passionnés de crochet.</li>
+        </ul>
+
+        <button
+          onClick={() =>
+            window.open(
+              "https://facebook.com/share/15xfjJpp5xC/",
+              "_blank"
+            )
+          }
+          className="w-full bg-blue-700 hover:bg-blue-600 rounded-lg py-3 font-semibold transition"
+        >
+          👥 Rejoindre Facebook
+        </button>
+      </div>
+    ),
+  },
+
+  contact: {
+    title: "📧 Contact",
+    content: (
+      <div className="space-y-4">
+        <p>
+          Une question, une suggestion ou un problème concernant Cartomailles ?
+        </p>
+
+        <p>N&apos;hésitez pas à nous contacter.</p>
+
+        <button
+          onClick={() =>
+            (window.location.href = "mailto:contact@cartomailles.com")
+          }
+          className="w-full bg-purple-700 hover:bg-purple-600 rounded-lg py-3 font-semibold transition"
+        >
+          📧 contact@cartomailles.com
+        </button>
+      </div>
+    ),
+  },
+
+  about: {
+    title: "ℹ️ À propos",
+    content: (
+      <div className="space-y-4">
+        <p>
+          Cartomailles est un logiciel imaginé et développé par
+          {" "}
+          <strong>Aurore alias AD Murphye</strong>.
+        </p>
+
+        <p>
+          Son objectif est de proposer un outil moderne, intuitif et accessible
+          permettant de créer facilement des diagrammes de crochet à partir de
+          patrons écrits.
+        </p>
+
+        <p>
+          Cartomailles évolue continuellement grâce aux essais et aux retours
+          de ses bêta-testeuses.
+        </p>
+
+        <p>Merci de faire partie de cette aventure ! 🧶</p>
+
+        <hr className="border-[#5d445e]" />
+
+        <p className="text-sm text-gray-400">
+          Cartomailles Bêta
+          <br />
+          © 2026 Aurore alias AD Murphye
+          <br />
+          Tous droits réservés.
+        </p>
+      </div>
+    ),
+  },
 };
 
 export default function HelpModal({
-
-isOpen,
-onClose,
-
+  isOpen,
+  onClose,
 }: HelpModalProps) {
+  const [page, setPage] =
+    useState<keyof typeof pages>("welcome");
 
-const [page, setPage] = useState<keyof typeof pages>("welcome");
+  if (!isOpen) return null;
 
-if(!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
+      <div className="bg-[#241d2d] rounded-xl w-[1000px] h-[700px] flex overflow-hidden">
+        {/* Menu gauche */}
+        <div className="w-64 border-r border-[#5d445e] p-4 overflow-y-auto">
+          <div className="flex flex-col gap-2">
+            {Object.entries(pages).map(([key, value]) => (
+              <button
+                key={key}
+                onClick={() =>
+                  setPage(key as keyof typeof pages)
+                }
+                className={`w-full text-left rounded-lg px-3 py-2 transition text-[#FBF7F2] ${
+                  page === key
+                    ? "bg-[#3a2c48] text-pink-300"
+                    : "hover:bg-[#2d2436]"
+                }`}
+              >
+                {value.title}
+              </button>
+            ))}
+          </div>
+        </div>
 
-return(
+        {/* Contenu */}
+        <div
+          className="flex-1 p-8 overflow-y-auto"
+          style={{ color: "#FBF7F2" }}
+        >
+          <div className="flex justify-between items-start">
+            <h2
+              className="text-2xl font-bold"
+              style={{ color: "#FBF7F2" }}
+            >
+              {pages[page].title}
+            </h2>
 
-<div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
+            <button
+              onClick={onClose}
+              className="w-9 h-9 rounded-lg border border-[#5d445e] hover:bg-[#3a2c48] transition flex items-center justify-center"
+              aria-label="Fermer l'aide"
+            >
+              ✕
+            </button>
+          </div>
 
-<div className="bg-[#241d2d] rounded-xl w-[1000px] h-[700px] flex">
-
-<div className="w-64 border-r border-[#5d445e] p-4">
-
-  <div className="flex flex-col gap-2">
-
-    {Object.entries(pages).map(([key, value]) => (
-
-      <button
-        key={key}
-        onClick={() => setPage(key as keyof typeof pages)}
-
-        className={`w-full text-left rounded-lg px-3 py-2 transition text-[#FBF7F2]
-${
-  page === key
-    ? "bg-[#3a2c48] text-pink-300"
-    : "hover:bg-[#2d2436]"
-}`}
-      >
-        {value.title}
-      </button>
-
-    ))}
-
-  </div>
-
-</div>
-
-<div
-  className="flex-1 p-8 overflow-y-auto"
-  style={{ color: "#FBF7F2" }}
->
-
-<div className="flex justify-between">
-
-<h2
-  className="text-2xl font-bold"
-  style={{ color: "#FBF7F2" }}
->
-
-{pages[page].title}
-
-</h2>
-
-<button
-
-onClick={onClose}
-
->
-
-✕
-
-</button>
-
-</div>
-
-<div className="mt-6">
-
-{pages[page].content}
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-);
+          <div className="mt-6">
+            {pages[page].content}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

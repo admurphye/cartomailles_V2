@@ -2,7 +2,7 @@ import { PositionedStitch } from "@/app/lib/engine/model/PositionedStitch";
 import { Link } from "@/app/lib/engine/model/Link";
 import { drawCrochetSymbol } from "./drawCrochetSymbol";
 import { colors } from "@/app/theme/colors";
-import { useState, type RefObject } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { Tool } from "@/app/lib/engine/model/Tool";
 
 interface Props {
@@ -19,7 +19,6 @@ interface Props {
 
 export default function CircularRenderer({
   stitches,
-  links,
   selectedId,
   onSelect,
   diagramRef,
@@ -35,6 +34,7 @@ export default function CircularRenderer({
     offsetX: number;
     offsetY: number;
   } | null>(null);
+  const dragMovedRef = useRef(false);
 
   const getDiagramPoint = (event: React.PointerEvent<SVGSVGElement>) => {
     const svg = event.currentTarget;
@@ -132,13 +132,21 @@ export default function CircularRenderer({
         if (!dragging) return;
 
         const point = getDiagramPoint(event);
+        const deltaX = point.x - dragging.startX;
+        const deltaY = point.y - dragging.startY;
+
+        if (Math.hypot(deltaX, deltaY) > 1) {
+          dragMovedRef.current = true;
+        }
+
         onMoveStitch(
           dragging.id,
-          dragging.offsetX + point.x - dragging.startX,
-          dragging.offsetY + point.y - dragging.startY
+          dragging.offsetX + deltaX,
+          dragging.offsetY + deltaY
         );
       }}
       onPointerUp={() => setDragging(null)}
+      onPointerCancel={() => setDragging(null)}
     >
       {roundGuides.map((guide) => (
         <circle
@@ -176,13 +184,24 @@ export default function CircularRenderer({
         return (
           <g
             key={stitch.id}
-            onClick={() =>
-              onSelect(selectedId === stitch.id ? null : stitch.id)
-            }
+            onClick={() => {
+              if (dragMovedRef.current) {
+                dragMovedRef.current = false;
+                return;
+              }
+
+              if (tool === "moveStitch") return;
+              onSelect(selectedId === stitch.id ? null : stitch.id);
+            }}
             onPointerDown={(event) => {
-              if (tool !== "moveStitch") return;
+              const canDrag =
+                tool === "moveStitch" ||
+                (tool === "select" && selectedId === stitch.id);
+
+              if (!canDrag) return;
 
               event.stopPropagation();
+              dragMovedRef.current = false;
               onSelect(stitch.id);
               const svg = diagramRef.current;
 
@@ -204,14 +223,23 @@ export default function CircularRenderer({
                 offsetY: stitch.offsetY ?? 0,
               });
             }}
-            style={{ cursor: tool === "moveStitch" ? "move" : "pointer" }}
+            style={{
+              cursor:
+                tool === "moveStitch" ||
+                (tool === "select" && selectedId === stitch.id)
+                  ? dragging?.id === stitch.id
+                    ? "grabbing"
+                    : "grab"
+                  : "pointer",
+            }}
           >
             {drawCrochetSymbol(
               stitch.type,
               stitch.operation,
               stitch.x,
               stitch.y,
-              symbolColor
+              symbolColor,
+              stitch.rotation ?? 0
             )}
 
             {selectedId === stitch.id && (

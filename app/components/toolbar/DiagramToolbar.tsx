@@ -11,8 +11,8 @@ import { Hand, Ban } from "lucide-react";
 import {Move,} from "lucide-react";
 
 interface DiagramToolbarProps {
-  diagramType: "circular" | "flat";
-  setDiagramType: (type: "circular" | "flat") => void;
+  diagramType: "circular" | "flat" | "granny";
+  setDiagramType: (type: "circular" | "flat" | "granny") => void;
   resetView: () => void;
   tool: Tool;
   setTool: (tool: Tool) => void;
@@ -102,6 +102,17 @@ export default function DiagramToolbar({
     className="px-3 py-2 text-sm transition-colors"
   >
     📏 Plat
+  </button>
+  <button
+    onClick={() => setDiagramType("granny")}
+    style={{
+      backgroundColor:
+        diagramType === "granny" ? colors.primary : colors.surface,
+      color: colors.text,
+    }}
+    className="px-3 py-2 text-sm transition-colors"
+  >
+    ◻ Granny
   </button>
     </div>
      </div>

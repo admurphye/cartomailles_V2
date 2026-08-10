@@ -6,7 +6,6 @@ import {
   drawStem,
   drawBar,
   drawHalfBar,
-  drawDiagonal,
   drawFrontPostArc,
   drawBackPostArc,
   drawTigeInclineeGauche,
@@ -247,8 +246,6 @@ export function drawReliefavant(
 
       {drawBar(x, y, color, 1)}
 
-      {drawDiagonal(x, y, color)}
-
       {drawFrontPostArc(x, y, color)}
     </g>
   );
@@ -272,8 +269,6 @@ export function drawReliefarriere(
       {drawStem(x, y, color)}
 
       {drawBar(x, y, color, 1)}
-
-      {drawDiagonal(x, y, color)}
 
       {drawBackPostArc(x, y, color)}
     </g>
@@ -366,7 +361,8 @@ export function drawCrochetSymbol(
   operation: InstructionOperation,
   x: number,
   y: number,
-  color = "black"
+  color = "black",
+  rotation = 0
 ) {
 
    switch (SYMBOL_REGISTRY[type]) {
@@ -380,13 +376,19 @@ export function drawCrochetSymbol(
       return drawMC(x - 20, y - 20, color);
 
     case "DB":
-      return drawDB(x - 20, y - 20, color);
+      return drawDB(x - 20, y - 20, color, rotation);
 
     case "BR":
-      return drawBR(x - 20, y - 20, color);
+      return drawBR(x - 20, y - 20, color, rotation);
+
+    case "BRAV":
+      return drawReliefavant(x - 20, y - 20, color, rotation);
+
+    case "BRAR":
+      return drawReliefarriere(x - 20, y - 20, color, rotation);
 
     case "TBR":
-      return drawTBR(x - 20, y - 20, color);
+      return drawTBR(x - 20, y - 20, color, rotation);
 
     default:
       return null;

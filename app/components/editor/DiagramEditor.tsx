@@ -1,12 +1,13 @@
 import CircularRenderer from "../renderer/CircularRenderer";
 import FlatRenderer from "../renderer/FlatRenderer";
+import GrannyRenderer from "../renderer/GrannyRenderer";
 import { Tool } from "@/app/lib/engine/model/Tool";
 import { PositionedStitch } from "@/app/lib/engine/model/PositionedStitch";
 import { Link } from "@/app/lib/engine/model/Link";
 import type { RefObject } from "react";
 
 type Props = {
-  diagramType: "circular" | "flat";
+  diagramType: "circular" | "flat" | "granny";
   stitches: PositionedStitch[];
   links: Link[];
   tool: Tool;
@@ -36,6 +37,16 @@ export default function DiagramEditor({
     >
       {diagramType === "flat" ? (
         <FlatRenderer
+          stitches={stitches}
+          links={links}
+          selectedId={selectedId}
+          onSelect={onSelect}
+          diagramRef={diagramRef}
+          onMoveStitch={onMoveStitch}
+          tool={tool}
+        />
+      ) : diagramType === "granny" ? (
+        <GrannyRenderer
           stitches={stitches}
           links={links}
           selectedId={selectedId}

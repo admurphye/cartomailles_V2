@@ -54,9 +54,8 @@ export default function PatternPanel({
         }}
         placeholder={`Exemple :
 
-Cercle magique
 6 ms
-6 aug
+6 aug (ms)
 12 br
 12tbr`}
       />

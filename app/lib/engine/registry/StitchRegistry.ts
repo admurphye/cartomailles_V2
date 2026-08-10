@@ -44,6 +44,20 @@ export const StitchRegistry: Record<string, StitchDefinition> = {
     isChain: false,
   },
 
+  fpdc: {
+    type: "fpdc",
+    consumes: 1,
+    produces: 1,
+    isChain: false,
+  },
+
+  bpdc: {
+    type: "bpdc",
+    consumes: 1,
+    produces: 1,
+    isChain: false,
+  },
+
   tr: {
     type: "tr",
     consumes: 1,

@@ -59,12 +59,12 @@ export default function Hero({
             <div className="mt-10 rounded-2xl border border-pink-200 bg-white p-6 shadow-sm max-w-xl">
 
               <h3 className="font-semibold text-[#5B2E4D] text-lg">
-                💜 Merci d'être membre fondateur
+                💜 Merci d&apos;être membre fondateur
               </h3>
 
               <p className="mt-3 text-gray-600 leading-7">
                 Vos retours, vos idées et vos signalements de bugs permettront
-                d'améliorer Cartomailles avant sa sortie officielle.
+                d&apos;améliorer Cartomailles avant sa sortie officielle.
               </p>
 
             </div>

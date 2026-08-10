@@ -29,6 +29,8 @@ const STITCH_CODES: Record<StitchType, string> = {
   sc: "ms",
   hdc: "db",
   dc: "br",
+  fpdc: "brAV",
+  bpdc: "brAR",
   tr: "tb",
   dtr: "dtr",
 };
@@ -117,7 +119,9 @@ function isProjectState(value: unknown): value is ProjectState {
   const hasValidCoreFields =
     typeof project.projectName === "string" &&
     typeof project.pattern === "string" &&
-    (project.diagramType === "circular" || project.diagramType === "flat");
+    (project.diagramType === "circular" ||
+      project.diagramType === "flat" ||
+      project.diagramType === "granny");
 
   if (!hasValidCoreFields) {
     return false;
@@ -169,7 +173,7 @@ export default function Editor() {
     useState<StitchAdjustments>({});
 
   const [diagramType, setDiagramType] =
-    useState<"circular" | "flat">("circular");
+    useState<"circular" | "flat" | "granny">("circular");
 
   const [tool, setTool] =
     useState<Tool>("select");
@@ -211,7 +215,7 @@ export default function Editor() {
     setPattern(value);
   };
 
-  const handleDiagramTypeChange = (value: "circular" | "flat") => {
+  const handleDiagramTypeChange = (value: "circular" | "flat" | "granny") => {
     if (value === diagramType) {
       return;
     }

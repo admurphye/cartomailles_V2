@@ -203,9 +203,9 @@ export function drawBackPostArc(
       d={`
         M ${x + 20} ${y + 36}
 
-        C ${x + 27} ${y + 34},
-        ${x + 27} ${y + 46},
-        ${x + 20} ${y + 46}
+        C ${x + 30} ${y + 36},
+          ${x + 30} ${y + 48},
+          ${x + 20} ${y + 48}
       `}
       fill="none"
       stroke={color}

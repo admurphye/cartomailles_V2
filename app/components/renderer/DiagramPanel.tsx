@@ -11,9 +11,9 @@ import { useState } from "react";
 import type { RefObject } from "react";
 
 type Props = {
-  diagramType: "circular" | "flat";
+  diagramType: "circular" | "flat" | "granny";
   setDiagramType: (
-    value: "circular" | "flat"
+    value: "circular" | "flat" | "granny"
   ) => void;
 tool: Tool;
 setTool: (tool: Tool) => void;

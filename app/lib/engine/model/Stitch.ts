@@ -7,6 +7,8 @@ export type StitchType =
   | "sc"
   | "hdc"
   | "dc"
+  | "fpdc"
+  | "bpdc"
   | "tr"
   | "dtr";
 
