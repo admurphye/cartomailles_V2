@@ -2,6 +2,9 @@ export function normalizePattern(text: string): string {
   return text
     .toLowerCase()
 
+    // Noms usuels du cercle magique.
+    .replace(/\b(cercle|anneau)\s+magique\b/gi, "mr")
+
     .replace(
       /\b(aug|augmentation|inc|increase|dim|diminution|dec|decrease)\(([^)]+)\)/gi,
       (_, fn, arg) => `${fn}§${arg}§`

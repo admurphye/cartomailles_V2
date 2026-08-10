@@ -21,6 +21,7 @@ const STITCH_MAP: Record<string, StitchType> = {
   tb: "tr",
   ml: "ch",
   mc: "slst",
+  cm: "mr",
   mr: "mr",
 
   // Anglais

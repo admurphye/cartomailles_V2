@@ -387,9 +387,9 @@ const pages = {
         <div className="space-y-2 font-mono">
           <div>
             <span className="font-bold text-pink-200 w-20 inline-block">
-              CM
+              CM / MR
             </span>
-            Cercle magique
+            Cercle magique (vous pouvez aussi écrire « cercle magique »)
           </div>
 
           <div>

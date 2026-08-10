@@ -103,7 +103,9 @@ export default function CircularRenderer({
     ? [...new Set(stitches.map((stitch) => stitch.round))].flatMap((round) => {
         const roundStitches = stitches.filter(
           (stitch) =>
-            stitch.round === round && stitch.role !== "turningChain"
+            stitch.round === round &&
+            stitch.role !== "turningChain" &&
+            stitch.role !== "magicRing"
         );
 
         if (roundStitches.length === 0) {

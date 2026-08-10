@@ -10,21 +10,43 @@ export function layoutCircularGroups(
   const positionedGroups: PositionedGroup[] = [];
   const centerX = 350;
   const centerY = 350;
-  const ringSpacing = 60;
+  const ringSpacing = 50;
   const rounds = [...new Set(groups.map((group) => group.round))];
 
-  for (const round of rounds) {
+  for (const [roundIndex, round] of rounds.entries()) {
     const currentGroups = groups.filter((group) => group.round === round);
+    const magicRings = currentGroups.filter(
+      (group) => group.role === "magicRing"
+    );
     const turningChains = currentGroups.filter(
       (group) => group.role === "turningChain"
     );
     const structuralGroups = currentGroups.filter(
-      (group) => group.role !== "turningChain" && group.role !== "chainSpace"
+      (group) =>
+        group.role !== "turningChain" &&
+        group.role !== "chainSpace" &&
+        group.role !== "magicRing"
     );
     const chainSpaces = currentGroups.filter(
       (group) => group.role === "chainSpace"
     );
-    const radius = round * ringSpacing;
+    const radius = Math.max(1, roundIndex) * ringSpacing;
+
+    magicRings.forEach((group) => {
+      positionedGroups.push({
+        id: group.id,
+        round: group.round,
+        order: group.order,
+        operation: group.operation,
+        role: group.role,
+        countsAsStitch: group.countsAsStitch,
+        centerX,
+        centerY,
+        rotation: 0,
+        orientation: "horizontal",
+        stitches: group.stitches,
+      });
+    });
 
     structuralGroups.forEach((group, index) => {
       const groupAngle =
@@ -39,7 +61,9 @@ export function layoutCircularGroups(
         countsAsStitch: group.countsAsStitch,
         centerX: centerX + radius * Math.cos(groupAngle),
         centerY: centerY + radius * Math.sin(groupAngle),
-        rotation: groupAngle,
+        // Le symbole de base pointe vers le haut. Un quart de tour ajouté à
+        // l'angle polaire l'oriente du centre vers l'extérieur du diagramme.
+        rotation: groupAngle + Math.PI / 2,
         orientation: "radial",
         stitches: group.stitches,
       });

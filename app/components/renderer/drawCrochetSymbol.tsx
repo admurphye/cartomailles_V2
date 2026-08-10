@@ -75,6 +75,23 @@ export function drawMC(
   );
 }
 
+export function drawMR(
+  x: number,
+  y: number,
+  color: string
+) {
+  return (
+    <circle
+      cx={x + 20}
+      cy={y + 20}
+      r={10}
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+    />
+  );
+}
+
 export function drawDB(
   x: number,
   y: number,
@@ -366,6 +383,9 @@ export function drawCrochetSymbol(
 ) {
 
    switch (SYMBOL_REGISTRY[type]) {
+    case "MR":
+      return drawMR(x - 20, y - 20, color);
+
     case "MS":
       return drawMS(x - 20, y - 20, color);
 
