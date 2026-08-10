@@ -6,7 +6,6 @@ import { explodeGroups } from "./explodeGroups";
 
 const CENTER_X = 350;
 const CENTER_Y = 350;
-const ROUND_SPACING = 62;
 const CLUSTER_SPACING = 14;
 
 type SquarePoint = {
@@ -109,7 +108,10 @@ function splitIntoClusters(groups: StitchGroup[]) {
   return { clusters, gaps };
 }
 
-export function layoutGrannyGroups(graph: CrochetGraph): PositionedStitch[] {
+export function layoutGrannyGroups(
+  graph: CrochetGraph,
+  roundSpacing = 62
+): PositionedStitch[] {
   const positionedGroups: PositionedGroup[] = [];
   const rounds = [...new Set(graph.groups.map((group) => group.round))].sort(
     (a, b) => a - b
@@ -152,7 +154,7 @@ export function layoutGrannyGroups(graph: CrochetGraph): PositionedStitch[] {
     if (squareGroups.length === 0) return;
 
     const { clusters, gaps } = splitIntoClusters(squareGroups);
-    const halfSize = Math.max(45, (roundIndex + 1) * ROUND_SPACING);
+    const halfSize = Math.max(45, (roundIndex + 1) * roundSpacing);
     const baseCount = Math.floor(clusters.length / 4);
     const remainder = clusters.length % 4;
     const clustersPerSide = Array.from(

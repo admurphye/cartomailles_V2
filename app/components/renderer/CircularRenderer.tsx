@@ -4,6 +4,7 @@ import { drawCrochetSymbol } from "./drawCrochetSymbol";
 import { colors } from "@/app/theme/colors";
 import { useRef, useState, type RefObject } from "react";
 import { Tool } from "@/app/lib/engine/model/Tool";
+import { usePreferences } from "../preferences/PreferencesContext";
 
 interface Props {
   stitches: PositionedStitch[];
@@ -27,6 +28,7 @@ export default function CircularRenderer({
   tool,
   onMoveStitch,
 }: Props) {
+  const { preferences } = usePreferences();
   const [dragging, setDragging] = useState<{
     id: string;
     startX: number;
@@ -71,7 +73,7 @@ export default function CircularRenderer({
   const viewBoxWidth = Math.max(100, maxX - minX);
   const viewBoxHeight = Math.max(100, maxY - minY);
 
-  const roundLabels = showRoundLabels
+  const roundLabels = showRoundLabels && preferences.showRowNumbers
     ? [...new Set(stitches.map((stitch) => stitch.round))].map((round) => {
         const roundStitches = stitches.filter(
           (stitch) => stitch.round === round
@@ -180,8 +182,8 @@ export default function CircularRenderer({
 
         const symbolColor =
           stitch.round % 2 === 0
-            ? colors.rowEven
-            : colors.rowOdd;
+            ? preferences.evenSymbolColor
+            : preferences.oddSymbolColor;
 
         return (
           <g
@@ -235,14 +237,20 @@ export default function CircularRenderer({
                   : "pointer",
             }}
           >
-            {drawCrochetSymbol(
-              stitch.type,
-              stitch.operation,
-              stitch.x,
-              stitch.y,
-              symbolColor,
-              stitch.rotation ?? 0
-            )}
+            <g
+              className="crochet-symbol"
+              style={{ "--symbol-stroke-width": preferences.strokeWidth } as React.CSSProperties}
+              transform={`translate(${stitch.x} ${stitch.y}) scale(${preferences.symbolSize}) translate(${-stitch.x} ${-stitch.y})`}
+            >
+              {drawCrochetSymbol(
+                stitch.type,
+                stitch.operation,
+                stitch.x,
+                stitch.y,
+                symbolColor,
+                stitch.rotation ?? 0
+              )}
+            </g>
 
             {selectedId === stitch.id && (
               <circle

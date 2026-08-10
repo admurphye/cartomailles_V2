@@ -2,11 +2,14 @@
 
 import Editor from "./components/editor/Editor";
 import PasswordGate from "./components/PasswordGate";
+import { PreferencesProvider } from "./components/preferences/PreferencesContext";
 
 export default function EditorPage() {
   return (
     <PasswordGate>
-      <Editor />
+      <PreferencesProvider>
+        <Editor />
+      </PreferencesProvider>
     </PasswordGate>
   );
 }

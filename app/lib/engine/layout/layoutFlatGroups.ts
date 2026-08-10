@@ -4,7 +4,8 @@ import { PositionedStitch } from "../model/PositionedStitch";
 import { explodeGroups } from "./explodeGroups";
 
 export function layoutFlatGroups(
-  graph: CrochetGraph
+  graph: CrochetGraph,
+  spacingY = 55
 ): PositionedStitch[] {
 
   const groups = graph.groups;
@@ -14,7 +15,6 @@ export function layoutFlatGroups(
   const startY = 80;
 
   const spacingX = 50;
-  const spacingY = 55;
 
   const rounds = [...new Set(groups.map(g => g.round))].sort((a, b) => a - b);
 

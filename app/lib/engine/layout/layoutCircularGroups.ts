@@ -4,16 +4,24 @@ import { PositionedGroup } from "../model/PositionedGroup";
 import { explodeGroups } from "./explodeGroups";
 
 export function layoutCircularGroups(
-  graph: CrochetGraph
+  graph: CrochetGraph,
+  ringSpacing = 50
 ): PositionedStitch[] {
   const groups = graph.groups;
   const positionedGroups: PositionedGroup[] = [];
   const centerX = 350;
   const centerY = 350;
-  const ringSpacing = 50;
   const rounds = [...new Set(groups.map((group) => group.round))];
+  const structuralRounds = rounds.filter((round) =>
+    groups.some(
+      (group) =>
+        group.round === round &&
+        group.role !== "magicRing" &&
+        group.role !== "turningChain"
+    )
+  );
 
-  for (const [roundIndex, round] of rounds.entries()) {
+  for (const round of rounds) {
     const currentGroups = groups.filter((group) => group.round === round);
     const magicRings = currentGroups.filter(
       (group) => group.role === "magicRing"
@@ -30,7 +38,8 @@ export function layoutCircularGroups(
     const chainSpaces = currentGroups.filter(
       (group) => group.role === "chainSpace"
     );
-    const radius = Math.max(1, roundIndex) * ringSpacing;
+    const structuralRoundIndex = structuralRounds.indexOf(round);
+    const radius = (structuralRoundIndex + 1) * ringSpacing;
 
     magicRings.forEach((group) => {
       positionedGroups.push({

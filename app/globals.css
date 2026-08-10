@@ -17,3 +17,7 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.crochet-symbol * {
+  stroke-width: var(--symbol-stroke-width, 2) !important;
+}

@@ -6,6 +6,7 @@ import { parsePattern } from "../lib/engine/parser/parsePattern";
 import { layoutFlatGroups } from "../lib/engine/layout/layoutFlatGroups";
 import { layoutGrannyGroups } from "../lib/engine/layout/layoutGrannyGroups";
 import { StitchAdjustments } from "@/app/lib/engine/model/StitchAdjustments";
+import { usePreferences } from "@/app/components/preferences/PreferencesContext";
 
 export function useCrochetEngine(
   pattern: string,
@@ -13,6 +14,7 @@ export function useCrochetEngine(
   diagramType: "circular" | "flat" | "granny",
   adjustments: StitchAdjustments
 ) {
+  const { preferences } = usePreferences();
   
  const graph = useMemo(() => {
 
@@ -23,10 +25,10 @@ export function useCrochetEngine(
 
   const positioned = useMemo(() => {
     const layout = diagramType === "flat"
-      ? layoutFlatGroups(graph)
+      ? layoutFlatGroups(graph, preferences.flatSpacing)
       : diagramType === "granny"
-        ? layoutGrannyGroups(graph)
-        : layoutCircularGroups(graph);
+        ? layoutGrannyGroups(graph, preferences.grannySpacing)
+        : layoutCircularGroups(graph, preferences.circularSpacing);
 
     return layout.map((stitch) => {
       const adjustment = adjustments[stitch.id];
@@ -43,7 +45,7 @@ export function useCrochetEngine(
         offsetY: adjustment.offsetY,
       };
     });
-  }, [graph, diagramType, adjustments]);
+  }, [graph, diagramType, adjustments, preferences.flatSpacing, preferences.circularSpacing, preferences.grannySpacing]);
 
   const selected = useMemo(
     () =>

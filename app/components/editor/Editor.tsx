@@ -14,6 +14,7 @@ import { exportSVG } from "@/app/components/renderer/exports/exportSVG";
 import { exportPDF } from "@/app/components/renderer/exports/exportPDF";
 import { Instruction } from "@/app/lib/engine/model/Instruction";
 import { StitchType } from "@/app/lib/engine/model/Stitch";
+import { usePreferences } from "../preferences/PreferencesContext";
 
 type ProjectState = Pick<
   CartomaillesProject,
@@ -156,6 +157,7 @@ function isStitchAdjustments(value: unknown): value is StitchAdjustments {
 }
 
 export default function Editor() {
+  const { preferences } = usePreferences();
   const diagramRef = useRef<SVGSVGElement>(null);
 
   const [projectName, setProjectName] =
@@ -173,7 +175,7 @@ export default function Editor() {
     useState<StitchAdjustments>({});
 
   const [diagramType, setDiagramType] =
-    useState<"circular" | "flat" | "granny">("circular");
+    useState<"circular" | "flat" | "granny">(preferences.defaultDiagramType);
 
   const [tool, setTool] =
     useState<Tool>("select");
@@ -192,6 +194,7 @@ export default function Editor() {
   const handleNewProject = () => {
     setProjectName("Projet sans titre");
     setPattern("");
+    setDiagramType(preferences.defaultDiagramType);
     setSelectedId(null);
     setAdjustments({});
     setUndoHistory([]);

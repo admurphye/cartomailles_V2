@@ -19,6 +19,7 @@ import { spacing } from "@/app/theme/spacing";
 import { shadows } from "@/app/theme/shadows";
 import HelpModal from "@/app/components/dialogs/HelpModal";
 import Input from "@/app/components/ui/Input";
+import PreferencesDialog from "@/app/components/dialogs/PreferencesDialog";
 
 type AppHeaderProps = {
   onNewProject: () => void;
@@ -51,6 +52,7 @@ export default function AppHeader({
 }: AppHeaderProps) {
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
 
   const handleExport = (exportProject: () => void) => {
     setIsExportMenuOpen(false);
@@ -130,7 +132,7 @@ export default function AppHeader({
         >
           <IconButton
   icon={<Settings size={18} />}
-  onClick={() => {}}
+  onClick={() => setIsPreferencesOpen(true)}
   label="Paramètres"
 />
 
@@ -265,6 +267,10 @@ export default function AppHeader({
       <HelpModal
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
+      />
+      <PreferencesDialog
+        isOpen={isPreferencesOpen}
+        onClose={() => setIsPreferencesOpen(false)}
       />
     </header>
   );
