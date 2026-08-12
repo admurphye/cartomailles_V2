@@ -1,4 +1,3 @@
-import React from "react";
 import {
   drawMS,
   drawML,
@@ -13,7 +12,7 @@ import {
   drawReliefarriere,
   drawDeuxBridesEnsemble,
   
-} from "./drawCrochetSymbol";
+} from "../components/renderer/drawCrochetSymbol";
 
 const DRAWERS = {
   O: drawML,
@@ -56,8 +55,6 @@ export function drawSvgSymbol(
 
   const drawer =
     SVG_DRAWERS[svg as keyof typeof SVG_DRAWERS];
-console.log("svg =", svg);
-console.log("clés =", Object.keys(SVG_DRAWERS));
   if (drawer) {
     return drawer(
       x,

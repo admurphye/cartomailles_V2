@@ -10,8 +10,10 @@ export function createLink(
   child.parents.push(parent.id);
 
   return {
+    id: `${parent.id}-${child.id}`,
     from: parent.id,
     to: child.id,
+    type: "normal",
   };
 
 }

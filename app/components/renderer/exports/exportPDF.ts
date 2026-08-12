@@ -10,16 +10,33 @@ export async function exportPDF(
   const bounds = diagram.getBoundingClientRect();
   const captureWidth = viewBox.width || bounds.width || 700;
   const captureHeight = viewBox.height || bounds.height || 700;
-  const dataUrl = await htmlToImage.toPng(diagram, {
-    backgroundColor: "#ffffff",
-    pixelRatio: 3,
-    width: captureWidth,
-    height: captureHeight,
-    style: {
-      width: `${captureWidth}px`,
-      height: `${captureHeight}px`,
-    },
-  });
+  const exportContainer = document.createElement("div");
+  const exportDiagram = diagram.cloneNode(true) as SVGSVGElement;
+
+  exportContainer.style.position = "fixed";
+  exportContainer.style.left = "-100000px";
+  exportContainer.style.top = "0";
+  exportContainer.style.width = `${captureWidth}px`;
+  exportContainer.style.height = `${captureHeight}px`;
+  exportContainer.style.backgroundColor = "#ffffff";
+  exportDiagram.setAttribute("width", String(captureWidth));
+  exportDiagram.setAttribute("height", String(captureHeight));
+  exportDiagram.style.display = "block";
+  exportContainer.appendChild(exportDiagram);
+  document.body.appendChild(exportContainer);
+
+  let dataUrl: string;
+
+  try {
+    dataUrl = await htmlToImage.toPng(exportContainer, {
+      backgroundColor: "#ffffff",
+      pixelRatio: 3,
+      width: captureWidth,
+      height: captureHeight,
+    });
+  } finally {
+    exportContainer.remove();
+  }
 
   const isLandscape = viewBox.width > viewBox.height;
   const pdf = new jsPDF({
