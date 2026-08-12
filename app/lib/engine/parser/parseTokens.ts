@@ -7,7 +7,6 @@ export function parseTokens(tokens: Token[]): {
   instructions: Instruction[];
   issues: ParseIssue[];
 } {
-   console.log(tokens);
   const instructions: Instruction[] = [];
   const issues: ParseIssue[] = [];
 
@@ -67,7 +66,6 @@ if (!parsed) {
   });
   continue;
 }
-console.log("Token brut :", stitchToken);
 if (!stitchToken) {
   continue;
 }

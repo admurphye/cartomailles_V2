@@ -33,7 +33,7 @@ const STITCH_CODES: Record<StitchType, string> = {
   fpdc: "brAV",
   bpdc: "brAR",
   tr: "tb",
-  dtr: "dtr",
+  dtr: "dbr",
 };
 
 type PatternItem = {

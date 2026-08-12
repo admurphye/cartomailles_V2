@@ -9,6 +9,12 @@ export function normalizePattern(text: string): string {
       /\b(aug|augmentation|inc|increase|dim|diminution|dec|decrease)\(([^)]+)\)/gi,
       (_, fn, arg) => `${fn}§${arg}§`
     )
+
+    // Accepte aussi la notation naturelle documentée : "aug ms", "dim br"...
+    .replace(
+      /\b(aug|augmentation|inc|increase|dim|diminution|dec|decrease)\s+(ms|db|dbr|b|br|brav|br_av|brar|br_ar|tb|ml|mc|cm|mr|sc|hdc|dc|dtr|fpdc|bpdc|tr|ch|slst)\b/gi,
+      (_, fn, stitch) => `${fn}§${stitch}§`
+    )
     // Remplace × par x
     .replace(/×/g, "x")
 

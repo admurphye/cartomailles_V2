@@ -12,7 +12,6 @@ import {
   drawTigeInclineeDroite
  
 } from "./crochetPrimitives";
-console.log("drawCrochetSymbol chargé");
 export function drawMS(
   x: number,
   y: number,
@@ -44,7 +43,8 @@ export function drawMS(
 export function drawML(
   x: number,
   y: number,
-  color: string
+  color: string,
+  rotation = 0
 ) {
   return (
     <ellipse
@@ -55,6 +55,7 @@ export function drawML(
       fill="none"
       stroke={color}
       strokeWidth="2"
+      transform={`rotate(${rotation} ${x + 20} ${y + 20})`}
     />
   );
 }
@@ -62,7 +63,8 @@ export function drawML(
 export function drawMC(
   x: number,
   y: number,
-  color: string
+  color: string,
+  rotation = 0
 ) {
   return (
     <ellipse
@@ -71,6 +73,7 @@ export function drawMC(
       rx={8}
       ry={4}
       fill={color}
+      transform={`rotate(${rotation} ${x + 20} ${y + 20})`}
     />
   );
 }
@@ -390,16 +393,19 @@ export function drawCrochetSymbol(
       return drawMS(x - 20, y - 20, color);
 
     case "ML":
-      return drawML(x - 20, y - 20, color);
+      return drawML(x - 20, y - 20, color, rotation);
 
     case "MC":
-      return drawMC(x - 20, y - 20, color);
+      return drawMC(x - 20, y - 20, color, rotation);
 
     case "DB":
       return drawDB(x - 20, y - 20, color, rotation);
 
     case "BR":
       return drawBR(x - 20, y - 20, color, rotation);
+
+    case "DBR":
+      return drawDBR(x - 20, y - 20, color, rotation);
 
     case "BRAV":
       return drawReliefavant(x - 20, y - 20, color, rotation);

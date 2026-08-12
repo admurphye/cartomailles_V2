@@ -65,4 +65,11 @@ export const StitchRegistry: Record<string, StitchDefinition> = {
     isChain: false,
   },
 
+  dtr: {
+    type: "dtr",
+    consumes: 1,
+    produces: 1,
+    isChain: false,
+  },
+
 };

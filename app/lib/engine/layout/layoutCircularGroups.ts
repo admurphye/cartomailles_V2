@@ -38,6 +38,16 @@ export function layoutCircularGroups(
     const chainSpaces = currentGroups.filter(
       (group) => group.role === "chainSpace"
     );
+    const circularGroups = [...structuralGroups, ...chainSpaces].sort(
+      (a, b) => a.order - b.order
+    );
+    const turningChainSlots = turningChains.length > 0 ? 1 : 0;
+    const circularSlotCount = circularGroups.length + turningChainSlots;
+    const angleForGroup = (group: typeof circularGroups[number]) => {
+      const index = circularGroups.indexOf(group) + turningChainSlots;
+
+      return (2 * Math.PI * index) / circularSlotCount - Math.PI / 2;
+    };
     const structuralRoundIndex = structuralRounds.indexOf(round);
     const radius = (structuralRoundIndex + 1) * ringSpacing;
 
@@ -57,9 +67,8 @@ export function layoutCircularGroups(
       });
     });
 
-    structuralGroups.forEach((group, index) => {
-      const groupAngle =
-        (2 * Math.PI * index) / structuralGroups.length - Math.PI / 2;
+    structuralGroups.forEach((group) => {
+      const groupAngle = angleForGroup(group);
 
       positionedGroups.push({
         id: group.id,
@@ -90,17 +99,25 @@ export function layoutCircularGroups(
         run.push(chainSpaces[index + run.length]);
       }
 
-      const groupsBefore = structuralGroups.filter(
-        (group) => group.order < run[0].order
-      ).length;
-      const previousIndex = Math.max(0, groupsBefore - 1);
-
       run.forEach((group, chainIndex) => {
         const progress = (chainIndex + 1) / (run.length + 1);
-        const logicalPosition = previousIndex + progress;
-        const angle =
-          (2 * Math.PI * logicalPosition) / structuralGroups.length - Math.PI / 2;
-        const picotRadius = radius + Math.sin(progress * Math.PI) * 34;
+        const angle = angleForGroup(group);
+        // Une ml isolée représente un espace entre deux mailles : elle reste
+        // sur le rang. Seule une suite de plusieurs ml forme une petite arche.
+        const archHeight = run.length === 1
+          ? 0
+          : Math.min(34, 14 + (run.length - 2) * 6);
+        const picotRadius =
+          radius + Math.sin(progress * Math.PI) * archHeight;
+        const angleStep = (2 * Math.PI) / circularSlotCount;
+        const progressPerRadian = 1 / ((run.length + 1) * angleStep);
+        const radiusDerivative =
+          archHeight * Math.PI * Math.cos(progress * Math.PI) * progressPerRadian;
+        const tangentX =
+          radiusDerivative * Math.cos(angle) - picotRadius * Math.sin(angle);
+        const tangentY =
+          radiusDerivative * Math.sin(angle) + picotRadius * Math.cos(angle);
+        const archTangent = Math.atan2(tangentY, tangentX);
 
         positionedGroups.push({
           id: group.id,
@@ -111,7 +128,9 @@ export function layoutCircularGroups(
           countsAsStitch: group.countsAsStitch,
           centerX: centerX + picotRadius * Math.cos(angle),
           centerY: centerY + picotRadius * Math.sin(angle),
-          rotation: angle,
+          // L'ovale suit exactement la tangente de l'arceau. La formule est
+          // locale et reste identique au raccordement du cercle.
+          rotation: archTangent,
           orientation: "radial",
           stitches: group.stitches,
         });
@@ -120,7 +139,13 @@ export function layoutCircularGroups(
       index += run.length;
     }
 
+    const previousRadius = Math.max(0, radius - ringSpacing);
+
     turningChains.forEach((group, index) => {
+      const progress = (index + 1) / turningChains.length;
+      const chainRadius =
+        previousRadius + (radius - previousRadius) * progress;
+
       positionedGroups.push({
         id: group.id,
         round: group.round,
@@ -129,7 +154,7 @@ export function layoutCircularGroups(
         role: group.role,
         countsAsStitch: group.countsAsStitch,
         centerX,
-        centerY: centerY - radius - (index + 1) * 18,
+        centerY: centerY - chainRadius,
         rotation: -Math.PI / 2,
         orientation: "radial",
         stitches: group.stitches,

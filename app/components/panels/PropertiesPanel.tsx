@@ -22,6 +22,7 @@ const STITCH_OPTIONS = [
   { value: "dc", label: "br — Bride" },
   { value: "fpdc", label: "brAV — Bride relief avant" },
   { value: "bpdc", label: "brAR — Bride relief arrière" },
+  { value: "dtr", label: "dbr — Double bride" },
   { value: "tr", label: "tb — Triple bride" },
 ];
 

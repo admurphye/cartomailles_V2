@@ -19,6 +19,7 @@ const STITCH_MAP: Record<string, StitchType> = {
   brar: "bpdc",
   br_ar: "bpdc",
   tb: "tr",
+  dbr: "dtr",
   ml: "ch",
   mc: "slst",
   cm: "mr",
@@ -31,6 +32,7 @@ const STITCH_MAP: Record<string, StitchType> = {
   fpdc: "fpdc",
   bpdc: "bpdc",
   tr: "tr",
+  dtr: "dtr",
   ch: "ch",
   slst: "slst",
 };

@@ -11,10 +11,11 @@ export function layoutFlatGroups(
   const groups = graph.groups;
   const positionedGroups: PositionedGroup[] = [];
 
-  const startX = 80;
+  const centerX = 350;
   const startY = 80;
 
-  const spacingX = 50;
+  const stitchSpacing = 16;
+  const groupGap = 26;
 
   const rounds = [...new Set(groups.map(g => g.round))].sort((a, b) => a - b);
 
@@ -31,22 +32,24 @@ export function layoutFlatGroups(
     const turningChains = currentGroups.filter(
       (group) => group.role === "turningChain"
     );
-    const structuralGroups = currentGroups.filter(
-      (group) => group.role !== "turningChain" && group.role !== "chainSpace"
-    );
-    const chainSpaces = currentGroups.filter(
-      (group) => group.role === "chainSpace"
-    );
+    const rowGroups = currentGroups
+      .filter((group) => group.role !== "turningChain")
+      .sort((a, b) => a.order - b.order);
     const isRightToLeft = round % 2 === 0;
 
-    structuralGroups.forEach((group, index) => {
+    const displayGroups = isRightToLeft
+      ? [...rowGroups].reverse()
+      : rowGroups;
+    const groupWidths = displayGroups.map(
+      (group) => Math.max(0, (group.stitches.length - 1) * stitchSpacing)
+    );
+    const rowWidth = groupWidths.reduce((total, width) => total + width, 0) +
+      Math.max(0, displayGroups.length - 1) * groupGap;
+    let cursorX = centerX - rowWidth / 2;
 
-      const displayIndex = isRightToLeft
-        ? structuralGroups.length - 1 - index
-        : index;
-
-      const groupCenterX =
-        startX + displayIndex * spacingX;
+    displayGroups.forEach((group, index) => {
+      const groupWidth = groupWidths[index];
+      const groupCenterX = cursorX + groupWidth / 2;
 
       const groupCenterY = rowCenterY;
 
@@ -74,54 +77,14 @@ export function layoutFlatGroups(
 
       });
 
+      cursorX += groupWidth + groupGap;
+
     });
-
-    // Les mailles en l'air situées au milieu d'un rang forment une
-    // petite arche (picot) entre les mailles qui les entourent.
-    for (let index = 0; index < chainSpaces.length;) {
-      const run = [chainSpaces[index]];
-
-      while (
-        index + run.length < chainSpaces.length &&
-        chainSpaces[index + run.length].order === run[run.length - 1].order + 1
-      ) {
-        run.push(chainSpaces[index + run.length]);
-      }
-
-      const groupsBefore = structuralGroups.filter(
-        (group) => group.order < run[0].order
-      ).length;
-      const leftLogicalPosition = Math.max(0, groupsBefore - 1);
-
-      run.forEach((group, chainIndex) => {
-        const progress = (chainIndex + 1) / (run.length + 1);
-        const logicalPosition = leftLogicalPosition + progress;
-        const displayPosition = isRightToLeft
-          ? structuralGroups.length - 1 - logicalPosition
-          : logicalPosition;
-
-        positionedGroups.push({
-          id: group.id,
-          round: group.round,
-          order: group.order,
-          operation: group.operation,
-          role: group.role,
-          countsAsStitch: group.countsAsStitch,
-          centerX: startX + displayPosition * spacingX,
-          centerY: rowCenterY - Math.sin(progress * Math.PI) * 34,
-          rotation: 0,
-          orientation: "horizontal",
-          stitches: group.stitches,
-        });
-      });
-
-      index += run.length;
-    }
 
     turningChains.forEach((group, index) => {
       const startXForRound = isRightToLeft
-        ? startX + structuralGroups.length * spacingX + 18
-        : startX - 18;
+        ? centerX + rowWidth / 2 + 18
+        : centerX - rowWidth / 2 - 18;
 
       positionedGroups.push({
         id: group.id,

@@ -67,6 +67,15 @@ function splitIntoClusters(groups: StitchGroup[]) {
   const gaps: Array<{ groups: StitchGroup[]; afterCluster: number }> = [];
   let currentCluster: StitchGroup[] = [];
   let currentGap: StitchGroup[] = [];
+  const firstClusterIndex = groups.findIndex(
+    (group) => group.role !== "chainSpace"
+  );
+  // Un rang Granny est cyclique. S'il commence par des ml, elles ferment en
+  // réalité le dernier coin et doivent donc être traitées après le dernier
+  // groupe de brides, pas comme un espace du premier côté.
+  const orderedGroups = firstClusterIndex > 0
+    ? [...groups.slice(firstClusterIndex), ...groups.slice(0, firstClusterIndex)]
+    : groups;
 
   const flushCluster = () => {
     if (currentCluster.length === 0) return;
@@ -80,7 +89,7 @@ function splitIntoClusters(groups: StitchGroup[]) {
     currentGap = [];
   };
 
-  groups.forEach((group) => {
+  orderedGroups.forEach((group) => {
     if (group.role === "chainSpace") {
       flushCluster();
       currentGap.push(group);
@@ -116,8 +125,17 @@ export function layoutGrannyGroups(
   const rounds = [...new Set(graph.groups.map((group) => group.round))].sort(
     (a, b) => a - b
   );
+  const squareRounds = rounds.filter((round) =>
+    graph.groups.some(
+      (group) =>
+        group.round === round &&
+        group.role !== "magicRing" &&
+        group.role !== "turningChain" &&
+        group.stitches[0]?.type !== "slst"
+    )
+  );
 
-  rounds.forEach((round, roundIndex) => {
+  rounds.forEach((round) => {
     const currentGroups = graph.groups
       .filter((group) => group.round === round)
       .sort((a, b) => a.order - b.order);
@@ -154,7 +172,8 @@ export function layoutGrannyGroups(
     if (squareGroups.length === 0) return;
 
     const { clusters, gaps } = splitIntoClusters(squareGroups);
-    const halfSize = Math.max(45, (roundIndex + 1) * roundSpacing);
+    const squareRoundIndex = squareRounds.indexOf(round);
+    const halfSize = Math.max(45, (squareRoundIndex + 1) * roundSpacing);
     const baseCount = Math.floor(clusters.length / 4);
     const remainder = clusters.length % 4;
     const clustersPerSide = Array.from(
@@ -196,8 +215,16 @@ export function layoutGrannyGroups(
       const before = clusterPoints[gap.afterCluster];
       const next = clusterPoints[(gap.afterCluster + 1) % clusterPoints.length];
       const isCorner = before && next && before.side !== next.side;
-      const anchor = isCorner
-        ? cornerAfterSide(before.side, halfSize)
+      const corner = isCorner ? cornerAfterSide(before.side, halfSize) : null;
+      const diagonalScale = Math.SQRT1_2;
+      const anchor = isCorner && corner
+        ? {
+            ...corner,
+            tangentX: (before.tangentX + next.tangentX) * diagonalScale,
+            tangentY: (before.tangentY + next.tangentY) * diagonalScale,
+            normalX: (before.normalX + next.normalX) * diagonalScale,
+            normalY: (before.normalY + next.normalY) * diagonalScale,
+          }
         : {
             x: (before.x + next.x) / 2,
             y: (before.y + next.y) / 2,
@@ -211,7 +238,9 @@ export function layoutGrannyGroups(
         const progress = (chainIndex + 1) / (gap.groups.length + 1);
         const tangentOffset =
           (chainIndex - (gap.groups.length - 1) / 2) * CLUSTER_SPACING;
-        const outwardOffset = Math.sin(progress * Math.PI) * 12;
+        const outwardOffset = isCorner
+          ? 0
+          : Math.sin(progress * Math.PI) * 12;
 
         positionedGroups.push({
           id: group.id,
@@ -228,7 +257,7 @@ export function layoutGrannyGroups(
             anchor.y +
             anchor.tangentY * tangentOffset +
             anchor.normalY * outwardOffset,
-          rotation: (before.side * Math.PI) / 2,
+          rotation: Math.atan2(anchor.tangentY, anchor.tangentX),
           orientation: "horizontal",
           stitches: group.stitches,
         });
@@ -236,6 +265,12 @@ export function layoutGrannyGroups(
     });
 
     turningChains.forEach((group, index) => {
+      const progress = (index + 1) / turningChains.length;
+      const tangentOffset =
+        (index - (turningChains.length - 1) / 2) * CLUSTER_SPACING;
+      const outwardOffset = Math.sin(progress * Math.PI) * 12;
+      const diagonal = Math.SQRT1_2;
+
       positionedGroups.push({
         id: group.id,
         round: group.round,
@@ -243,9 +278,11 @@ export function layoutGrannyGroups(
         operation: group.operation,
         role: group.role,
         countsAsStitch: group.countsAsStitch,
-        centerX: CENTER_X - halfSize - 12,
-        centerY: CENTER_Y - halfSize + index * 14,
-        rotation: 0,
+        centerX:
+          CENTER_X - halfSize + tangentOffset * diagonal - outwardOffset * diagonal,
+        centerY:
+          CENTER_Y - halfSize - tangentOffset * diagonal - outwardOffset * diagonal,
+        rotation: -Math.PI / 4,
         orientation: "horizontal",
         stitches: group.stitches,
       });

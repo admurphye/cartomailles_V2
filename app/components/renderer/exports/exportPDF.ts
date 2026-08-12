@@ -6,18 +6,21 @@ export async function exportPDF(
   projectName: string,
   pattern: string
 ) {
-  const container = diagram.parentElement;
-
-  if (!container) {
-    return;
-  }
-
-  const dataUrl = await htmlToImage.toPng(container, {
+  const viewBox = diagram.viewBox.baseVal;
+  const bounds = diagram.getBoundingClientRect();
+  const captureWidth = viewBox.width || bounds.width || 700;
+  const captureHeight = viewBox.height || bounds.height || 700;
+  const dataUrl = await htmlToImage.toPng(diagram, {
     backgroundColor: "#ffffff",
     pixelRatio: 3,
+    width: captureWidth,
+    height: captureHeight,
+    style: {
+      width: `${captureWidth}px`,
+      height: `${captureHeight}px`,
+    },
   });
 
-  const viewBox = diagram.viewBox.baseVal;
   const isLandscape = viewBox.width > viewBox.height;
   const pdf = new jsPDF({
     orientation: isLandscape ? "landscape" : "portrait",
@@ -29,7 +32,7 @@ export async function exportPDF(
   const titleHeight = 12;
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const ratio = viewBox.width / viewBox.height || 1;
+  const ratio = captureWidth / captureHeight;
   const availableWidth = pageWidth - margin * 2;
   const availableHeight = pageHeight - margin * 2 - titleHeight;
 

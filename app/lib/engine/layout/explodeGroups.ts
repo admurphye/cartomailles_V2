@@ -30,11 +30,11 @@ if (group.orientation === "horizontal") {
 
   x =
     group.centerX +
-    offset * Math.cos(group.rotation + Math.PI / 2);
+    offset * Math.cos(group.rotation);
 
   y =
     group.centerY +
-    offset * Math.sin(group.rotation + Math.PI / 2);
+    offset * Math.sin(group.rotation);
 
 }
 
