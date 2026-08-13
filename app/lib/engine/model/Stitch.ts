@@ -9,6 +9,7 @@ export type StitchType =
   | "dc"
   | "fpdc"
   | "bpdc"
+  | "popcorn"
   | "tr"
   | "dtr";
 
@@ -18,6 +19,7 @@ export interface Stitch {
   type: StitchType;
 
   operation: InstructionOperation;
+  groupSize?: number;
   role: InstructionRole;
   countsAsStitch: boolean;
   

@@ -9,6 +9,7 @@ export const SYMBOL_REGISTRY: Record<StitchType, string> = {
   dc: "BR",
   fpdc: "BRAV",
   bpdc: "BRAR",
+  popcorn: "POPCORN",
   tr: "TBR",
   dtr: "DBR",
 };

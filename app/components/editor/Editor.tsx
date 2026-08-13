@@ -32,6 +32,7 @@ const STITCH_CODES: Record<StitchType, string> = {
   dc: "br",
   fpdc: "brAV",
   bpdc: "brAR",
+  popcorn: "popcorn",
   tr: "tb",
   dtr: "dbr",
 };

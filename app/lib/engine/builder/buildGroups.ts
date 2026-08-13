@@ -28,6 +28,7 @@ export function buildGroups(pattern: CrochetPattern): StitchGroup[] {
             type: instruction.type,
 
             operation: instruction.operation,
+            groupSize: instruction.produces,
             role: instruction.role,
             countsAsStitch: instruction.countsAsStitch,
 

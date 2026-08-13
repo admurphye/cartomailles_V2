@@ -23,6 +23,7 @@ export function buildStitches(pattern: CrochetPattern): Stitch[] {
   type: instruction.type,
 
   operation: instruction.operation,
+  groupSize: instruction.produces,
   role: instruction.role,
   countsAsStitch: instruction.countsAsStitch,
 

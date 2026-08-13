@@ -248,7 +248,8 @@ export default function CircularRenderer({
                 stitch.x,
                 stitch.y,
                 symbolColor,
-                stitch.rotation ?? 0
+                stitch.rotation ?? 0,
+                stitch.groupSize
               )}
             </g>
 

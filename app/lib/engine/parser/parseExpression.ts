@@ -24,6 +24,8 @@ const STITCH_MAP: Record<string, StitchType> = {
   mc: "slst",
   cm: "mr",
   mr: "mr",
+  popcorn: "popcorn",
+  pop: "popcorn",
 
   // Anglais
   sc: "sc",
@@ -49,6 +51,26 @@ export function parseExpression(
 
   if (expression === "2be") {
     expression = "aug(br)";
+  }
+
+  if (expression === "3be" || expression === "triple_dc_increase") {
+    return {
+      type: "dc",
+      operation: "increase",
+      consumes: 1,
+      produces: 3,
+    };
+  }
+
+  const fanMatch = expression.match(/^fan_(5|6|9)_dc$/);
+
+  if (fanMatch) {
+    return {
+      type: "dc",
+      operation: "increase",
+      consumes: 1,
+      produces: Number(fanMatch[1]),
+    };
   }
 
   const operationMatch = expression.match(

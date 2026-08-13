@@ -14,6 +14,7 @@ describe("parseExpression", () => {
     ["tb", "tr"],
     ["ml", "ch"],
     ["mc", "slst"],
+    ["popcorn", "popcorn"],
   ] as const)("reconnaît l'alias français %s", (source, type) => {
     expect(parseExpression(source)).toMatchObject({
       type,
@@ -40,6 +41,15 @@ describe("parseExpression", () => {
     });
   });
 
+  it("reconnaît le raccourci 3BE comme trois brides dans la même maille", () => {
+    expect(parseExpression("3be")).toEqual({
+      type: "dc",
+      operation: "increase",
+      consumes: 1,
+      produces: 3,
+    });
+  });
+
   it("décrit correctement une diminution", () => {
     expect(parseExpression("dim(br)")).toEqual({
       type: "dc",
@@ -51,6 +61,17 @@ describe("parseExpression", () => {
 
   it("rejette un symbole inconnu", () => {
     expect(parseExpression("xyz")).toBeNull();
+  });
+
+  it.each(["popcorn", "pop corn", "pop"])("reconnaît le point %s", (notation) => {
+    const graph = parsePattern(`R1 ${notation}`);
+
+    expect(graph.issues).toEqual([]);
+    expect(graph.stitches).toHaveLength(1);
+    expect(graph.stitches[0]).toMatchObject({
+      type: "popcorn",
+      operation: "normal",
+    });
   });
 });
 
@@ -87,6 +108,41 @@ describe("parsePattern", () => {
     expect(graph.groups).toHaveLength(1);
     expect(graph.groups[0]).toMatchObject({ operation: "increase" });
     expect(graph.stitches.every((stitch) => stitch.type === "dc")).toBe(true);
+  });
+
+  it.each([
+    "3BE",
+    "3 brides ensemble",
+    "3 brides dans la même maille",
+  ])("accepte la notation %s", (notation) => {
+    const graph = parsePattern(`R1 ${notation}`);
+
+    expect(graph.issues).toEqual([]);
+    expect(graph.stitches).toHaveLength(3);
+    expect(graph.groups).toHaveLength(1);
+    expect(graph.groups[0]).toMatchObject({ operation: "increase" });
+    expect(graph.stitches.every((stitch) =>
+      stitch.type === "dc" && stitch.groupSize === 3
+    )).toBe(true);
+  });
+
+  it.each([
+    ["5BE", 5],
+    ["6 brides dans la même maille", 6],
+    ["9 brides ensemble", 9],
+    ["éventail(5 br)", 5],
+    ["eventail 6 br", 6],
+    ["coquillage(9 br)", 9],
+  ] as const)("construit l'éventail %s", (notation, count) => {
+    const graph = parsePattern(`R1 ${notation}`);
+
+    expect(graph.issues).toEqual([]);
+    expect(graph.stitches).toHaveLength(count);
+    expect(graph.groups).toHaveLength(1);
+    expect(graph.groups[0]).toMatchObject({ operation: "increase" });
+    expect(graph.stitches.every((stitch) =>
+      stitch.type === "dc" && stitch.groupSize === count
+    )).toBe(true);
   });
 
   it("construit les liens d'augmentation entre deux rangs", () => {

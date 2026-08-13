@@ -404,7 +404,35 @@ const pages = {
             <span className="font-bold text-pink-200 w-20 inline-block">
               3BE
             </span>
-            Trois brides ensemble
+            Trois brides dans la même maille
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              5BE
+            </span>
+            Éventail de 5 brides dans la même maille
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              6BE
+            </span>
+            Éventail de 6 brides dans la même maille
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              9BE
+            </span>
+            Éventail ou coquillage de 9 brides dans la même maille
+          </div>
+
+          <div>
+            <span className="font-bold text-pink-200 w-20 inline-block">
+              popcorn
+            </span>
+            Point popcorn (vous pouvez aussi écrire « pop corn » ou « pop »)
           </div>
 
           <div>

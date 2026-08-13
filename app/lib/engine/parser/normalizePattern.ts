@@ -2,12 +2,34 @@ export function normalizePattern(text: string): string {
   return text
     .toLowerCase()
 
+    .replace(/\bpop\s+corn\b/gi, "popcorn")
+
+    // Éventails de brides piquées dans une seule maille.
+    .replace(
+      /(?:[ée]ventail|coquillage)\s*\(\s*(5|6|9)\s*(?:br|brides?)\s*\)/gi,
+      (_, count) => `fan_${count}_dc`
+    )
+    .replace(
+      /(?:[ée]ventail|coquillage)\s+(5|6|9)\s*(?:br|brides?)\b/gi,
+      (_, count) => `fan_${count}_dc`
+    )
+    .replace(
+      /\b(5|6|9)\s*(?:br|brides?)\s+(?:ensemble|dans\s+la\s+m[êe]me\s+maille)\b/gi,
+      (_, count) => `fan_${count}_dc`
+    )
+    .replace(/\b(5|6|9)be\b/gi, (_, count) => `fan_${count}_dc`)
+
     // Deux brides piquées dans la même maille (augmentation en V).
     .replace(
       /\b(?:2|deux)\s*(?:br|brides?)\s+(?:ensemble|dans\s+la\s+m[êe]me\s+maille)\b/gi,
       "aug(br)"
     )
     .replace(/\b2be\b/gi, "aug(br)")
+    .replace(
+      /\b(?:3|trois)\s*(?:br|brides?)\s+(?:ensemble|dans\s+la\s+m[êe]me\s+maille)\b/gi,
+      "triple_dc_increase"
+    )
+    .replace(/\b3be\b/gi, "triple_dc_increase")
 
     // Noms usuels du cercle magique.
     .replace(/\b(cercle|anneau)\s+magique\b/gi, "mr")

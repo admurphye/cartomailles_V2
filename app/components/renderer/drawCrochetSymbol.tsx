@@ -318,6 +318,109 @@ export function drawDeuxBridesEnsemble(
   );
 }
 
+export function drawTroisBridesEnsemble(
+  x: number,
+  y: number,
+  color: string,
+  rotation = 0
+) {
+  return (
+    <g transform={`rotate(${rotation} ${x + 20} ${y + 20})`}>
+      <line x1={x + 5} y1={y + 6} x2={x + 24} y2={y + 34} stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <line x1={x + 24} y1={y + 5} x2={x + 24} y2={y + 34} stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <line x1={x + 43} y1={y + 6} x2={x + 24} y2={y + 34} stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <line x1={x + 2} y1={y + 14} x2={x + 15} y2={y + 6} stroke={color} strokeWidth="2" />
+      <line x1={x + 17} y1={y + 11} x2={x + 31} y2={y + 11} stroke={color} strokeWidth="2" />
+      <line x1={x + 33} y1={y + 6} x2={x + 46} y2={y + 14} stroke={color} strokeWidth="2" />
+    </g>
+  );
+}
+
+export function drawEventailBrides(
+  x: number,
+  y: number,
+  color: string,
+  count: number,
+  rotation = 0
+) {
+  const baseX = x + 20;
+  const baseY = y + 35;
+  const radius = count === 9 ? 34 : 30;
+  const spread = count === 9 ? Math.PI * 0.8 : Math.PI * 0.68;
+
+  return (
+    <g transform={`rotate(${rotation} ${x + 20} ${y + 20})`}>
+      {Array.from({ length: count }, (_, index) => {
+        const progress = count === 1 ? 0.5 : index / (count - 1);
+        const angle = -spread / 2 + progress * spread;
+        const endX = baseX + Math.sin(angle) * radius;
+        const endY = baseY - Math.cos(angle) * radius;
+        const barCenterX = baseX + (endX - baseX) * 0.72;
+        const barCenterY = baseY + (endY - baseY) * 0.72;
+        const barHalfLength = 5;
+        const perpendicularX = Math.cos(angle) * barHalfLength;
+        const perpendicularY = Math.sin(angle) * barHalfLength;
+
+        return (
+          <g key={index}>
+            <line x1={baseX} y1={baseY} x2={endX} y2={endY} stroke={color} strokeWidth="2" strokeLinecap="round" />
+            <line
+              x1={barCenterX - perpendicularX}
+              y1={barCenterY - perpendicularY}
+              x2={barCenterX + perpendicularX}
+              y2={barCenterY + perpendicularY}
+              stroke={color}
+              strokeWidth="2"
+            />
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+export function drawPopcorn(
+  x: number,
+  y: number,
+  color: string,
+  rotation = 0
+) {
+  const centerX = x + 20;
+  const topY = y + 5;
+  const bottomY = y + 35;
+  const curves = [-14, -8, 0, 8, 14];
+
+  return (
+    <g transform={`rotate(${rotation} ${centerX} ${y + 20})`}>
+      {curves.map((spread, index) => {
+        const barY = y + 13;
+        const barCenterX = centerX + spread * 0.68;
+
+        return (
+          <g key={spread}>
+            <path
+              d={`M ${centerX} ${bottomY} C ${centerX + spread} ${y + 29}, ${centerX + spread} ${y + 11}, ${centerX} ${topY}`}
+              fill="none"
+              stroke={color}
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            <line
+              x1={barCenterX - 4}
+              y1={barY + (index - 2) * 0.7}
+              x2={barCenterX + 4}
+              y2={barY - (index - 2) * 0.7}
+              stroke={color}
+              strokeWidth="2"
+            />
+          </g>
+        );
+      })}
+      <ellipse cx={centerX} cy={topY} rx="3" ry="2" fill={color} />
+    </g>
+  );
+}
+
 export function drawDIM(
   x: number,
   y: number,
@@ -380,8 +483,17 @@ export function drawCrochetSymbol(
   x: number,
   y: number,
   color = "black",
-  rotation = 0
+  rotation = 0,
+  groupSize = 1
 ) {
+
+  if (type === "dc" && operation === "increase" && [5, 6, 9].includes(groupSize)) {
+    return drawEventailBrides(x - 20, y - 20, color, groupSize, rotation);
+  }
+
+  if (type === "dc" && operation === "increase" && groupSize === 3) {
+    return drawTroisBridesEnsemble(x - 20, y - 20, color, rotation);
+  }
 
   if (type === "dc" && operation === "increase") {
     return drawDeuxBridesEnsemble(x - 20, y - 20, color, rotation);
@@ -414,6 +526,9 @@ export function drawCrochetSymbol(
 
     case "BRAR":
       return drawReliefarriere(x - 20, y - 20, color, rotation);
+
+    case "POPCORN":
+      return drawPopcorn(x - 20, y - 20, color, rotation);
 
     case "TBR":
       return drawTBR(x - 20, y - 20, color, rotation);
