@@ -36,7 +36,7 @@ export default function CreatorMessage() {
               </span>
 
               <h2 className="mt-6 text-3xl font-bold text-[#5B2E4D]">
-                Merci d'être ici.
+                Merci d’être ici.
               </h2>
 
               <p className="mt-6 text-gray-600 leading-8">
@@ -48,13 +48,13 @@ export default function CreatorMessage() {
               </p>
 
               <p className="mt-4 text-gray-600 leading-8">
-                Ce logiciel est né d'un besoin que j'ai moi-même rencontré :
+                Ce logiciel est né d’un besoin que j’ai moi-même rencontré :
                 créer des diagrammes de crochet rapidement, simplement et avec
                 un rendu professionnel.
               </p>
 
               <p className="mt-4 text-gray-600 leading-8">
-                Aujourd'hui, grâce à vous, cette idée devient réalité.
+                Aujourd’hui, grâce à vous, cette idée devient réalité.
                 Vos retours, vos idées et vos signalements de bugs me permettront
                 de faire évoluer Cartomailles dans la bonne direction.
               </p>

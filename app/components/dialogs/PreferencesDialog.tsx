@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { DiagramPreferences } from "@/app/lib/diagramPreferences";
+import { useModalAccessibility } from "@/app/hooks/useModalAccessibility";
 
 type Props = { isOpen: boolean; onClose: () => void };
 
@@ -22,14 +23,23 @@ const numberSettings: Array<{
 
 export default function PreferencesDialog({ isOpen, onClose }: Props) {
   const { preferences, updatePreferences, resetPreferences } = usePreferences();
+  const dialogRef = useModalAccessibility(isOpen, onClose);
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onMouseDown={onClose}>
-      <div className="w-full max-w-lg rounded-2xl border border-[#5B2E4D] bg-[#2B2434] p-6 text-[#FBF7F2] shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="preferences-dialog-title"
+        tabIndex={-1}
+        className="max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#5B2E4D] bg-[#2B2434] p-6 text-[#FBF7F2] shadow-2xl outline-none"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">Paramètres du diagramme</h2>
-          <button onClick={onClose} aria-label="Fermer"><X /></button>
+          <h2 id="preferences-dialog-title" className="text-xl font-bold">Paramètres du diagramme</h2>
+          <button type="button" onClick={onClose} aria-label="Fermer les paramètres"><X /></button>
         </div>
 
         <div className="mt-6 space-y-5">

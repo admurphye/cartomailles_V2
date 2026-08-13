@@ -1,14 +1,8 @@
-import { colors } from "@/app/theme/colors";
-import {
-  ZoomIn,
-  ZoomOut,
-  LocateFixed,
-} from "lucide-react";
+import { Ban, Hand, LocateFixed, Move, ZoomIn, ZoomOut } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import IconButton from "@/app/components/ui/IconButton";
 import { Tool } from "@/app/lib/engine/model/Tool";
-import { Hand, Ban } from "lucide-react";
-import {Move,} from "lucide-react";
+import { colors } from "@/app/theme/colors";
 
 interface DiagramToolbarProps {
   diagramType: "circular" | "flat" | "granny";
@@ -17,7 +11,7 @@ interface DiagramToolbarProps {
   tool: Tool;
   setTool: (tool: Tool) => void;
   zoom: number;
-setZoom: Dispatch<SetStateAction<number>>;
+  setZoom: Dispatch<SetStateAction<number>>;
 }
 
 export default function DiagramToolbar({
@@ -25,96 +19,81 @@ export default function DiagramToolbar({
   setDiagramType,
   resetView,
   tool,
-  setTool, 
+  setTool,
+  zoom,
   setZoom,
 }: DiagramToolbarProps) {
-
   return (
     <div className="flex items-center justify-between border-b pb-3">
-
-      <div className="flex items-center gap-2">
-
+      <div className="flex items-center gap-2" role="toolbar" aria-label="Outils du diagramme">
         <IconButton
           icon={<ZoomIn />}
           label="Zoom avant"
-          onClick={() =>
-  setZoom((z) => Math.min(4, z + 0.1))
-}
+          onClick={() => setZoom((value) => Math.min(4, Number((value + 0.1).toFixed(1))))}
         />
-
         <IconButton
           icon={<ZoomOut />}
           label="Zoom arrière"
-          onClick={() =>
-  setZoom((z) => Math.max(0.2, z - 0.1))
-}
+          onClick={() => setZoom((value) => Math.max(0.2, Number((value - 0.1).toFixed(1))))}
         />
+        <output
+          className="min-w-14 text-center text-sm tabular-nums"
+          aria-label={`Niveau de zoom : ${Math.round(zoom * 100)} %`}
+          aria-live="polite"
+        >
+          {Math.round(zoom * 100)} %
+        </output>
+        <IconButton
+          icon={<Ban />}
+          active={tool === "select"}
+          onClick={() => setTool("select")}
+          label="Sélectionner"
+        />
+        <IconButton
+          icon={<Hand />}
+          active={tool === "pan"}
+          onClick={() => setTool("pan")}
+          label="Déplacer la vue"
+        />
+        <IconButton
+          icon={<Move />}
+          active={tool === "moveStitch"}
+          onClick={() => setTool("moveStitch")}
+          label="Déplacer une maille"
+        />
+        <IconButton
+          icon={<LocateFixed />}
+          onClick={resetView}
+          label="Réinitialiser la vue"
+        />
+      </div>
 
-       <IconButton
-    icon={<Ban />}
-    active={tool === "select"}
-    onClick={() => setTool("select")}
-    label="Sélectionner"
-/>
-
-<IconButton
-    icon={<Hand />}
-    active={tool === "pan"}
-    onClick={() => setTool("pan")}
-    label="Déplacer la vue"
-/>
-<IconButton
-  icon={<Move />}
-  active={tool === "moveStitch"}
-  onClick={() => setTool("moveStitch")}
-  label="Déplacer une maille"
-/>
-<IconButton
-    icon={<LocateFixed />}
-    onClick={resetView}
-    label="Réinitialiser la vue"
-/>
-        </div>
-
-     <div
-  className="flex overflow-hidden rounded-lg"
-  style={{ border: `1px solid ${colors.border}` }}
->
-  <button
-    onClick={() => setDiagramType("circular")}
-    style={{
-      backgroundColor:
-        diagramType === "circular" ? colors.primary : colors.surface,
-      color: colors.text,
-    }}
-    className="px-3 py-2 text-sm transition-colors"
-  >
-    ⭕ Circulaire
-  </button>
-
-  <button
-    onClick={() => setDiagramType("flat")}
-    style={{
-      backgroundColor:
-        diagramType === "flat" ? colors.primary : colors.surface,
-      color: colors.text,
-    }}
-    className="px-3 py-2 text-sm transition-colors"
-  >
-    📏 Plat
-  </button>
-  <button
-    onClick={() => setDiagramType("granny")}
-    style={{
-      backgroundColor:
-        diagramType === "granny" ? colors.primary : colors.surface,
-      color: colors.text,
-    }}
-    className="px-3 py-2 text-sm transition-colors"
-  >
-    ◻ Granny
-  </button>
+      <div
+        className="flex overflow-hidden rounded-lg"
+        style={{ border: `1px solid ${colors.border}` }}
+        role="group"
+        aria-label="Type de diagramme"
+      >
+        {([
+          ["circular", "⭕ Circulaire"],
+          ["flat", "📏 Plat"],
+          ["granny", "◻ Granny"],
+        ] as const).map(([type, label]) => (
+          <button
+            key={type}
+            type="button"
+            aria-pressed={diagramType === type}
+            onClick={() => setDiagramType(type)}
+            style={{
+              backgroundColor: diagramType === type ? colors.primary : colors.surface,
+              color: colors.text,
+            }}
+            className="px-3 py-2 text-sm transition-colors"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </div>
-     </div>
   );
 }

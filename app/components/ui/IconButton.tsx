@@ -13,7 +13,7 @@ type IconButtonProps = {
 export default function IconButton({
   icon,
   onClick,
-  active = false,
+  active,
   label,
   disabled = false,
 }: IconButtonProps) {
@@ -24,6 +24,8 @@ export default function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
+      aria-pressed={active === undefined ? undefined : active}
+      type="button"
       disabled={disabled}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}

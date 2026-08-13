@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useModalAccessibility } from "@/app/hooks/useModalAccessibility";
 
 type HelpModalProps = {
   isOpen: boolean;
@@ -879,15 +880,27 @@ export default function HelpModal({
 }: HelpModalProps) {
   const [page, setPage] =
     useState<keyof typeof pages>("welcome");
+  const dialogRef = useModalAccessibility(isOpen, onClose);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50">
-      <div className="bg-[#241d2d] rounded-xl w-[1000px] h-[700px] flex overflow-hidden">
+    <div
+      className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4"
+      onMouseDown={onClose}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="help-dialog-title"
+        tabIndex={-1}
+        className="bg-[#241d2d] rounded-xl w-full max-w-[1000px] h-[min(700px,calc(100vh-2rem))] flex flex-col md:flex-row overflow-hidden outline-none"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         {/* Menu gauche */}
-        <div className="w-64 border-r border-[#5d445e] p-4 overflow-y-auto">
-          <div className="flex flex-col gap-2">
+        <div className="w-full md:w-64 shrink-0 border-b md:border-b-0 md:border-r border-[#5d445e] p-4 overflow-x-auto md:overflow-y-auto">
+          <div className="flex md:flex-col gap-2 min-w-max md:min-w-0">
             {Object.entries(pages).map(([key, value]) => (
               <button
                 key={key}
@@ -913,6 +926,7 @@ export default function HelpModal({
         >
           <div className="flex justify-between items-start">
             <h2
+              id="help-dialog-title"
               className="text-2xl font-bold"
               style={{ color: "#FBF7F2" }}
             >

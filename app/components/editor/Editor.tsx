@@ -388,8 +388,6 @@ export default function Editor() {
         onUpdateStitchPosition={handleUpdateStitchPosition}
         onResetStitchPosition={handleResetStitchPosition}
 
-        adjustments={adjustments}
-        setAdjustments={setAdjustments}
         diagramRef={diagramRef}
       />
     </MainLayout>

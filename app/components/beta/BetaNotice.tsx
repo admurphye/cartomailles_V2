@@ -24,7 +24,7 @@ export default function BetaNotice() {
 
               <p className="mt-4 text-gray-600 leading-8">
                 Vos retours, vos idées et vos signalements de bugs sont essentiels.
-                Ils m'aideront à faire de Cartomailles un logiciel toujours plus intuitif et agréable à utiliser.
+                Ils m’aideront à faire de Cartomailles un logiciel toujours plus intuitif et agréable à utiliser.
               </p>
 
               <p className="mt-5 font-semibold text-[#D98CA8]">

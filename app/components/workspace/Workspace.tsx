@@ -4,18 +4,11 @@ import PropertiesPanel from "../panels/PropertiesPanel";
 import { Tool } from "@/app/lib/engine/model/Tool";
 import { PositionedStitch } from "@/app/lib/engine/model/PositionedStitch";
 import { Link } from "@/app/lib/engine/model/Link";
-import { StitchAdjustments } from "@/app/lib/engine/model/StitchAdjustments";
 import type { RefObject } from "react";
 import { ParseIssue } from "@/app/lib/engine/model/ParseIssue";
 import { StitchType } from "@/app/lib/engine/model/Stitch";
 
 type WorkspaceProps = {
-   adjustments: StitchAdjustments;
-
-  setAdjustments: React.Dispatch<
-    React.SetStateAction<StitchAdjustments>
-  >;
-
   pattern: string;
   setPattern: (value: string) => void;
   issues: ParseIssue[];
@@ -60,8 +53,6 @@ export default function Workspace({
   onChangeStitchType,
   onUpdateStitchPosition,
   onResetStitchPosition,
-  adjustments,
-  setAdjustments,
   diagramRef,
 }: WorkspaceProps) {
 

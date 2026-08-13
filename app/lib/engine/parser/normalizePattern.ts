@@ -21,8 +21,11 @@ export function normalizePattern(text: string): string {
     // Ajoute un espace entre un nombre et des lettres
     .replace(/(\d)([a-zà-ÿ])/gi, "$1 $2")
 
-    // Ajoute un espace entre des lettres et un nombre
-    .replace(/([a-zà-ÿ])(\d)/gi, "$1 $2")
+    // Ajoute un espace entre des lettres et un nombre, sauf pour les
+    // marqueurs de rang R1, R2... que parseTokens reconnaît tels quels.
+    .replace(/([a-zà-ÿ])(\d)/gi, (match, letter: string, number: string) =>
+      letter === "r" ? match : `${letter} ${number}`
+    )
 
     // Espaces autour de la ponctuation
     .replace(/\(/g, " ( ")

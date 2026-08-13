@@ -5,7 +5,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 text-center">
 
         <h3 className="text-2xl font-semibold text-[#5B2E4D]">
-          Merci de faire partie de l'aventure 💜
+          Merci de faire partie de l’aventure 💜
         </h3>
 
         <p className="mt-4 text-gray-600 max-w-2xl mx-auto">

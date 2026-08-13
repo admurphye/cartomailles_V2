@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Ancienne implémentation conservée uniquement comme référence.
+    "app/lib/old/**",
   ]),
 ]);
 

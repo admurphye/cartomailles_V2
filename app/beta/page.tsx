@@ -7,12 +7,10 @@ import BetaNotice from "../components/beta/BetaNotice";
 
 type BetaPageProps = {
   onNewProject: () => void;
-  onOpenProject: () => void;
 };
 
 export default function BetaPage({
   onNewProject,
-  onOpenProject,
 }: BetaPageProps) {
   return (
     <main className="min-h-screen bg-[#FFF9F5]">

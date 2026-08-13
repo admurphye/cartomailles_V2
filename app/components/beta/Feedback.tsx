@@ -16,7 +16,7 @@ export default function Feedback() {
 
           <p className="mt-5 max-w-3xl mx-auto text-lg text-gray-600 leading-8">
             Cette bêta évolue grâce à vous. Chaque bug signalé et chaque idée
-            proposée nous permettent d'améliorer Cartomailles avant son lancement officiel.
+            proposée nous permettent d’améliorer Cartomailles avant son lancement officiel.
           </p>
 
         </div>
@@ -37,7 +37,7 @@ export default function Feedback() {
 
             <p className="mt-4 text-gray-600 leading-8">
               Vous avez rencontré un problème, un comportement inattendu ou un
-              blocage ? Décrivez-nous ce qu'il s'est passé afin que nous
+              blocage ? Décrivez-nous ce qu’il s’est passé afin que nous
               puissions le corriger rapidement.
             </p>
 
