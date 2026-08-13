@@ -152,6 +152,11 @@ describe("exports du diagramme", () => {
       pixelRatio: 3,
       width: 800,
     });
+    const captureSurface = toPng.mock.calls[0][0] as HTMLDivElement;
+    const capturedDiagram = captureSurface.querySelector("svg") as SVGSVGElement;
+    expect(captureSurface.style.left).toBe("");
+    expect(capturedDiagram.getAttribute("xmlns")).toBe("http://www.w3.org/2000/svg");
+    expect(capturedDiagram.querySelector('[data-stitch-id="maille-1"]')).not.toBeNull();
     expect(addImage).toHaveBeenCalledWith(
       "data:image/png;base64,diagramme",
       "PNG",

@@ -11,24 +11,30 @@ export async function exportPDF(
   const captureWidth = viewBox.width || bounds.width || 700;
   const captureHeight = viewBox.height || bounds.height || 700;
   const exportContainer = document.createElement("div");
+  const captureSurface = document.createElement("div");
   const exportDiagram = diagram.cloneNode(true) as SVGSVGElement;
 
   exportContainer.style.position = "fixed";
   exportContainer.style.left = "-100000px";
   exportContainer.style.top = "0";
-  exportContainer.style.width = `${captureWidth}px`;
-  exportContainer.style.height = `${captureHeight}px`;
-  exportContainer.style.backgroundColor = "#ffffff";
+  captureSurface.style.width = `${captureWidth}px`;
+  captureSurface.style.height = `${captureHeight}px`;
+  captureSurface.style.backgroundColor = "#ffffff";
   exportDiagram.setAttribute("width", String(captureWidth));
   exportDiagram.setAttribute("height", String(captureHeight));
+  exportDiagram.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   exportDiagram.style.display = "block";
-  exportContainer.appendChild(exportDiagram);
+  captureSurface.appendChild(exportDiagram);
+  exportContainer.appendChild(captureSurface);
   document.body.appendChild(exportContainer);
 
   let dataUrl: string;
 
   try {
-    dataUrl = await htmlToImage.toPng(exportContainer, {
+    // Capture a neutral inner surface. Capturing exportContainer would also
+    // copy its large negative `left` offset into the generated foreignObject,
+    // leaving the resulting PNG (and therefore the PDF) blank in some browsers.
+    dataUrl = await htmlToImage.toPng(captureSurface, {
       backgroundColor: "#ffffff",
       pixelRatio: 3,
       width: captureWidth,
@@ -38,7 +44,7 @@ export async function exportPDF(
     exportContainer.remove();
   }
 
-  const isLandscape = viewBox.width > viewBox.height;
+  const isLandscape = captureWidth > captureHeight;
   const pdf = new jsPDF({
     orientation: isLandscape ? "landscape" : "portrait",
     unit: "mm",
