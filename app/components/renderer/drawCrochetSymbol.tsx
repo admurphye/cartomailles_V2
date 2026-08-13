@@ -308,13 +308,11 @@ export function drawDeuxBridesEnsemble(
   return (
     <g transform={`rotate(${rotation} ${x + 20} ${y + 20})`}>
 
-      {/* Les deux tiges */}
       {drawTigeInclineeGauche(x, y, color)}
       {drawTigeInclineeDroite(x, y, color)}
 
-      {/* Puis les deux barres */}
-      {drawBar(x - 6, y - 2, color, 1)}
-      {drawBar(x + 12, y - 2, color, 1)}
+      <line x1={x + 8} y1={y + 15} x2={x + 22} y2={y + 9} stroke={color} strokeWidth="2" />
+      <line x1={x + 26} y1={y + 9} x2={x + 39} y2={y + 15} stroke={color} strokeWidth="2" />
 
     </g>
   );
@@ -384,6 +382,10 @@ export function drawCrochetSymbol(
   color = "black",
   rotation = 0
 ) {
+
+  if (type === "dc" && operation === "increase") {
+    return drawDeuxBridesEnsemble(x - 20, y - 20, color, rotation);
+  }
 
    switch (SYMBOL_REGISTRY[type]) {
     case "MR":

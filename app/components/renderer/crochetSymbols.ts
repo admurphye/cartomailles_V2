@@ -121,17 +121,18 @@ tbr: {
     needsParent: true,
   },
   deuxBridesEns: {
-    name: "2 brides ensemble",
+    name: "2 brides dans la même maille",
     code: "2BE",
     svg: "deuxBridesEnsemble",
     category: "construction",
-     aliases: [
+    aliases: [
     "2 brides ensemble",
+    "2 brides dans la même maille",
     "2br ensemble",
     "2be"
   ],
-     consumes: 2,
-     produces: 1,
+     consumes: 1,
+     produces: 2,
      needsParent: true,
 },
   troisBridesEns: {

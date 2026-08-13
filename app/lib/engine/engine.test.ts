@@ -31,6 +31,15 @@ describe("parseExpression", () => {
     });
   });
 
+  it("reconnaît le raccourci 2BE comme deux brides dans la même maille", () => {
+    expect(parseExpression("2be")).toEqual({
+      type: "dc",
+      operation: "increase",
+      consumes: 1,
+      produces: 2,
+    });
+  });
+
   it("décrit correctement une diminution", () => {
     expect(parseExpression("dim(br)")).toEqual({
       type: "dc",
@@ -64,6 +73,20 @@ describe("parsePattern", () => {
     expect(graph.groups).toHaveLength(6);
     expect(graph.stitches).toHaveLength(9);
     expect(graph.groups.filter((group) => group.operation === "increase")).toHaveLength(3);
+  });
+
+  it.each([
+    "2BE",
+    "2 brides ensemble",
+    "2 brides dans la même maille",
+  ])("accepte la notation %s", (notation) => {
+    const graph = parsePattern(`R1 ${notation}`);
+
+    expect(graph.issues).toEqual([]);
+    expect(graph.stitches).toHaveLength(2);
+    expect(graph.groups).toHaveLength(1);
+    expect(graph.groups[0]).toMatchObject({ operation: "increase" });
+    expect(graph.stitches.every((stitch) => stitch.type === "dc")).toBe(true);
   });
 
   it("construit les liens d'augmentation entre deux rangs", () => {

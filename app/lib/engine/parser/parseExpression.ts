@@ -47,6 +47,10 @@ export function parseExpression(
 
   expression = expression.trim().toLowerCase();
 
+  if (expression === "2be") {
+    expression = "aug(br)";
+  }
+
   const operationMatch = expression.match(
   /^(aug|augmentation|inc|increase|dim|diminution|dec|decrease)\((.+)\)$/
 );

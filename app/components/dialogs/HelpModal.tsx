@@ -314,7 +314,7 @@ const pages = {
             <span className="font-bold text-pink-200 w-28 inline-block">
               aug br
             </span>
-            Augmentation en brides
+            2 brides dans la même maille (symbole en V)
           </div>
 
           <div>
@@ -397,7 +397,7 @@ const pages = {
             <span className="font-bold text-pink-200 w-20 inline-block">
               2BE
             </span>
-            Deux brides ensemble
+            Deux brides dans la même maille (équivaut à « aug br »)
           </div>
 
           <div>

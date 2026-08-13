@@ -2,6 +2,13 @@ export function normalizePattern(text: string): string {
   return text
     .toLowerCase()
 
+    // Deux brides piquées dans la même maille (augmentation en V).
+    .replace(
+      /\b(?:2|deux)\s*(?:br|brides?)\s+(?:ensemble|dans\s+la\s+m[êe]me\s+maille)\b/gi,
+      "aug(br)"
+    )
+    .replace(/\b2be\b/gi, "aug(br)")
+
     // Noms usuels du cercle magique.
     .replace(/\b(cercle|anneau)\s+magique\b/gi, "mr")
 
