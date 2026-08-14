@@ -34,6 +34,17 @@ export function normalizePattern(text: string): string {
     // Noms usuels du cercle magique.
     .replace(/\b(cercle|anneau)\s+magique\b/gi, "mr")
 
+    // Une maille sautée consomme un parent sans produire de nouveau symbole.
+    // Exemples : "sauter une maille", "sautez 2 mailles", "3 mailles sautées".
+    .replace(
+      /\b(?:sauter|saute|sautez|saut[ée]e?s?)\s+(une?|\d+)\s+mailles?\b/gi,
+      (_, count) => `${/^un(?:e)?$/i.test(count) ? 1 : count} skip`
+    )
+    .replace(
+      /\b(une?|\d+)\s+mailles?\s+saut[ée]e?s?\b/gi,
+      (_, count) => `${/^un(?:e)?$/i.test(count) ? 1 : count} skip`
+    )
+
     .replace(
       /\b(aug|augmentation|inc|increase|dim|diminution|dec|decrease)\(([^)]+)\)/gi,
       (_, fn, arg) => `${fn}§${arg}§`

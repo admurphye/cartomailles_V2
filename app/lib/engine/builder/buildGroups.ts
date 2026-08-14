@@ -17,6 +17,12 @@ export function buildGroups(pattern: CrochetPattern): StitchGroup[] {
 
       for (let repeat = 0; repeat < instruction.count; repeat++) {
 
+        // Les instructions de saut déplacent seulement le curseur des parents.
+        // Elles ne correspondent à aucun groupe visible dans le diagramme.
+        if (instruction.produces === 0) {
+          continue;
+        }
+
         const stitches: Stitch[] = [];
 
         for (let i = 0; i < instruction.produces; i++) {

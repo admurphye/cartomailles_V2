@@ -62,6 +62,16 @@ export function parseExpression(
     };
   }
 
+  if (expression === "skip") {
+    return {
+      // Aucun point n'est créé : le type ne sera jamais rendu.
+      type: "sc",
+      operation: "normal",
+      consumes: 1,
+      produces: 0,
+    };
+  }
+
   const fanMatch = expression.match(/^fan_(5|6|9)_dc$/);
 
   if (fanMatch) {

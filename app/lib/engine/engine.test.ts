@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { layoutCircularGroups } from "./layout/layoutCircularGroups";
 import { layoutFlatGroups } from "./layout/layoutFlatGroups";
 import { layoutGrannyGroups } from "./layout/layoutGrannyGroups";
+import { PositionedStitch } from "./model/PositionedStitch";
 import { parseExpression } from "./parser/parseExpression";
 import { parsePattern } from "./parser/parsePattern";
 
@@ -164,6 +165,44 @@ describe("parsePattern", () => {
     expect(graph.links.every((link) => link.type === "decrease")).toBe(true);
   });
 
+  it.each([
+    "sauter une maille",
+    "sautez 1 maille",
+    "1 maille sautée",
+  ])("saute un parent avec la notation %s", (notation) => {
+    const graph = parsePattern(`R1 4 ms\nR2 1 ms, ${notation}, 2 ms`);
+    const firstRound = graph.stitches.filter((stitch) => stitch.round === 1);
+    const secondRound = graph.stitches.filter((stitch) => stitch.round === 2);
+    const linkedParentIds = graph.links
+      .filter((link) => secondRound.some((stitch) => stitch.id === link.to))
+      .map((link) => link.from);
+
+    expect(graph.issues).toEqual([]);
+    expect(secondRound).toHaveLength(3);
+    expect(graph.groups.filter((group) => group.round === 2)).toHaveLength(3);
+    expect(linkedParentIds).toEqual([
+      firstRound[0].id,
+      firstRound[2].id,
+      firstRound[3].id,
+    ]);
+  });
+
+  it("saute autant de parents que de mailles demandées", () => {
+    const graph = parsePattern("R1 5 ms\nR2 1 ms, sauter 3 mailles, 1 ms");
+    const firstRound = graph.stitches.filter((stitch) => stitch.round === 1);
+    const secondRound = graph.stitches.filter((stitch) => stitch.round === 2);
+    const secondRoundLinks = graph.links.filter((link) =>
+      secondRound.some((stitch) => stitch.id === link.to)
+    );
+
+    expect(graph.issues).toEqual([]);
+    expect(secondRound).toHaveLength(2);
+    expect(secondRoundLinks.map((link) => link.from)).toEqual([
+      firstRound[0].id,
+      firstRound[4].id,
+    ]);
+  });
+
   it("remonte une erreur sans empêcher les mailles valides", () => {
     const graph = parsePattern("R1 2 ms, 1 inconnu");
 
@@ -191,6 +230,20 @@ describe("layouts", () => {
     firstRoundRadii.forEach((radius) => expect(radius).toBeCloseTo(50));
   });
 
+  it("aligne l'angle des mailles enfants avec leurs parents en circulaire", () => {
+    const circularGraph = parsePattern("R1 4 ms\nR2 4 ms");
+    const positioned = layoutCircularGroups(circularGraph);
+    const angle = (stitch: PositionedStitch) =>
+      Math.atan2(stitch.y - 350, stitch.x - 350);
+
+    for (const link of circularGraph.links) {
+      const parent = positioned.find((stitch) => stitch.id === link.from)!;
+      const child = positioned.find((stitch) => stitch.id === link.to)!;
+
+      expect(angle(child)).toBeCloseTo(angle(parent));
+    }
+  });
+
   it("empile les rangs plats du bas vers le haut avec l'espacement demandé", () => {
     const positioned = layoutFlatGroups(graph, 70);
     const firstRoundY = positioned.find((stitch) => stitch.round === 1)?.y;
@@ -199,6 +252,31 @@ describe("layouts", () => {
     expect(firstRoundY).toBeDefined();
     expect(secondRoundY).toBeDefined();
     expect(firstRoundY! - secondRoundY!).toBe(70);
+  });
+
+  it("aligne les mailles enfants avec leurs parents dans un diagramme plat", () => {
+    const flatGraph = parsePattern("R1 4 ms\nR2 4 ms");
+    const positioned = layoutFlatGroups(flatGraph);
+
+    for (const link of flatGraph.links) {
+      const parent = positioned.find((stitch) => stitch.id === link.from);
+      const child = positioned.find((stitch) => stitch.id === link.to);
+
+      expect(child?.x).toBe(parent?.x);
+    }
+  });
+
+  it("centre une diminution plate entre ses deux parents", () => {
+    const flatGraph = parsePattern("R1 4 ms\nR2 2 dim(ms)");
+    const positioned = layoutFlatGroups(flatGraph);
+    const child = positioned.find((stitch) => stitch.round === 2);
+    const parentLinks = flatGraph.links.filter((link) => link.to === child?.id);
+    const parents = parentLinks.map((link) =>
+      positioned.find((stitch) => stitch.id === link.from)!
+    );
+
+    expect(parents).toHaveLength(2);
+    expect(child?.x).toBe((parents[0].x + parents[1].x) / 2);
   });
 
   it("produit un carré granny centré et non dégénéré", () => {

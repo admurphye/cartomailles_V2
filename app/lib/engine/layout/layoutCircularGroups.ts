@@ -9,8 +9,18 @@ export function layoutCircularGroups(
 ): PositionedStitch[] {
   const groups = graph.groups;
   const positionedGroups: PositionedGroup[] = [];
+  const positionedById = new Map<string, PositionedStitch>();
+  const parentIdsByChildId = new Map<string, string[]>();
   const centerX = 350;
   const centerY = 350;
+
+  for (const link of graph.links) {
+    if (link.type === "chain") continue;
+
+    const parentIds = parentIdsByChildId.get(link.to) ?? [];
+    parentIds.push(link.from);
+    parentIdsByChildId.set(link.to, parentIds);
+  }
   const rounds = [...new Set(groups.map((group) => group.round))];
   const structuralRounds = rounds.filter((round) =>
     groups.some(
@@ -22,6 +32,7 @@ export function layoutCircularGroups(
   );
 
   for (const round of rounds) {
+    const roundStartIndex = positionedGroups.length;
     const currentGroups = groups.filter((group) => group.round === round);
     const magicRings = currentGroups.filter(
       (group) => group.role === "magicRing"
@@ -48,6 +59,36 @@ export function layoutCircularGroups(
 
       return (2 * Math.PI * index) / circularSlotCount - Math.PI / 2;
     };
+    const parentAngleForGroup = (group: typeof circularGroups[number]) => {
+      const parentPositions = [
+        ...new Set(
+          group.stitches.flatMap((stitch) =>
+            parentIdsByChildId.get(stitch.id) ?? []
+          )
+        ),
+      ]
+        .map((parentId) => positionedById.get(parentId))
+        .filter((parent): parent is PositionedStitch => parent !== undefined)
+        // Le centre d'un anneau magique n'a pas d'angle exploitable.
+        .filter((parent) =>
+          Math.hypot(parent.x - centerX, parent.y - centerY) > 0.001
+        );
+
+      if (parentPositions.length === 0) return angleForGroup(group);
+
+      const direction = parentPositions.reduce(
+        (sum, parent) => {
+          const angle = Math.atan2(parent.y - centerY, parent.x - centerX);
+          return {
+            x: sum.x + Math.cos(angle),
+            y: sum.y + Math.sin(angle),
+          };
+        },
+        { x: 0, y: 0 }
+      );
+
+      return Math.atan2(direction.y, direction.x);
+    };
     const structuralRoundIndex = structuralRounds.indexOf(round);
     const radius = (structuralRoundIndex + 1) * ringSpacing;
 
@@ -68,7 +109,7 @@ export function layoutCircularGroups(
     });
 
     structuralGroups.forEach((group) => {
-      const groupAngle = angleForGroup(group);
+      const groupAngle = parentAngleForGroup(group);
 
       positionedGroups.push({
         id: group.id,
@@ -160,6 +201,11 @@ export function layoutCircularGroups(
         stitches: group.stitches,
       });
     });
+
+    // Les angles obtenus deviennent les références du rang suivant.
+    for (const stitch of explodeGroups(positionedGroups.slice(roundStartIndex))) {
+      positionedById.set(stitch.id, stitch);
+    }
   }
 
   return explodeGroups(positionedGroups);

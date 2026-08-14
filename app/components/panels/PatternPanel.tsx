@@ -1,19 +1,21 @@
 import Card from "@/app/components/ui/Card";
 import TextArea from "@/app/components/ui/TextArea";
 import { colors } from "@/app/theme/colors";
-import { FileText } from "lucide-react";
+import { FileText, Rows3 } from "lucide-react";
 import { ParseIssue } from "@/app/lib/engine/model/ParseIssue";
 
 type PatternPanelProps = {
   pattern: string;
   setPattern: (value: string) => void;
   issues: ParseIssue[];
+  stitchCountsByRound: Array<{ round: number; count: number }>;
 };
 
 export default function PatternPanel({
   pattern,
   setPattern,
   issues,
+  stitchCountsByRound,
 }: PatternPanelProps) {
   const lineCount = pattern
     .split("\n")
@@ -91,6 +93,65 @@ export default function PatternPanel({
           </ul>
         </div>
       )}
+
+      <div
+        style={{
+          marginTop: 14,
+          padding: 13,
+          borderRadius: 10,
+          border: `1px solid ${colors.border}`,
+          background: colors.workspace,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            color: colors.text,
+            fontSize: 14,
+            fontWeight: 600,
+            marginBottom: stitchCountsByRound.length > 0 ? 10 : 0,
+          }}
+        >
+          <Rows3 size={16} strokeWidth={1.75} />
+          Total des mailles par rang
+        </div>
+
+        {stitchCountsByRound.length === 0 ? (
+          <div style={{ color: colors.textSecondary, fontSize: 13 }}>
+            Aucun rang pour le moment.
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gap: 7,
+              maxHeight: 150,
+              overflowY: "auto",
+              paddingRight: 4,
+            }}
+          >
+            {stitchCountsByRound.map(({ round, count }) => (
+              <div
+                key={round}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  color: colors.textSecondary,
+                  fontSize: 13,
+                }}
+              >
+                <span>Rang {round}</span>
+                <strong style={{ color: colors.primary, fontSize: 14 }}>
+                  {count} {count > 1 ? "mailles" : "maille"}
+                </strong>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
          </Card>
   );

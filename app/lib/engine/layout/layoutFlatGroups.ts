@@ -10,6 +10,16 @@ export function layoutFlatGroups(
 
   const groups = graph.groups;
   const positionedGroups: PositionedGroup[] = [];
+  const positionedById = new Map<string, PositionedStitch>();
+  const parentIdsByChildId = new Map<string, string[]>();
+
+  for (const link of graph.links) {
+    if (link.type === "chain") continue;
+
+    const parentIds = parentIdsByChildId.get(link.to) ?? [];
+    parentIds.push(link.from);
+    parentIdsByChildId.set(link.to, parentIds);
+  }
 
   const centerX = 350;
   const startY = 80;
@@ -47,13 +57,28 @@ export function layoutFlatGroups(
       Math.max(0, displayGroups.length - 1) * groupGap;
     let cursorX = centerX - rowWidth / 2;
 
+    const positionedRowGroups: PositionedGroup[] = [];
+
     displayGroups.forEach((group, index) => {
       const groupWidth = groupWidths[index];
-      const groupCenterX = cursorX + groupWidth / 2;
+      const defaultCenterX = cursorX + groupWidth / 2;
+      const parentPositions = [
+        ...new Set(
+          group.stitches.flatMap((stitch) =>
+            parentIdsByChildId.get(stitch.id) ?? []
+          )
+        ),
+      ]
+        .map((parentId) => positionedById.get(parentId))
+        .filter((parent): parent is PositionedStitch => parent !== undefined);
+      const groupCenterX = parentPositions.length > 0
+        ? parentPositions.reduce((total, parent) => total + parent.x, 0) /
+          parentPositions.length
+        : defaultCenterX;
 
       const groupCenterY = rowCenterY;
 
-      positionedGroups.push({
+      const positionedGroup: PositionedGroup = {
 
         id: group.id,
 
@@ -75,7 +100,10 @@ export function layoutFlatGroups(
 
         stitches: group.stitches,
 
-      });
+      };
+
+      positionedGroups.push(positionedGroup);
+      positionedRowGroups.push(positionedGroup);
 
       cursorX += groupWidth + groupGap;
 
@@ -86,7 +114,7 @@ export function layoutFlatGroups(
         ? centerX + rowWidth / 2 + 18
         : centerX - rowWidth / 2 - 18;
 
-      positionedGroups.push({
+      const positionedGroup: PositionedGroup = {
         id: group.id,
         round: group.round,
         order: group.order,
@@ -98,8 +126,16 @@ export function layoutFlatGroups(
         rotation: 0,
         orientation: "horizontal",
         stitches: group.stitches,
-      });
+      };
+
+      positionedGroups.push(positionedGroup);
+      positionedRowGroups.push(positionedGroup);
     });
+
+    // Rend les positions du rang disponibles aux enfants du rang suivant.
+    for (const stitch of explodeGroups(positionedRowGroups)) {
+      positionedById.set(stitch.id, stitch);
+    }
 
   }
 

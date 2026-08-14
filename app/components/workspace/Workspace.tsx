@@ -12,6 +12,7 @@ type WorkspaceProps = {
   pattern: string;
   setPattern: (value: string) => void;
   issues: ParseIssue[];
+  stitchCountsByRound: Array<{ round: number; count: number }>;
 
   tool: Tool;
   setTool: (tool: Tool) => void;
@@ -38,6 +39,7 @@ export default function Workspace({
   pattern,
   setPattern,
   issues,
+  stitchCountsByRound,
 
   diagramType,
   setDiagramType,
@@ -80,6 +82,7 @@ export default function Workspace({
           pattern={pattern}
           setPattern={setPattern}
           issues={issues}
+          stitchCountsByRound={stitchCountsByRound}
         />
 <DiagramPanel
   diagramType={diagramType}

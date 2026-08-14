@@ -11,6 +11,7 @@ import {
   Redo2,
   Settings,
   CircleHelp,
+  BookOpenText,
 } from "lucide-react";
 
 import IconButton from "@/app/components/ui/IconButton";
@@ -20,6 +21,7 @@ import { shadows } from "@/app/theme/shadows";
 import HelpModal from "@/app/components/dialogs/HelpModal";
 import Input from "@/app/components/ui/Input";
 import PreferencesDialog from "@/app/components/dialogs/PreferencesDialog";
+import StitchLegendDialog from "@/app/components/dialogs/StitchLegendDialog";
 
 type AppHeaderProps = {
   onNewProject: () => void;
@@ -53,6 +55,7 @@ export default function AppHeader({
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
 
   const handleExport = (exportProject: () => void) => {
     setIsExportMenuOpen(false);
@@ -134,6 +137,12 @@ export default function AppHeader({
   icon={<Settings size={18} />}
   onClick={() => setIsPreferencesOpen(true)}
   label="Paramètres"
+/>
+
+<IconButton
+    icon={<BookOpenText size={18} />}
+    onClick={() => setIsLegendOpen(true)}
+    label="Légende des mailles"
 />
 
 <IconButton
@@ -271,6 +280,10 @@ export default function AppHeader({
       <PreferencesDialog
         isOpen={isPreferencesOpen}
         onClose={() => setIsPreferencesOpen(false)}
+      />
+      <StitchLegendDialog
+        isOpen={isLegendOpen}
+        onClose={() => setIsLegendOpen(false)}
       />
     </header>
   );

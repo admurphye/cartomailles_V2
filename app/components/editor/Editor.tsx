@@ -372,6 +372,12 @@ export default function Editor() {
         pattern={pattern}
         setPattern={handlePatternChange}
         issues={graph.issues}
+        stitchCountsByRound={graph.rounds.map((round) => ({
+          round: round.number,
+          count: graph.stitches.filter(
+            (stitch) => stitch.round === round.number && stitch.countsAsStitch
+          ).length,
+        }))}
 
         diagramType={diagramType}
         setDiagramType={handleDiagramTypeChange}
