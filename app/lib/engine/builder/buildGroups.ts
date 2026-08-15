@@ -34,7 +34,7 @@ export function buildGroups(pattern: CrochetPattern): StitchGroup[] {
             type: instruction.type,
 
             operation: instruction.operation,
-            groupSize: instruction.produces,
+            groupSize: Math.max(instruction.consumes, instruction.produces),
             role: instruction.role,
             countsAsStitch: instruction.countsAsStitch,
 

@@ -62,6 +62,17 @@ export function parseExpression(
     };
   }
 
+  const tripleIncreaseMatch = expression.match(/^triple_(hdc|dtr|tr)_increase$/);
+
+  if (tripleIncreaseMatch) {
+    return {
+      type: tripleIncreaseMatch[1] as StitchType,
+      operation: "decrease",
+      consumes: 3,
+      produces: 1,
+    };
+  }
+
   if (expression === "skip") {
     return {
       // Aucun point n'est créé : le type ne sera jamais rendu.

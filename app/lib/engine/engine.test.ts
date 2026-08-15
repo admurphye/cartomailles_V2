@@ -128,6 +128,29 @@ describe("parsePattern", () => {
   });
 
   it.each([
+    ["3dbe", "hdc"],
+    ["3 demi-brides ensemble", "hdc"],
+    ["3 db dans la même maille", "hdc"],
+    ["3dbre", "dtr"],
+    ["3 doubles brides ensemble", "dtr"],
+    ["3 dbr dans la même maille", "dtr"],
+    ["3tbr", "tr"],
+    ["3 triples brides ensemble", "tr"],
+    ["3 tribles brides ensemble", "tr"],
+    ["3 tb dans la même maille", "tr"],
+  ] as const)("accepte la notation %s", (notation, type) => {
+    const graph = parsePattern(`R1 ${notation}`);
+
+    expect(graph.issues).toEqual([]);
+    expect(graph.stitches).toHaveLength(1);
+    expect(graph.groups).toHaveLength(1);
+    expect(graph.groups[0]).toMatchObject({ operation: "decrease" });
+    expect(graph.stitches.every((stitch) =>
+      stitch.type === type && stitch.groupSize === 3
+    )).toBe(true);
+  });
+
+  it.each([
     ["5BE", 5],
     ["6 brides dans la même maille", 6],
     ["9 brides ensemble", 9],

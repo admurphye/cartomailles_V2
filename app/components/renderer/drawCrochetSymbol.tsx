@@ -336,6 +336,57 @@ export function drawTroisBridesEnsemble(
   );
 }
 
+function drawTroisMaillesEnsemble(
+  type: "hdc" | "dtr" | "tr",
+  x: number,
+  y: number,
+  color: string,
+  rotation = 0
+) {
+  const barCount = type === "dtr" ? 2 : type === "tr" ? 3 : 1;
+  const stems = [
+    { topX: x + 5, topY: y + 6 },
+    { topX: x + 24, topY: y + 5 },
+    { topX: x + 43, topY: y + 6 },
+  ];
+
+  return (
+    <g transform={`rotate(${rotation} ${x + 20} ${y + 20})`}>
+      {stems.map(({ topX, topY }, stemIndex) => {
+        const bottomX = x + 24;
+        const bottomY = y + 34;
+        const dx = bottomX - topX;
+        const dy = bottomY - topY;
+        const length = Math.hypot(dx, dy);
+        const perpendicularX = (-dy / length) * (type === "hdc" ? 4 : 6);
+        const perpendicularY = (dx / length) * (type === "hdc" ? 4 : 6);
+
+        return (
+          <g key={stemIndex}>
+            <line x1={topX} y1={topY} x2={bottomX} y2={bottomY} stroke={color} strokeWidth="2" strokeLinecap="round" />
+            {Array.from({ length: barCount }, (_, barIndex) => {
+              const progress = type === "hdc" ? 0.28 : 0.2 + barIndex * 0.19;
+              const centerX = topX + dx * progress;
+              const centerY = topY + dy * progress;
+              return (
+                <line
+                  key={barIndex}
+                  x1={centerX - perpendicularX}
+                  y1={centerY - perpendicularY}
+                  x2={centerX + perpendicularX}
+                  y2={centerY + perpendicularY}
+                  stroke={color}
+                  strokeWidth="2"
+                />
+              );
+            })}
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
 export function drawEventailBrides(
   x: number,
   y: number,
@@ -493,6 +544,10 @@ export function drawCrochetSymbol(
 
   if (type === "dc" && operation === "increase" && groupSize === 3) {
     return drawTroisBridesEnsemble(x - 20, y - 20, color, rotation);
+  }
+
+  if (["hdc", "dtr", "tr"].includes(type) && operation === "decrease" && groupSize === 3) {
+    return drawTroisMaillesEnsemble(type as "hdc" | "dtr" | "tr", x - 20, y - 20, color, rotation);
   }
 
   if (type === "dc" && operation === "increase") {

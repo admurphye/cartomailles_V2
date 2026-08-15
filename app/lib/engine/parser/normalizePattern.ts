@@ -30,6 +30,23 @@ export function normalizePattern(text: string): string {
       "triple_dc_increase"
     )
     .replace(/\b3be\b/gi, "triple_dc_increase")
+    .replace(/\b3dbe\b/gi, "triple_hdc_increase")
+    .replace(/\b3dbre\b/gi, "triple_dtr_increase")
+    .replace(/\b3tbr\b/gi, "triple_tr_increase")
+
+    // Trois mailles de même type piquées dans la même maille.
+    .replace(
+      /\b(?:3|trois)\s*(?:db|demi[\s-]*brides?)\s+(?:ensemble|dans\s+la\s+m[êe]me\s+maille)\b/gi,
+      "triple_hdc_increase"
+    )
+    .replace(
+      /\b(?:3|trois)\s*(?:dbr|doubles?\s+brides?)\s+(?:ensemble|dans\s+la\s+m[êe]me\s+maille)\b/gi,
+      "triple_dtr_increase"
+    )
+    .replace(
+      /\b(?:3|trois)\s*(?:tbr|tb|tri(?:p|b)les?\s+brides?)\s+(?:ensemble|dans\s+la\s+m[êe]me\s+maille)\b/gi,
+      "triple_tr_increase"
+    )
 
     // Noms usuels du cercle magique.
     .replace(/\b(cercle|anneau)\s+magique\b/gi, "mr")
