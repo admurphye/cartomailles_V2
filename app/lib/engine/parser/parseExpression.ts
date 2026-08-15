@@ -1,11 +1,12 @@
 import { StitchType } from "../model/Stitch";
-import { InstructionOperation } from "../model/Instruction";
+import { InstructionOperation, InstructionRole } from "../model/Instruction";
 
 export interface ParsedExpression {
   type: StitchType;
   operation: InstructionOperation;
   consumes: number;
   produces: number;
+  role?: InstructionRole;
 }
 
 const STITCH_MAP: Record<string, StitchType> = {
@@ -48,6 +49,32 @@ export function parseExpression(
   }
 
   expression = expression.trim().toLowerCase();
+
+  if (expression === "br_same_parent") {
+    return {
+      type: "dc",
+      operation: "normal",
+      consumes: 1,
+      produces: 1,
+      role: "sameParent",
+    };
+  }
+
+  const sameStitchMatch = expression.match(/^same_(\d+)_(ms|db|br|dbr|tb|tbr)$/);
+
+  if (sameStitchMatch) {
+    const stitch = STITCH_MAP[sameStitchMatch[2]];
+    const count = Number(sameStitchMatch[1]);
+
+    if (!stitch || count < 1) return null;
+
+    return {
+      type: stitch,
+      operation: count > 1 ? "increase" : "normal",
+      consumes: 1,
+      produces: count,
+    };
+  }
 
   if (expression === "2be") {
     expression = "aug(br)";

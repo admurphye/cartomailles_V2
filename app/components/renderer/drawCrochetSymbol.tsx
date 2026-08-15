@@ -50,8 +50,8 @@ export function drawML(
     <ellipse
       cx={x + 20}
       cy={y + 20}
-      rx={9}
-      ry={5}
+      rx={4.5}
+      ry={2.5}
       fill="none"
       stroke={color}
       strokeWidth="2"
@@ -336,6 +336,79 @@ export function drawTroisBridesEnsemble(
   );
 }
 
+function drawMaillesDansLaMemeMaille(
+  type: "sc" | "hdc" | "dc" | "dtr" | "tr",
+  count: number,
+  x: number,
+  y: number,
+  color: string,
+  rotation = 0
+) {
+  const baseX = x + 20;
+  const baseY = y + 35;
+  const spread = Math.min(36, 16 + (count - 2) * 5);
+  const barCount = type === "dc" ? 1 : type === "dtr" ? 2 : type === "tr" ? 3 : 0;
+
+  return (
+    <g transform={`rotate(${rotation} ${x + 20} ${y + 20})`}>
+      {Array.from({ length: count }, (_, index) => {
+        const progress = count === 1 ? 0.5 : index / (count - 1);
+        const topX = baseX - spread / 2 + spread * progress;
+        const topY = y + 5 + Math.abs(progress - 0.5) * 4;
+        const dx = baseX - topX;
+        const dy = baseY - topY;
+        const length = Math.hypot(dx, dy);
+        const perpendicularX = (-dy / length) * 5;
+        const perpendicularY = (dx / length) * 5;
+
+        if (type === "sc") {
+          const crossX = topX + dx * 0.22;
+          const crossY = topY + dy * 0.22;
+          return (
+            <g key={index}>
+              <line x1={topX} y1={topY} x2={baseX} y2={baseY} stroke={color} strokeWidth="2" strokeLinecap="round" />
+              <line x1={crossX - 5} y1={crossY - 5} x2={crossX + 5} y2={crossY + 5} stroke={color} strokeWidth="2" />
+              <line x1={crossX + 5} y1={crossY - 5} x2={crossX - 5} y2={crossY + 5} stroke={color} strokeWidth="2" />
+            </g>
+          );
+        }
+
+        return (
+          <g key={index}>
+            <line x1={topX} y1={topY} x2={baseX} y2={baseY} stroke={color} strokeWidth="2" strokeLinecap="round" />
+            {type === "hdc" && (
+              <line
+                x1={topX + dx * 0.25 - perpendicularX * 0.7}
+                y1={topY + dy * 0.25 - perpendicularY * 0.7}
+                x2={topX + dx * 0.25 + perpendicularX * 0.7}
+                y2={topY + dy * 0.25 + perpendicularY * 0.7}
+                stroke={color}
+                strokeWidth="2"
+              />
+            )}
+            {Array.from({ length: barCount }, (_, barIndex) => {
+              const barProgress = 0.16 + barIndex * 0.2;
+              const barX = topX + dx * barProgress;
+              const barY = topY + dy * barProgress;
+              return (
+                <line
+                  key={barIndex}
+                  x1={barX - perpendicularX}
+                  y1={barY - perpendicularY}
+                  x2={barX + perpendicularX}
+                  y2={barY + perpendicularY}
+                  stroke={color}
+                  strokeWidth="2"
+                />
+              );
+            })}
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
 function drawTroisMaillesEnsemble(
   type: "hdc" | "dtr" | "tr",
   x: number,
@@ -550,8 +623,19 @@ export function drawCrochetSymbol(
     return drawTroisMaillesEnsemble(type as "hdc" | "dtr" | "tr", x - 20, y - 20, color, rotation);
   }
 
-  if (type === "dc" && operation === "increase") {
+  if (type === "dc" && operation === "increase" && groupSize === 2) {
     return drawDeuxBridesEnsemble(x - 20, y - 20, color, rotation);
+  }
+
+  if (["sc", "hdc", "dc", "dtr", "tr"].includes(type) && operation === "increase" && groupSize >= 2) {
+    return drawMaillesDansLaMemeMaille(
+      type as "sc" | "hdc" | "dc" | "dtr" | "tr",
+      groupSize,
+      x - 20,
+      y - 20,
+      color,
+      rotation
+    );
   }
 
    switch (SYMBOL_REGISTRY[type]) {

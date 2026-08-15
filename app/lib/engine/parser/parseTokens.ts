@@ -75,7 +75,7 @@ if (!stitchToken) {
   count,
   consumes: parsed.consumes,
   produces: parsed.produces,
-  role: parsed.type === "mr" ? "magicRing" : "normal",
+  role: parsed.role ?? (parsed.type === "mr" ? "magicRing" : "normal"),
   countsAsStitch: true,
   round: currentRound,
   operation: parsed.operation,

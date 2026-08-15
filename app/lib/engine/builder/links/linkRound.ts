@@ -94,6 +94,28 @@ export function linkRound(
       }
 
       for (let repeat = 0; repeat < instruction.count; repeat++) {
+        if (instruction.role === "sameParent") {
+          const parent = previous[Math.max(0, parentCursor - 1)];
+          const children = current.slice(
+            childCursor,
+            childCursor + instruction.produces
+          );
+
+          if (parent) {
+            for (const child of children) {
+              links.push({
+                id: String(linkId++),
+                from: parent.id,
+                to: child.id,
+                type: "normal",
+              });
+            }
+          }
+
+          childCursor += instruction.produces;
+          continue;
+        }
+
         const parents = previous.slice(
           parentCursor,
           parentCursor + instruction.consumes

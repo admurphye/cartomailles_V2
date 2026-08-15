@@ -4,6 +4,32 @@ export function normalizePattern(text: string): string {
 
     .replace(/\bpop\s+corn\b/gi, "popcorn")
 
+    // Chaînette tournante et bride piquées dans le même parent.
+    .replace(
+      /\b2\s*ml\s*(?:,|et)?\s*(?:1|un(?:e)?)?\s*(?:b|br|bride)\s+dans\s+la\s+m[êe]me\s+maille\b/gi,
+      "2 ml, br_same_parent"
+    )
+
+    // Plusieurs mailles de n'importe quelle hauteur dans un même parent.
+    .replace(
+      /\b(\d+)\s*(ms|db|br|dbr|tb|tbr|mailles?\s+serr[ée]es?|demi[\s-]*brides?|brides?|doubles?\s+brides?|tri(?:p|b)les?\s+brides?)\s+dans\s+la\s+m[êe]me\s+maille\b/gi,
+      (_, count, stitchText: string) => {
+        const stitch = stitchText.toLowerCase();
+        const alias = /^mailles?\s+serr/.test(stitch)
+          ? "ms"
+          : /^demi/.test(stitch)
+            ? "db"
+            : /^doubles?/.test(stitch)
+              ? "dbr"
+              : /^tri(?:p|b)les?/.test(stitch)
+                ? "tb"
+                : /^brides?$/.test(stitch)
+                  ? "br"
+                  : stitch;
+        return `same_${count}_${alias}`;
+      }
+    )
+
     // Éventails de brides piquées dans une seule maille.
     .replace(
       /(?:[ée]ventail|coquillage)\s*\(\s*(5|6|9)\s*(?:br|brides?)\s*\)/gi,

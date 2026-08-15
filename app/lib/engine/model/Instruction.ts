@@ -4,6 +4,7 @@ export type InstructionRole =
   | "normal"
   | "foundationChain"
   | "turningChain"
+  | "sameParent"
   | "chainSpace"
   | "freeChain"
   | "magicRing"

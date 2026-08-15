@@ -130,14 +130,11 @@ describe("parsePattern", () => {
   it.each([
     ["3dbe", "hdc"],
     ["3 demi-brides ensemble", "hdc"],
-    ["3 db dans la même maille", "hdc"],
     ["3dbre", "dtr"],
     ["3 doubles brides ensemble", "dtr"],
-    ["3 dbr dans la même maille", "dtr"],
     ["3tbr", "tr"],
     ["3 triples brides ensemble", "tr"],
     ["3 tribles brides ensemble", "tr"],
-    ["3 tb dans la même maille", "tr"],
   ] as const)("accepte la notation %s", (notation, type) => {
     const graph = parsePattern(`R1 ${notation}`);
 
@@ -147,6 +144,28 @@ describe("parsePattern", () => {
     expect(graph.groups[0]).toMatchObject({ operation: "decrease" });
     expect(graph.stitches.every((stitch) =>
       stitch.type === type && stitch.groupSize === 3
+    )).toBe(true);
+  });
+
+  it.each([
+    ["2 mailles serrées dans la même maille", "sc", 2],
+    ["3 ms dans la même maille", "sc", 3],
+    ["2 demi-brides dans la même maille", "hdc", 2],
+    ["3 db dans la même maille", "hdc", 3],
+    ["2 brides dans la même maille", "dc", 2],
+    ["3 doubles brides dans la même maille", "dtr", 3],
+    ["2 dbr dans la même maille", "dtr", 2],
+    ["3 triples brides dans la même maille", "tr", 3],
+    ["2 tb dans la même maille", "tr", 2],
+  ] as const)("place %s", (notation, type, count) => {
+    const graph = parsePattern(`R1 ${notation}`);
+
+    expect(graph.issues).toEqual([]);
+    expect(graph.groups).toHaveLength(1);
+    expect(graph.groups[0]).toMatchObject({ operation: "increase" });
+    expect(graph.stitches).toHaveLength(count);
+    expect(graph.stitches.every((stitch) =>
+      stitch.type === type && stitch.groupSize === count
     )).toBe(true);
   });
 
@@ -241,6 +260,61 @@ describe("parsePattern", () => {
       expect(followingStitches).toHaveLength(5);
     }
   );
+
+  it.each([
+    "2 ml et une bride dans la même maille",
+    "2ml, 1br dans la même maille",
+  ])("place la chaîne et la bride sur le même parent avec %s", (notation) => {
+    const graph = parsePattern(`R1 3 ms\nR2 ${notation}, 2 br`);
+    const firstRound = graph.stitches.filter((stitch) => stitch.round === 1);
+    const secondRound = graph.stitches.filter((stitch) => stitch.round === 2);
+    const turningChain = secondRound.filter((stitch) => stitch.role === "turningChain");
+    const brides = secondRound.filter((stitch) => stitch.type === "dc");
+    const parentsOf = (stitchId: string) => graph.links
+      .filter((link) => link.to === stitchId)
+      .map((link) => link.from);
+
+    expect(graph.issues).toEqual([]);
+    expect(turningChain).toHaveLength(2);
+    expect(brides).toHaveLength(3);
+    expect(parentsOf(turningChain[0].id)).toEqual([firstRound[0].id]);
+    expect(parentsOf(brides[0].id)).toEqual([firstRound[0].id]);
+    expect(parentsOf(brides[1].id)).toEqual([firstRound[1].id]);
+
+    const positioned = layoutFlatGroups(graph);
+    const positionedChainTop = positioned.find(
+      (stitch) => stitch.id === turningChain.at(-1)?.id
+    );
+    const positionedSharedBride = positioned.find(
+      (stitch) => stitch.id === brides[0].id
+    );
+
+    expect(positionedSharedBride?.rotation).not.toBe(0);
+    expect(positionedSharedBride?.x).not.toBe(positionedChainTop?.x);
+    const positionedChain = positioned.filter(
+      (stitch) => turningChain.some((chain) => chain.id === stitch.id)
+    );
+    const averageChainY = positionedChain.reduce(
+      (total, stitch) => total + stitch.y,
+      0
+    ) / positionedChain.length;
+    expect(positionedSharedBride?.y).toBe(averageChainY);
+
+    const circular = layoutCircularGroups(graph);
+    const circularChain = circular.filter(
+      (stitch) => turningChain.some((chain) => chain.id === stitch.id)
+    );
+    const circularSharedBride = circular.find(
+      (stitch) => stitch.id === brides[0].id
+    );
+    const chainRadii = circularChain.map((stitch) =>
+      Math.hypot(stitch.x - 350, stitch.y - 350)
+    );
+
+    expect(Math.abs(chainRadii[1] - chainRadii[0])).toBeCloseTo(12);
+    expect(circularSharedBride?.rotation).not.toBe(0);
+    expect(circularSharedBride?.x).not.toBe(circularChain[0].x);
+  });
 
   it("construit les liens de diminution entre deux rangs", () => {
     const graph = parsePattern("R1 12 ms\nR2 6 dim(ms)");

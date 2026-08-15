@@ -110,6 +110,14 @@ export function layoutCircularGroups(
 
     structuralGroups.forEach((group) => {
       const groupAngle = parentAngleForGroup(group);
+      const isSameParentBride = group.role === "sameParent";
+      const sameParentTilt = isSameParentBride ? Math.PI / 7 : 0;
+      const groupRadius = isSameParentBride && turningChains.length > 0
+        ? radius - (turningChains.length - 1) * 6
+        : radius;
+      const tangentOffset = isSameParentBride
+        ? 16 * Math.sin(sameParentTilt)
+        : 0;
 
       positionedGroups.push({
         id: group.id,
@@ -118,11 +126,13 @@ export function layoutCircularGroups(
         operation: group.operation,
         role: group.role,
         countsAsStitch: group.countsAsStitch,
-        centerX: centerX + radius * Math.cos(groupAngle),
-        centerY: centerY + radius * Math.sin(groupAngle),
+        centerX: centerX + groupRadius * Math.cos(groupAngle) -
+          tangentOffset * Math.sin(groupAngle),
+        centerY: centerY + groupRadius * Math.sin(groupAngle) +
+          tangentOffset * Math.cos(groupAngle),
         // Le symbole de base pointe vers le haut. Un quart de tour ajouté à
         // l'angle polaire l'oriente du centre vers l'extérieur du diagramme.
-        rotation: groupAngle + Math.PI / 2,
+        rotation: groupAngle + Math.PI / 2 + sameParentTilt,
         orientation: "radial",
         stitches: group.stitches,
       });
@@ -180,12 +190,11 @@ export function layoutCircularGroups(
       index += run.length;
     }
 
-    const previousRadius = Math.max(0, radius - ringSpacing);
+    const turningChainGap = 12;
 
     turningChains.forEach((group, index) => {
-      const progress = (index + 1) / turningChains.length;
-      const chainRadius =
-        previousRadius + (radius - previousRadius) * progress;
+      const chainRadius = radius -
+        (turningChains.length - 1 - index) * turningChainGap;
 
       positionedGroups.push({
         id: group.id,

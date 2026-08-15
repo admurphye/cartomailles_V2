@@ -94,8 +94,17 @@ export function layoutFlatGroups(
         ? parentPositions.reduce((total, parent) => total + parent.x, 0) /
           parentPositions.length
         : defaultCenterX;
+      const isSameParentBride = group.role === "sameParent";
+      const sameParentTilt = isSameParentBride
+        ? (isRightToLeft ? Math.PI / 7 : -Math.PI / 7)
+        : 0;
+      // Le pied reste sur le parent de la chaînette tandis que le haut de la
+      // bride s'incline vers l'intérieur du rang.
+      const adjustedCenterX = groupCenterX + 16 * Math.sin(sameParentTilt);
 
-      const groupCenterY = rowCenterY;
+      const groupCenterY = isSameParentBride
+        ? rowCenterY + Math.max(0, turningChains.length - 1) * 9
+        : rowCenterY;
 
       const positionedGroup: PositionedGroup = {
 
@@ -109,11 +118,11 @@ export function layoutFlatGroups(
         role: group.role,
         countsAsStitch: group.countsAsStitch,
 
-        centerX: groupCenterX,
+        centerX: adjustedCenterX,
 
         centerY: groupCenterY,
 
-        rotation: 0,
+        rotation: sameParentTilt,
 
         orientation: "horizontal",
 

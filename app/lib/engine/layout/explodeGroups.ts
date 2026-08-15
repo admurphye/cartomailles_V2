@@ -15,10 +15,9 @@ export function explodeGroups(
 
     for (let i = 0; i < count; i++) {
 
-      const isDoubleCrochetIncrease =
-        group.operation === "increase" &&
-        group.stitches.every((stitch) => stitch.type === "dc");
-      const offset = isDoubleCrochetIncrease
+      const isGroupedIncrease =
+        group.operation === "increase" && group.stitches.length > 1;
+      const offset = isGroupedIncrease
         ? 0
         : (i - (count - 1) / 2) * spacing;
 
