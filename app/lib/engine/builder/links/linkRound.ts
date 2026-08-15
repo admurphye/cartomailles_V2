@@ -72,6 +72,27 @@ export function linkRound(
     let childCursor = 0;
 
     for (const instruction of pattern.rounds[r].instructions) {
+      if (instruction.role === "turningChain") {
+        const chainLength = instruction.count * instruction.produces;
+        const firstChainStitch = current[childCursor];
+        const parent = previous[parentCursor];
+
+        if (parent && firstChainStitch) {
+          links.push({
+            id: String(linkId++),
+            from: parent.id,
+            to: firstChainStitch.id,
+            type: "normal",
+          });
+        }
+
+        // Toute la chaînette de début de rang remplace une seule bride :
+        // la maille suivante doit donc commencer sur le parent suivant.
+        parentCursor += parent ? 1 : 0;
+        childCursor += chainLength;
+        continue;
+      }
+
       for (let repeat = 0; repeat < instruction.count; repeat++) {
         const parents = previous.slice(
           parentCursor,

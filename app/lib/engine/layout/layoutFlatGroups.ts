@@ -46,6 +46,25 @@ export function layoutFlatGroups(
       .filter((group) => group.role !== "turningChain")
       .sort((a, b) => a.order - b.order);
     const isRightToLeft = round % 2 === 0;
+    const previousRoundStitches = roundIndex > 0
+      ? graph.stitches
+          .filter((stitch) => stitch.round === rounds[roundIndex - 1])
+          .sort((a, b) => a.order - b.order)
+      : [];
+    const visualParentPosition = (parentId: string) => {
+      if (!isRightToLeft) return positionedById.get(parentId);
+
+      const parentIndex = previousRoundStitches.findIndex(
+        (stitch) => stitch.id === parentId
+      );
+      const mirroredParent = parentIndex >= 0
+        ? previousRoundStitches[previousRoundStitches.length - 1 - parentIndex]
+        : undefined;
+
+      return mirroredParent
+        ? positionedById.get(mirroredParent.id)
+        : positionedById.get(parentId);
+    };
 
     const displayGroups = isRightToLeft
       ? [...rowGroups].reverse()
@@ -69,7 +88,7 @@ export function layoutFlatGroups(
           )
         ),
       ]
-        .map((parentId) => positionedById.get(parentId))
+        .map(visualParentPosition)
         .filter((parent): parent is PositionedStitch => parent !== undefined);
       const groupCenterX = parentPositions.length > 0
         ? parentPositions.reduce((total, parent) => total + parent.x, 0) /
@@ -109,6 +128,12 @@ export function layoutFlatGroups(
 
     });
 
+    const turningChainAnchorParent = turningChains
+      .flatMap((group) => group.stitches)
+        .flatMap((stitch) => parentIdsByChildId.get(stitch.id) ?? [])
+        .map(visualParentPosition)
+        .find((parent): parent is PositionedStitch => parent !== undefined);
+
     turningChains.forEach((group, index) => {
       const startXForRound = isRightToLeft
         ? centerX + rowWidth / 2 + 18
@@ -121,8 +146,10 @@ export function layoutFlatGroups(
         operation: group.operation,
         role: group.role,
         countsAsStitch: group.countsAsStitch,
-        centerX: startXForRound,
-        centerY: rowCenterY + (index + 1) * 18,
+        centerX: turningChainAnchorParent?.x ?? startXForRound,
+        // La première ml part du parent et la dernière atteint exactement
+        // la ligne du nouveau rang (elle remplace la première bride).
+        centerY: rowCenterY + (turningChains.length - 1 - index) * 18,
         rotation: 0,
         orientation: "horizontal",
         stitches: group.stitches,

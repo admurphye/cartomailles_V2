@@ -25,7 +25,11 @@ export function buildStitches(pattern: CrochetPattern): Stitch[] {
   operation: instruction.operation,
   groupSize: Math.max(instruction.consumes, instruction.produces),
   role: instruction.role,
-  countsAsStitch: instruction.countsAsStitch,
+  // Une chaînette tournante remplace une seule maille, quelle que soit sa
+  // hauteur : seule sa dernière ml compte comme maille du nouveau rang.
+  countsAsStitch: instruction.role === "turningChain"
+    ? i === instruction.count - 1 && j === instruction.produces - 1
+    : instruction.countsAsStitch,
 
   round: round.number,
 

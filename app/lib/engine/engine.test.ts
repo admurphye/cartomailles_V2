@@ -179,6 +179,69 @@ describe("parsePattern", () => {
     expect(graph.links.every((link) => link.type === "increase")).toBe(true);
   });
 
+  it("fait remplacer le premier parent par la chaînette de début de rang", () => {
+    const graph = parsePattern("R1 4 br\nR2 3 ml, 3 br");
+    const firstRound = graph.stitches.filter((stitch) => stitch.round === 1);
+    const secondRound = graph.stitches.filter((stitch) => stitch.round === 2);
+    const turningChain = secondRound.filter((stitch) => stitch.role === "turningChain");
+    const brides = secondRound.filter((stitch) => stitch.type === "dc");
+
+    expect(graph.issues).toEqual([]);
+    expect(turningChain).toHaveLength(3);
+    expect(graph.links).toContainEqual(expect.objectContaining({
+      from: firstRound[0].id,
+      to: turningChain[0].id,
+      type: "normal",
+    }));
+    expect(graph.links.filter((link) => link.to === brides[0].id)).toContainEqual(
+      expect.objectContaining({ from: firstRound[1].id })
+    );
+
+    const positioned = layoutFlatGroups(graph);
+    const positionedFirstRound = positioned
+      .filter((stitch) => stitch.round === 1)
+      .sort((a, b) => a.order - b.order);
+    const positionedTurningChain = positioned.filter(
+      (stitch) => stitch.role === "turningChain"
+    );
+
+    expect(positionedTurningChain.every(
+      (stitch) => stitch.x === positionedFirstRound.at(-1)?.x
+    )).toBe(true);
+    const secondRoundBride = positioned.find(
+      (stitch) => stitch.round === 2 && stitch.type === "dc"
+    );
+    expect(positionedTurningChain.at(-1)?.y).toBe(secondRoundBride?.y);
+    expect(positionedTurningChain[0].y).toBeGreaterThan(
+      positionedTurningChain.at(-1)!.y
+    );
+  });
+
+  it.each([
+    [1, "ms", "sc"],
+    [2, "db", "hdc"],
+    [3, "br", "dc"],
+    [4, "dbr", "dtr"],
+    [5, "tb", "tr"],
+  ] as const)(
+    "%i ml de début de rang remplacent une %s",
+    (chainCount, notation, type) => {
+      const graph = parsePattern(`R1 6 ms\nR2 ${chainCount} ml, 5 ${notation}`);
+      const turningChain = graph.stitches.filter(
+        (stitch) => stitch.role === "turningChain"
+      );
+      const followingStitches = graph.stitches.filter(
+        (stitch) => stitch.round === 2 && stitch.type === type
+      );
+
+      expect(graph.issues).toEqual([]);
+      expect(turningChain).toHaveLength(chainCount);
+      expect(turningChain.filter((stitch) => stitch.countsAsStitch)).toHaveLength(1);
+      expect(turningChain.at(-1)?.countsAsStitch).toBe(true);
+      expect(followingStitches).toHaveLength(5);
+    }
+  );
+
   it("construit les liens de diminution entre deux rangs", () => {
     const graph = parsePattern("R1 12 ms\nR2 6 dim(ms)");
 
@@ -281,8 +344,16 @@ describe("layouts", () => {
     const flatGraph = parsePattern("R1 4 ms\nR2 4 ms");
     const positioned = layoutFlatGroups(flatGraph);
 
+    const firstRound = positioned
+      .filter((stitch) => stitch.round === 1)
+      .sort((a, b) => a.order - b.order);
+
     for (const link of flatGraph.links) {
-      const parent = positioned.find((stitch) => stitch.id === link.from);
+      const logicalParentIndex = flatGraph.stitches
+        .filter((stitch) => stitch.round === 1)
+        .sort((a, b) => a.order - b.order)
+        .findIndex((stitch) => stitch.id === link.from);
+      const parent = firstRound[firstRound.length - 1 - logicalParentIndex];
       const child = positioned.find((stitch) => stitch.id === link.to);
 
       expect(child?.x).toBe(parent?.x);
@@ -294,9 +365,18 @@ describe("layouts", () => {
     const positioned = layoutFlatGroups(flatGraph);
     const child = positioned.find((stitch) => stitch.round === 2);
     const parentLinks = flatGraph.links.filter((link) => link.to === child?.id);
-    const parents = parentLinks.map((link) =>
-      positioned.find((stitch) => stitch.id === link.from)!
-    );
+    const firstRound = positioned
+      .filter((stitch) => stitch.round === 1)
+      .sort((a, b) => a.order - b.order);
+    const logicalFirstRound = flatGraph.stitches
+      .filter((stitch) => stitch.round === 1)
+      .sort((a, b) => a.order - b.order);
+    const parents = parentLinks.map((link) => {
+      const logicalIndex = logicalFirstRound.findIndex(
+        (stitch) => stitch.id === link.from
+      );
+      return firstRound[firstRound.length - 1 - logicalIndex];
+    });
 
     expect(parents).toHaveLength(2);
     expect(child?.x).toBe((parents[0].x + parents[1].x) / 2);
