@@ -16,6 +16,42 @@ function stitchCountsByRound(pattern: string) {
 }
 
 describe("patrons métier complets", () => {
+  it("répartit régulièrement la succession (1 ms, 2 ms) x9", () => {
+    const graph = parsePattern([
+      "mr",
+      "6 ms",
+      "(2 ms dans la même maille) x6",
+      "1 ms, (2 ms dans la même maille) x11",
+      "(1 ms, 2 ms) x9",
+    ].join("\n"));
+    const lastRound = layoutCircularGroups(graph)
+      .filter((stitch) => stitch.round === 5);
+    const uniquePositions = new Set(lastRound.map((stitch) =>
+      `${stitch.x.toFixed(3)},${stitch.y.toFixed(3)}`
+    ));
+
+    expect(graph.issues).toEqual([]);
+    expect(lastRound).toHaveLength(27);
+    expect(lastRound.every((stitch) => stitch.operation === "normal")).toBe(true);
+    expect(uniquePositions.size).toBe(27);
+  });
+
+  it("place l'instruction après une virgule sur la maille suivante", () => {
+    const graph = parsePattern([
+      "mr",
+      "6 ms",
+      "(2 ms dans la même maille) x6",
+      "1 ms, 2 ms dans la même maille",
+    ].join("\n"));
+    const positioned = layoutCircularGroups(graph);
+    const lastRound = positioned.filter((stitch) => stitch.round === 4);
+    const simple = lastRound.find((stitch) => stitch.operation === "normal")!;
+    const increase = lastRound.find((stitch) => stitch.operation === "increase")!;
+
+    expect(graph.issues).toEqual([]);
+    expect(Math.hypot(simple.x - increase.x, simple.y - increase.y)).toBeGreaterThan(30);
+  });
+
   it("construit la progression classique d'un amigurumi", () => {
     const pattern = [
       "R1 cercle magique",

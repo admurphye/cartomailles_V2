@@ -26,10 +26,14 @@ function loadPreferences(): DiagramPreferences {
     const parsed = JSON.parse(stored) as Partial<DiagramPreferences> & {
       symbolColor?: string;
     };
+    const circularSpacing = parsed.circularSpacing === 50
+      ? DEFAULT_DIAGRAM_PREFERENCES.circularSpacing
+      : parsed.circularSpacing;
 
     return {
       ...DEFAULT_DIAGRAM_PREFERENCES,
       ...parsed,
+      circularSpacing: circularSpacing ?? DEFAULT_DIAGRAM_PREFERENCES.circularSpacing,
       evenSymbolColor:
         parsed.evenSymbolColor ?? parsed.symbolColor ?? DEFAULT_DIAGRAM_PREFERENCES.evenSymbolColor,
     };

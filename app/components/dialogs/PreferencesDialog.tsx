@@ -17,7 +17,7 @@ const numberSettings: Array<{
   { key: "symbolSize", label: "Taille des symboles", min: 0.7, max: 1.5, step: 0.1 },
   { key: "strokeWidth", label: "Épaisseur des traits", min: 1, max: 4, step: 0.5 },
   { key: "flatSpacing", label: "Espacement des rangs plats", min: 40, max: 100, step: 5 },
-  { key: "circularSpacing", label: "Espacement des tours circulaires", min: 40, max: 100, step: 5 },
+  { key: "circularSpacing", label: "Espacement des tours circulaires", min: 30, max: 100, step: 5 },
   { key: "grannySpacing", label: "Espacement des tours granny", min: 45, max: 110, step: 5 },
 ];
 

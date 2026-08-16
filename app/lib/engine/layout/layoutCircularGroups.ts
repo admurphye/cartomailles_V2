@@ -54,19 +54,29 @@ export function layoutCircularGroups(
     );
     const turningChainSlots = turningChains.length > 0 ? 1 : 0;
     const circularSlotCount = circularGroups.length + turningChainSlots;
+    const hasIncompleteParentLinks = structuralGroups.some((group) =>
+      group.stitches.every((stitch) =>
+        (parentIdsByChildId.get(stitch.id) ?? []).length === 0
+      )
+    );
     const angleForGroup = (group: typeof circularGroups[number]) => {
       const index = circularGroups.indexOf(group) + turningChainSlots;
 
       return (2 * Math.PI * index) / circularSlotCount - Math.PI / 2;
     };
     const parentAngleForGroup = (group: typeof circularGroups[number]) => {
-      const parentPositions = [
-        ...new Set(
-          group.stitches.flatMap((stitch) =>
-            parentIdsByChildId.get(stitch.id) ?? []
-          )
-        ),
-      ]
+      // Si le rang demande plus de mailles qu'il n'existe de parents, une
+      // partie des groupes n'a aucun lien. Mélanger alignement sur les parents
+      // et placement automatique crée alors des chevauchements. Dans ce cas,
+      // tout le rang est réparti régulièrement dans l'ordre des instructions.
+      if (hasIncompleteParentLinks) return angleForGroup(group);
+
+      const parentIds = [
+        ...new Set(group.stitches.flatMap((stitch) =>
+          parentIdsByChildId.get(stitch.id) ?? []
+        )),
+      ];
+      const parentPositions = parentIds
         .map((parentId) => positionedById.get(parentId))
         .filter((parent): parent is PositionedStitch => parent !== undefined)
         // Le centre d'un anneau magique n'a pas d'angle exploitable.
@@ -75,6 +85,37 @@ export function layoutCircularGroups(
         );
 
       if (parentPositions.length === 0) return angleForGroup(group);
+
+      // Les sorties d'une augmentation partagent le même centre visuel, mais
+      // deviennent des mailles distinctes au rang suivant. On leur attribue
+      // alors leur angle logique dans le rang : une virgule avance ainsi bien
+      // vers la maille suivante au lieu d'empiler les nouveaux symboles.
+      const hasStackedParent = parentPositions.some((parent) =>
+        [...positionedById.values()].some((candidate) =>
+          candidate.id !== parent.id &&
+          candidate.round === parent.round &&
+          Math.hypot(candidate.x - parent.x, candidate.y - parent.y) < 0.001
+        )
+      );
+
+      if (hasStackedParent) {
+        const parentRound = parentPositions[0].round;
+        const logicalParents = graph.stitches
+          .filter((stitch) => stitch.round === parentRound && stitch.role !== "magicRing" && stitch.role !== "turningChain")
+          .sort((a, b) => a.order - b.order);
+        const logicalAngles = parentIds
+          .map((id) => logicalParents.findIndex((stitch) => stitch.id === id))
+          .filter((index) => index >= 0)
+          .map((index) => 2 * Math.PI * index / logicalParents.length - Math.PI / 2);
+
+        if (logicalAngles.length > 0) {
+          const direction = logicalAngles.reduce((sum, angle) => ({
+            x: sum.x + Math.cos(angle),
+            y: sum.y + Math.sin(angle),
+          }), { x: 0, y: 0 });
+          return Math.atan2(direction.y, direction.x);
+        }
+      }
 
       const direction = parentPositions.reduce(
         (sum, parent) => {

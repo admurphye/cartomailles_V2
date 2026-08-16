@@ -16,7 +16,7 @@ export const DEFAULT_DIAGRAM_PREFERENCES: DiagramPreferences = {
   symbolSize: 1,
   strokeWidth: 2,
   flatSpacing: 55,
-  circularSpacing: 50,
+  circularSpacing: 40,
   grannySpacing: 62,
   showRowNumbers: true,
   oddSymbolColor: "#2F2F35",
