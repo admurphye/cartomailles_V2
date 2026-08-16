@@ -1,4 +1,5 @@
 import { StitchAdjustments } from "./engine/model/StitchAdjustments";
+import { DiagramAnnotation } from "./annotations";
 
 export type CartomaillesProject = {
   format: "cartomailles";
@@ -7,6 +8,7 @@ export type CartomaillesProject = {
   pattern: string;
   diagramType: "circular" | "flat" | "granny";
   adjustments?: StitchAdjustments;
+  annotations?: DiagramAnnotation[];
 };
 
 export function saveProject(data: CartomaillesProject) {

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Tool } from "@/app/lib/engine/model/Tool";
 import MainLayout from "../layout/MainLayout";
 import Workspace from "../workspace/Workspace";
@@ -15,6 +15,7 @@ import { exportPDF } from "@/app/components/renderer/exports/exportPDF";
 import { Instruction } from "@/app/lib/engine/model/Instruction";
 import { StitchType } from "@/app/lib/engine/model/Stitch";
 import { usePreferences } from "../preferences/PreferencesContext";
+import { DiagramAnnotation, isDiagramAnnotations } from "@/app/lib/annotations";
 
 type ProjectState = Pick<
   CartomaillesProject,
@@ -181,6 +182,9 @@ export default function Editor() {
   const [tool, setTool] =
     useState<Tool>("select");
 
+  const [annotations, setAnnotations] = useState<DiagramAnnotation[]>([]);
+  const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
+
   const {
     graph,
     positioned,
@@ -198,6 +202,8 @@ export default function Editor() {
     setDiagramType(preferences.defaultDiagramType);
     setSelectedId(null);
     setAdjustments({});
+    setAnnotations([]);
+    setSelectedAnnotationId(null);
     setUndoHistory([]);
     setRedoHistory([]);
   };
@@ -268,6 +274,30 @@ export default function Editor() {
     });
   };
 
+  const handleAddAnnotation = (annotation: DiagramAnnotation) => {
+    setAnnotations((current) => [...current, annotation]);
+    setSelectedAnnotationId(annotation.id);
+    setTool("select");
+  };
+
+  const handleUpdateAnnotation = (annotation: DiagramAnnotation) => {
+    setAnnotations((current) => current.map((item) => item.id === annotation.id ? annotation : item));
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.key !== "Delete" && event.key !== "Backspace") || !selectedAnnotationId) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.matches("input, textarea, [contenteditable='true']")) return;
+      event.preventDefault();
+      setAnnotations((current) => current.filter((annotation) => annotation.id !== selectedAnnotationId));
+      setSelectedAnnotationId(null);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedAnnotationId]);
+
   const handleUndo = () => {
     const previousEntry = undoHistory.at(-1);
 
@@ -310,6 +340,7 @@ export default function Editor() {
       pattern,
       diagramType,
       adjustments,
+      annotations,
     });
   };
 
@@ -330,6 +361,9 @@ export default function Editor() {
           : {}
       );
       setSelectedId(null);
+      const savedAnnotations = (data as Record<string, unknown>).annotations;
+      setAnnotations(isDiagramAnnotations(savedAnnotations) ? savedAnnotations : []);
+      setSelectedAnnotationId(null);
       setUndoHistory([]);
       setRedoHistory([]);
     });
@@ -369,6 +403,11 @@ export default function Editor() {
       setProjectName={setProjectName}
     >
       <Workspace
+        annotations={annotations}
+        selectedAnnotationId={selectedAnnotationId}
+        onSelectAnnotation={setSelectedAnnotationId}
+        onAddAnnotation={handleAddAnnotation}
+        onUpdateAnnotation={handleUpdateAnnotation}
         pattern={pattern}
         setPattern={handlePatternChange}
         issues={graph.issues}

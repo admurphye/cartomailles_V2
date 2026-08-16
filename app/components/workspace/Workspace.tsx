@@ -7,6 +7,7 @@ import { Link } from "@/app/lib/engine/model/Link";
 import type { RefObject } from "react";
 import { ParseIssue } from "@/app/lib/engine/model/ParseIssue";
 import { StitchType } from "@/app/lib/engine/model/Stitch";
+import { DiagramAnnotation } from "@/app/lib/annotations";
 
 type WorkspaceProps = {
   pattern: string;
@@ -33,6 +34,11 @@ setDiagramType: (
   value: "circular" | "flat" | "granny"
 ) => void;
   diagramRef: RefObject<SVGSVGElement | null>;
+  annotations: DiagramAnnotation[];
+  selectedAnnotationId: string | null;
+  onSelectAnnotation: (id: string | null) => void;
+  onAddAnnotation: (annotation: DiagramAnnotation) => void;
+  onUpdateAnnotation: (annotation: DiagramAnnotation) => void;
 };
 
 export default function Workspace({
@@ -56,6 +62,11 @@ export default function Workspace({
   onUpdateStitchPosition,
   onResetStitchPosition,
   diagramRef,
+  annotations,
+  selectedAnnotationId,
+  onSelectAnnotation,
+  onAddAnnotation,
+  onUpdateAnnotation,
 }: WorkspaceProps) {
 
   return (
@@ -85,6 +96,11 @@ export default function Workspace({
           stitchCountsByRound={stitchCountsByRound}
         />
 <DiagramPanel
+  annotations={annotations}
+  selectedAnnotationId={selectedAnnotationId}
+  onSelectAnnotation={onSelectAnnotation}
+  onAddAnnotation={onAddAnnotation}
+  onUpdateAnnotation={onUpdateAnnotation}
   diagramType={diagramType}
   setDiagramType={setDiagramType}
 

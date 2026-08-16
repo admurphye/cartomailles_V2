@@ -20,19 +20,19 @@ export function drawMS(
   return (
     <>
       <line
-        x1={x + 12}
-        y1={y + 12}
-        x2={x + 28}
-        y2={y + 28}
+        x1={x + 14}
+        y1={y + 14}
+        x2={x + 26}
+        y2={y + 26}
         stroke={color}
         strokeWidth="2"
       />
 
       <line
-        x1={x + 28}
-        y1={y + 12}
-        x2={x + 12}
-        y2={y + 28}
+        x1={x + 26}
+        y1={y + 14}
+        x2={x + 14}
+        y2={y + 26}
         stroke={color}
         strokeWidth="2"
       />
@@ -57,6 +57,40 @@ export function drawML(
       strokeWidth="2"
       transform={`rotate(${rotation} ${x + 20} ${y + 20})`}
     />
+  );
+}
+
+export function drawAugmentationMS(
+  x: number,
+  y: number,
+  color: string,
+  rotation = 0
+) {
+  const centers = [x + 15, x + 25];
+
+  return (
+    <g transform={`rotate(${rotation} ${x + 20} ${y + 20})`}>
+      {centers.map((centerX) => (
+        <g key={centerX}>
+          <line
+            x1={centerX - 4}
+            y1={y + 16}
+            x2={centerX + 4}
+            y2={y + 24}
+            stroke={color}
+            strokeWidth="2"
+          />
+          <line
+            x1={centerX + 4}
+            y1={y + 16}
+            x2={centerX - 4}
+            y2={y + 24}
+            stroke={color}
+            strokeWidth="2"
+          />
+        </g>
+      ))}
+    </g>
   );
 }
 
@@ -625,6 +659,10 @@ export function drawCrochetSymbol(
 
   if (type === "dc" && operation === "increase" && groupSize === 2) {
     return drawDeuxBridesEnsemble(x - 20, y - 20, color, rotation);
+  }
+
+  if (type === "sc" && operation === "increase" && groupSize === 2) {
+    return drawAugmentationMS(x - 20, y - 20, color, rotation);
   }
 
   if (["sc", "hdc", "dc", "dtr", "tr"].includes(type) && operation === "increase" && groupSize >= 2) {

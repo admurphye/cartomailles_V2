@@ -9,6 +9,7 @@ import { ScanSearch } from "lucide-react";
 import { colors } from "@/app/theme/colors";
 import { useState } from "react";
 import type { RefObject } from "react";
+import { DiagramAnnotation } from "@/app/lib/annotations";
 
 type Props = {
   diagramType: "circular" | "flat" | "granny";
@@ -24,6 +25,11 @@ setTool: (tool: Tool) => void;
   onSelect: (id: string | null) => void;
   diagramRef: RefObject<SVGSVGElement | null>;
   onMoveStitch: (stitchId: string, offsetX: number, offsetY: number) => void;
+  annotations: DiagramAnnotation[];
+  selectedAnnotationId: string | null;
+  onSelectAnnotation: (id: string | null) => void;
+  onAddAnnotation: (annotation: DiagramAnnotation) => void;
+  onUpdateAnnotation: (annotation: DiagramAnnotation) => void;
 };
 
 export default function DiagramPanel({
@@ -37,6 +43,11 @@ export default function DiagramPanel({
   onSelect,
   diagramRef,
   onMoveStitch,
+  annotations,
+  selectedAnnotationId,
+  onSelectAnnotation,
+  onAddAnnotation,
+  onUpdateAnnotation,
 }: Props) {
 
   const [zoom, setZoom] = useState(1);
@@ -92,6 +103,11 @@ export default function DiagramPanel({
 >
 
   <DiagramEditor
+    annotations={annotations}
+    selectedAnnotationId={selectedAnnotationId}
+    onSelectAnnotation={onSelectAnnotation}
+    onAddAnnotation={onAddAnnotation}
+    onUpdateAnnotation={onUpdateAnnotation}
     diagramType={diagramType}
     tool={tool}
     stitches={stitches}

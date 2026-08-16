@@ -5,6 +5,7 @@ import { Tool } from "@/app/lib/engine/model/Tool";
 import { PositionedStitch } from "@/app/lib/engine/model/PositionedStitch";
 import { Link } from "@/app/lib/engine/model/Link";
 import type { RefObject } from "react";
+import { DiagramAnnotation } from "@/app/lib/annotations";
 
 type Props = {
   diagramType: "circular" | "flat" | "granny";
@@ -15,6 +16,11 @@ type Props = {
   onSelect: (id: string | null) => void;
   diagramRef: RefObject<SVGSVGElement | null>;
   onMoveStitch: (stitchId: string, offsetX: number, offsetY: number) => void;
+  annotations: DiagramAnnotation[];
+  selectedAnnotationId: string | null;
+  onSelectAnnotation: (id: string | null) => void;
+  onAddAnnotation: (annotation: DiagramAnnotation) => void;
+  onUpdateAnnotation: (annotation: DiagramAnnotation) => void;
 };
 
 export default function DiagramEditor({
@@ -26,7 +32,14 @@ export default function DiagramEditor({
   onSelect,
   diagramRef,
   onMoveStitch,
+  annotations,
+  selectedAnnotationId,
+  onSelectAnnotation,
+  onAddAnnotation,
+  onUpdateAnnotation,
 }: Props) {
+
+  const annotationProps = { annotations, selectedAnnotationId, onSelectAnnotation, onAddAnnotation, onUpdateAnnotation };
 
   return (
     <div
@@ -37,6 +50,7 @@ export default function DiagramEditor({
     >
       {diagramType === "flat" ? (
         <FlatRenderer
+          {...annotationProps}
           stitches={stitches}
           links={links}
           selectedId={selectedId}
@@ -47,6 +61,7 @@ export default function DiagramEditor({
         />
       ) : diagramType === "granny" ? (
         <GrannyRenderer
+          {...annotationProps}
           stitches={stitches}
           links={links}
           selectedId={selectedId}
@@ -57,6 +72,7 @@ export default function DiagramEditor({
         />
       ) : (
         <CircularRenderer
+          {...annotationProps}
           stitches={stitches}
           links={links}
           selectedId={selectedId}

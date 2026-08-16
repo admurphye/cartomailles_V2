@@ -1,4 +1,4 @@
-import { Ban, Hand, LocateFixed, Move, ZoomIn, ZoomOut } from "lucide-react";
+import { Ban, Hand, LocateFixed, Move, MousePointer2, TextCursorInput, ZoomIn, ZoomOut } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import IconButton from "@/app/components/ui/IconButton";
 import { Tool } from "@/app/lib/engine/model/Tool";
@@ -61,6 +61,8 @@ export default function DiagramToolbar({
           onClick={() => setTool("moveStitch")}
           label="Déplacer une maille"
         />
+        <IconButton icon={<TextCursorInput />} active={tool === "text"} onClick={() => setTool("text")} label="Ajouter une annotation" />
+        <IconButton icon={<MousePointer2 />} active={tool === "arrow"} onClick={() => setTool("arrow")} label="Ajouter une flèche" />
         <IconButton
           icon={<LocateFixed />}
           onClick={resetView}
