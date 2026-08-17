@@ -20,6 +20,7 @@ const STITCH_MAP: Record<string, StitchType> = {
   brar: "bpdc",
   br_ar: "bpdc",
   tb: "tr",
+  tbr: "tr",
   dbr: "dtr",
   ml: "ch",
   mc: "slst",
@@ -50,9 +51,11 @@ export function parseExpression(
 
   expression = expression.trim().toLowerCase();
 
-  if (expression === "br_same_parent") {
+  const sameParentMatch = expression.match(/^(ms|db|br|dbr|tb|tbr)_same_parent$/);
+
+  if (sameParentMatch) {
     return {
-      type: "dc",
+      type: STITCH_MAP[sameParentMatch[1]],
       operation: "normal",
       consumes: 1,
       produces: 1,

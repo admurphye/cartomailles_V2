@@ -316,6 +316,44 @@ describe("parsePattern", () => {
     expect(circularSharedBride?.x).not.toBe(circularChain[0].x);
   });
 
+  it("place une double bride après 2 ml dans la même maille", () => {
+    const graph = parsePattern("R1 3 ms\nR2 2ml, dbr dans la même maille, 2 dbr");
+    const firstRound = graph.stitches.filter((stitch) => stitch.round === 1);
+    const secondRound = graph.stitches.filter((stitch) => stitch.round === 2);
+    const turningChain = secondRound.filter((stitch) => stitch.role === "turningChain");
+    const doubleBrides = secondRound.filter((stitch) => stitch.type === "dtr");
+    const parentsOf = (stitchId: string) => graph.links
+      .filter((link) => link.to === stitchId)
+      .map((link) => link.from);
+
+    expect(graph.issues).toEqual([]);
+    expect(turningChain).toHaveLength(2);
+    expect(doubleBrides).toHaveLength(3);
+    expect(doubleBrides[0].role).toBe("sameParent");
+    expect(parentsOf(turningChain[0].id)).toEqual([firstRound[0].id]);
+    expect(parentsOf(doubleBrides[0].id)).toEqual([firstRound[0].id]);
+    expect(parentsOf(doubleBrides[1].id)).toEqual([firstRound[1].id]);
+  });
+
+  it("place une triple bride après 2 ml dans la même maille", () => {
+    const graph = parsePattern("R1 3 ms\nR2 2ml et tbr dans la même maille, 2 tbr");
+    const firstRound = graph.stitches.filter((stitch) => stitch.round === 1);
+    const secondRound = graph.stitches.filter((stitch) => stitch.round === 2);
+    const turningChain = secondRound.filter((stitch) => stitch.role === "turningChain");
+    const tripleBrides = secondRound.filter((stitch) => stitch.type === "tr");
+    const parentsOf = (stitchId: string) => graph.links
+      .filter((link) => link.to === stitchId)
+      .map((link) => link.from);
+
+    expect(graph.issues).toEqual([]);
+    expect(turningChain).toHaveLength(2);
+    expect(tripleBrides).toHaveLength(3);
+    expect(tripleBrides[0].role).toBe("sameParent");
+    expect(parentsOf(turningChain[0].id)).toEqual([firstRound[0].id]);
+    expect(parentsOf(tripleBrides[0].id)).toEqual([firstRound[0].id]);
+    expect(parentsOf(tripleBrides[1].id)).toEqual([firstRound[1].id]);
+  });
+
   it("construit les liens de diminution entre deux rangs", () => {
     const graph = parsePattern("R1 12 ms\nR2 6 dim(ms)");
 

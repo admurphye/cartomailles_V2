@@ -4,10 +4,24 @@ export function normalizePattern(text: string): string {
 
     .replace(/\bpop\s+corn\b/gi, "popcorn")
 
-    // Chaînette tournante et bride piquées dans le même parent.
+    // Chaînette tournante et maille piquées dans le même parent.
     .replace(
-      /\b2\s*ml\s*(?:,|et)?\s*(?:1|un(?:e)?)?\s*(?:b|br|bride)\s+dans\s+la\s+m[êe]me\s+maille\b/gi,
-      "2 ml, br_same_parent"
+      /\b(\d+)\s*ml\s*(?:,|et)?\s*(?:1|un(?:e)?)?\s*(ms|db|br|dbr|tb|tbr|maille\s+serrée|demi[\s-]*bride|bride|double\s+bride|tri(?:p|b)le\s+bride)\s+dans\s+la\s+m[êe]me\s+maille\b/gi,
+      (_, chainCount, stitchText: string) => {
+        const stitch = stitchText.toLowerCase();
+        const alias = /^maille\s+serr/.test(stitch)
+          ? "ms"
+          : /^demi/.test(stitch)
+            ? "db"
+            : /^double/.test(stitch)
+              ? "dbr"
+              : /^tri(?:p|b)le/.test(stitch)
+                ? "tb"
+                : stitch === "bride"
+                  ? "br"
+                  : stitch;
+        return `${chainCount} ml, ${alias}_same_parent`;
+      }
     )
 
     // Plusieurs mailles de n'importe quelle hauteur dans un même parent.
