@@ -8,6 +8,22 @@ import { parsePattern } from "./parser/parsePattern";
 
 describe("parseExpression", () => {
   it.each([
+    ["dim(ms)", "sc"],
+    ["dim(db)", "hdc"],
+    ["dim(br)", "dc"],
+    ["dim(dbr)", "dtr"],
+    ["dim(tbr)", "tr"],
+    ["dim(brav)", "fpdc"],
+    ["dim(brar)", "bpdc"],
+  ])("reconnaît deux mailles ensemble : %s", (notation, type) => {
+    expect(parseExpression(notation)).toMatchObject({
+      type,
+      operation: "decrease",
+      consumes: 2,
+      produces: 1,
+    });
+  });
+  it.each([
     ["ms", "sc"],
     ["db", "hdc"],
     ["br", "dc"],

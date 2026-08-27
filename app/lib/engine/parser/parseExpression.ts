@@ -51,7 +51,7 @@ export function parseExpression(
 
   expression = expression.trim().toLowerCase();
 
-  const sameParentMatch = expression.match(/^(ms|db|br|dbr|tb|tbr)_same_parent$/);
+  const sameParentMatch = expression.match(/^(ms|db|br|dbr|tb|tbr|brav|brar)_same_parent$/);
 
   if (sameParentMatch) {
     return {
@@ -110,6 +110,15 @@ export function parseExpression(
       operation: "normal",
       consumes: 1,
       produces: 0,
+    };
+  }
+
+  if (expression === "cluster5_fpdc") {
+    return {
+      type: "fpdc",
+      operation: "decrease",
+      consumes: 5,
+      produces: 1,
     };
   }
 

@@ -2,6 +2,41 @@ export function normalizePattern(text: string): string {
   return text
     .toLowerCase()
 
+    // Libellés de rang courants dans les patrons éditoriaux.
+    .replace(/\brang\s+(\d+)(?:\s*\([^)]*\))?\s*:\s*/gi, "r$1 ")
+
+    // Les précisions telles que « 3 ml compte comme 1ère br » décrivent la
+    // maille de début mais ne constituent pas une instruction supplémentaire.
+    .replace(/\([^)]*\bcompte(?:nt)?\s+comme\b[^)]*\)/gi, " ")
+
+    // Répétitions rédactionnelles : [5 br, 1 ml] deux fois.
+    .replace(/\[([^\]]+)\]\s*deux\s+fois/gi, "($1) x2")
+    .replace(/\[([^\]]+)\]\s*trois\s+fois/gi, "($1) x3")
+
+    // Verbes introductifs sans incidence sur le diagramme.
+    .replace(/\bfaire\s+/gi, "")
+
+    // Une coquille de Grisaille est entièrement piquée dans le même parent.
+    .replace(
+      /\b(?:travailler\s+)?coquille(?:\s+dans\s+(?:la\s+)?(?:br|maille)(?:\s+suivante|\s+centrale)?)?/gi,
+      "br, 1 ml, br_same_parent, 1 ml, br_same_parent"
+    )
+
+    // Points relief employés par le patron Grisaille.
+    .replace(/\bbr\s*rav\s*5\s*ens\s+sur\s+(?:les\s+)?5\s*br(?:\s+suivantes?)?/gi, "cluster5_fpdc")
+    .replace(/\bbr\s*rar\b/gi, "brar")
+    .replace(/\bbr\s*rav\b/gi, "brav")
+
+    // Groupes de brides piqués dans une seule bride.
+    .replace(/\b(5|6|9)\s*br\s+dans\s+(?:la\s+)?br\s+suivante\b/gi, (_, count) => `fan_${count}_dc`)
+
+    // Bride finale dans la chaînette tournante : la chaînette citée est un
+    // emplacement, pas une nouvelle suite de mailles à dessiner.
+    .replace(/\bbr\s+dans\s+les\s+\d+(?:(?:e|è)me?s?)?\s+ml\s+du\s+d[ée]but\b/gi, "br")
+
+    // Forme courte rencontrée dans les répétitions : « sauter 1 ».
+    .replace(/\bsauter\s+(\d+)\b(?!\s+mailles?)/gi, "$1 skip")
+
     .replace(/\bpop\s+corn\b/gi, "popcorn")
 
     // Chaînette tournante et maille piquées dans le même parent.
@@ -125,6 +160,7 @@ export function normalizePattern(text: string): string {
     )
 
     // Espaces autour de la ponctuation
+    .replace(/\./g, " ")
     .replace(/\(/g, " ( ")
     .replace(/\)/g, " ) ")
     .replace(/,/g, " , ")

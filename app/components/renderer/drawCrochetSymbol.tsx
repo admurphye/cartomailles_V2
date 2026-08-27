@@ -352,6 +352,83 @@ export function drawDeuxBridesEnsemble(
   );
 }
 
+export function drawFiveFrontPostDoubleCrochetTogether(
+  x: number,
+  y: number,
+  color: string,
+  rotation = 0
+) {
+  const bottomX = x + 20;
+  const bottomY = y + 36;
+  const topXs = [x - 4, x + 8, x + 20, x + 32, x + 44];
+
+  return (
+    <g transform={`rotate(${rotation} ${x + 20} ${y + 20})`}>
+      {topXs.map((topX, index) => {
+        const topY = y + 5 + Math.abs(index - 2) * 2;
+        const dx = bottomX - topX;
+        const dy = bottomY - topY;
+        const length = Math.hypot(dx, dy);
+        const px = (-dy / length) * 5;
+        const py = (dx / length) * 5;
+        const barX = topX + dx * 0.28;
+        const barY = topY + dy * 0.28;
+
+        return (
+          <g key={topX}>
+            <line x1={topX} y1={topY} x2={bottomX} y2={bottomY} stroke={color} strokeWidth="2" strokeLinecap="round" />
+            <line x1={barX - px} y1={barY - py} x2={barX + px} y2={barY + py} stroke={color} strokeWidth="2" />
+            <path
+              d={`M ${topX + dx * 0.72} ${topY + dy * 0.72} Q ${topX + dx * 0.72 - 7} ${topY + dy * 0.72 + 5}, ${topX + dx * 0.82} ${topY + dy * 0.82 + 7}`}
+              fill="none"
+              stroke={color}
+              strokeWidth="1.7"
+              strokeLinecap="round"
+            />
+          </g>
+        );
+      })}
+      <ellipse cx={bottomX} cy={bottomY} rx="3" ry="2" fill={color} />
+    </g>
+  );
+}
+
+function drawTwoStitchesTogether(
+  type: "hdc" | "dc" | "dtr" | "tr" | "fpdc" | "bpdc",
+  x: number,
+  y: number,
+  color: string,
+  rotation = 0
+) {
+  const barCount = type === "dtr" ? 2 : type === "tr" ? 3 : 1;
+  const topX = x + 20;
+  const topY = y + 5;
+
+  return (
+    <g transform={`rotate(${rotation} ${x + 20} ${y + 20})`}>
+      {[x + 8, x + 32].map((bottomX, index) => {
+        const bottomY = y + 35;
+        const dx = bottomX - topX;
+        const dy = bottomY - topY;
+        const length = Math.hypot(dx, dy);
+        const px = (-dy / length) * 5;
+        const py = (dx / length) * 5;
+        return <g key={bottomX}>
+          <line x1={topX} y1={topY} x2={bottomX} y2={bottomY} stroke={color} strokeWidth="2" strokeLinecap="round" />
+          {Array.from({ length: barCount }, (_, barIndex) => {
+            const progress = type === "hdc" ? 0.35 : 0.25 + barIndex * 0.18;
+            const cx = topX + dx * progress;
+            const cy = topY + dy * progress;
+            return <line key={barIndex} x1={cx - px} y1={cy - py} x2={cx + px} y2={cy + py} stroke={color} strokeWidth="2" />;
+          })}
+          {(type === "fpdc" || type === "bpdc") && <path d={`M ${topX + dx * 0.7} ${topY + dy * 0.7} Q ${topX + dx * 0.7 + (type === "fpdc" ? -7 : 7)} ${topY + dy * 0.7 + 4}, ${topX + dx * 0.82} ${topY + dy * 0.82 + 7}`} fill="none" stroke={color} strokeWidth="1.7" />}
+          {index === 0 && <ellipse cx={topX} cy={topY} rx="3" ry="2" fill={color} />}
+        </g>;
+      })}
+    </g>
+  );
+}
+
 export function drawTroisBridesEnsemble(
   x: number,
   y: number,
@@ -644,6 +721,18 @@ export function drawCrochetSymbol(
   rotation = 0,
   groupSize = 1
 ) {
+
+  if (type === "fpdc" && operation === "decrease" && groupSize === 5) {
+    return drawFiveFrontPostDoubleCrochetTogether(x - 20, y - 20, color, rotation);
+  }
+
+  if (type === "sc" && operation === "decrease" && groupSize === 2) {
+    return drawDIM(x - 20, y - 20, color, rotation);
+  }
+
+  if (["hdc", "dc", "dtr", "tr", "fpdc", "bpdc"].includes(type) && operation === "decrease" && groupSize === 2) {
+    return drawTwoStitchesTogether(type as "hdc" | "dc" | "dtr" | "tr" | "fpdc" | "bpdc", x - 20, y - 20, color, rotation);
+  }
 
   if (type === "dc" && operation === "increase" && [5, 6, 9].includes(groupSize)) {
     return drawEventailBrides(x - 20, y - 20, color, groupSize, rotation);

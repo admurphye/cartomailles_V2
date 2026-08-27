@@ -62,7 +62,9 @@ const parsed = parseExpression(stitchToken);
 if (!parsed) {
   issues.push({
     round: currentRound,
-    message: `Symbole non reconnu : « ${stitchToken} »`,
+    message: stitchToken === "conditional_repeat"
+      ? "Répétition conditionnelle liée à une maille marquée : vérification manuelle nécessaire"
+      : `Symbole non reconnu : « ${stitchToken} »`,
   });
   continue;
 }

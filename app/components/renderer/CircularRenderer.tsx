@@ -293,6 +293,12 @@ export default function CircularRenderer({
           >
             <g
               className="crochet-symbol"
+              data-stitch-type={stitch.type}
+              data-stitch-operation={stitch.operation}
+              data-stitch-round={stitch.round}
+              data-stitch-order={stitch.order}
+              data-stitch-role={stitch.role}
+              data-stitch-group-size={stitch.groupSize ?? 1}
               style={{ "--symbol-stroke-width": preferences.strokeWidth } as React.CSSProperties}
               transform={`translate(${stitch.x} ${stitch.y}) scale(${preferences.symbolSize}) translate(${-stitch.x} ${-stitch.y})`}
             >

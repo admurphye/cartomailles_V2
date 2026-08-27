@@ -8,10 +8,12 @@ import type { RefObject } from "react";
 import { ParseIssue } from "@/app/lib/engine/model/ParseIssue";
 import { StitchType } from "@/app/lib/engine/model/Stitch";
 import { DiagramAnnotation } from "@/app/lib/annotations";
+import type { ImportedPatternType } from "@/app/lib/pdf/types";
 
 type WorkspaceProps = {
   pattern: string;
   setPattern: (value: string) => void;
+  onImportPattern: (value: string, type: ImportedPatternType) => void;
   issues: ParseIssue[];
   stitchCountsByRound: Array<{ round: number; count: number }>;
 
@@ -44,6 +46,7 @@ setDiagramType: (
 export default function Workspace({
   pattern,
   setPattern,
+  onImportPattern,
   issues,
   stitchCountsByRound,
 
@@ -92,6 +95,7 @@ export default function Workspace({
         <PatternPanel
           pattern={pattern}
           setPattern={setPattern}
+          onImportPattern={onImportPattern}
           issues={issues}
           stitchCountsByRound={stitchCountsByRound}
         />

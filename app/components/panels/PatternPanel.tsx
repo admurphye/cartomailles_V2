@@ -1,12 +1,18 @@
 import Card from "@/app/components/ui/Card";
 import TextArea from "@/app/components/ui/TextArea";
 import { colors } from "@/app/theme/colors";
-import { FileText, Rows3 } from "lucide-react";
+import { ChangeEvent, useRef, useState } from "react";
+import { FilePenLine, FileText, Rows3, Upload } from "lucide-react";
 import { ParseIssue } from "@/app/lib/engine/model/ParseIssue";
+import PdfImportDialog from "@/app/components/pdf-import/PdfImportDialog";
+import type { ImportedPatternType } from "@/app/lib/pdf/types";
+import DiagramImportDialog from "@/app/components/chart-import/DiagramImportDialog";
+import WrittenPatternDialog from "@/app/components/written-pattern/WrittenPatternDialog";
 
 type PatternPanelProps = {
   pattern: string;
   setPattern: (value: string) => void;
+  onImportPattern: (value: string, type: ImportedPatternType) => void;
   issues: ParseIssue[];
   stitchCountsByRound: Array<{ round: number; count: number }>;
 };
@@ -14,12 +20,32 @@ type PatternPanelProps = {
 export default function PatternPanel({
   pattern,
   setPattern,
+  onImportPattern,
   issues,
   stitchCountsByRound,
 }: PatternPanelProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const diagramInputRef = useRef<HTMLInputElement>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [lastPdfFile, setLastPdfFile] = useState<File | null>(null);
+  const [diagramFile, setDiagramFile] = useState<File | null>(null);
+  const [writtenPatternOpen, setWrittenPatternOpen] = useState(false);
   const lineCount = pattern
     .split("\n")
     .filter((line) => line.trim() !== "").length;
+
+  const handlePdfImport = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setPdfFile(file);
+  };
+
+  const handleDiagramImport = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) setDiagramFile(file);
+  };
 
   return (
     <Card
@@ -40,8 +66,85 @@ export default function PatternPanel({
           marginBottom: 15,
         }}
       >
-        Colle ou écris ton patron crochet.
+        Colle, écris ou importe ton patron crochet.
       </p>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/pdf,.pdf"
+        onChange={handlePdfImport}
+        style={{ display: "none" }}
+      />
+      <input ref={diagramInputRef} type="file" accept="image/svg+xml,image/png,image/jpeg,application/pdf,.svg,.png,.jpg,.jpeg,.pdf" onChange={handleDiagramImport} style={{ display: "none" }} />
+      <button
+        type="button"
+        onClick={() => setWrittenPatternOpen(true)}
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12, padding: "9px 12px", borderRadius: 8, border: `1px solid ${colors.border}`, background: colors.surface, color: colors.primary, fontWeight: 600, cursor: "pointer" }}
+      >
+        <FilePenLine size={16} />
+        Interpréter un patron écrit
+      </button>
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          marginBottom: 12,
+          padding: "9px 12px",
+          borderRadius: 8,
+          border: `1px solid ${colors.border}`,
+          background: colors.surface,
+          color: colors.primary,
+          fontWeight: 600,
+          cursor: "pointer",
+        }}
+      >
+        <Upload size={16} />
+        Importer un PDF
+      </button>
+
+      <button
+        type="button"
+        onClick={() => diagramInputRef.current?.click()}
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12, padding: "9px 12px", borderRadius: 8, border: `1px solid ${colors.border}`, background: colors.workspace, color: colors.text, fontWeight: 600, cursor: "pointer" }}
+      >
+        Importer un diagramme
+      </button>
+
+      {lastPdfFile && !pdfFile && (
+        <button
+          type="button"
+          onClick={() => setPdfFile(lastPdfFile)}
+          style={{
+            marginTop: -4,
+            marginBottom: 12,
+            padding: "8px 12px",
+            borderRadius: 8,
+            border: `1px solid ${colors.border}`,
+            background: colors.workspace,
+            color: colors.text,
+            cursor: "pointer",
+          }}
+        >
+          Revoir l’analyse PDF
+        </button>
+      )}
+
+      {pdfFile && <PdfImportDialog file={pdfFile} onClose={() => setPdfFile(null)} onConfirm={(value, type) => { setLastPdfFile(pdfFile); onImportPattern(value, type); setPdfFile(null); }} />}
+      {diagramFile && <DiagramImportDialog file={diagramFile} onClose={() => setDiagramFile(null)} onConfirm={(value, type) => { onImportPattern(value, type); setDiagramFile(null); }} />}
+      {writtenPatternOpen && (
+        <WrittenPatternDialog
+          onClose={() => setWrittenPatternOpen(false)}
+          onConfirm={(value) => {
+            onImportPattern(value, "unknown");
+            setWrittenPatternOpen(false);
+          }}
+        />
+      )}
 
       <TextArea
         value={pattern}

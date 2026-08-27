@@ -134,4 +134,31 @@ describe("patrons métier complets", () => {
     expect(counts).toEqual([6, 6]);
     expect(graph.rounds.map((round) => round.number)).toEqual([1, 3]);
   });
+
+  it("comprend les explications rédactionnelles du motif de feuilles Grisaille", () => {
+    const pattern = [
+      "Faire 25 ml (3 ml compte comme 1ère br), [5br, 1 ml, sauter 1, br, 1 ml, sauter 1] deux fois, 6br.",
+      "Rang 2: 4 ml, [brRAV5ens sur 5br, 1 ml, 5br dans br suivante, 1 ml] deux fois, brRAV5ens sur les 5br suivantes, 1 ml, br dans les 3 ml du début.",
+    ].join("\n");
+    const { graph, counts } = stitchCountsByRound(pattern);
+
+    expect(graph.issues).toEqual([]);
+    expect(counts).toEqual([47, 23]);
+    expect(graph.groups.filter((group) => group.operation === "decrease")).toHaveLength(3);
+    expect(graph.groups.filter((group) => group.operation === "increase")).toHaveLength(2);
+  });
+
+  it("ancre les trois brides d'une coquille dans le même parent", () => {
+    const graph = parsePattern("R1 5 br\nR2 3 ml, travailler Coquille dans br suivante");
+    const shellBrides = graph.stitches.filter(
+      (stitch) => stitch.round === 2 && stitch.type === "dc"
+    );
+    const parentIds = shellBrides.map((stitch) =>
+      graph.links.find((link) => link.to === stitch.id)?.from
+    );
+
+    expect(graph.issues).toEqual([]);
+    expect(shellBrides).toHaveLength(3);
+    expect(new Set(parentIds).size).toBe(1);
+  });
 });

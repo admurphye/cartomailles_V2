@@ -16,6 +16,7 @@ import { Instruction } from "@/app/lib/engine/model/Instruction";
 import { StitchType } from "@/app/lib/engine/model/Stitch";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { DiagramAnnotation, isDiagramAnnotations } from "@/app/lib/annotations";
+import type { ImportedPatternType } from "@/app/lib/pdf/types";
 
 type ProjectState = Pick<
   CartomaillesProject,
@@ -225,6 +226,18 @@ export default function Editor() {
     setPattern(value);
   };
 
+  const handleImportedPattern = (value: string, importedType: ImportedPatternType) => {
+    saveHistoryEntry();
+    setPattern(value);
+    if (importedType === "circular" || importedType === "granny" || importedType === "flat") {
+      setDiagramType(importedType);
+    } else if (importedType === "triangular") {
+      setDiagramType("flat");
+    }
+    setSelectedId(null);
+    setAdjustments({});
+  };
+
   const handleDiagramTypeChange = (value: "circular" | "flat" | "granny") => {
     if (value === diagramType) {
       return;
@@ -410,6 +423,7 @@ export default function Editor() {
         onUpdateAnnotation={handleUpdateAnnotation}
         pattern={pattern}
         setPattern={handlePatternChange}
+        onImportPattern={handleImportedPattern}
         issues={graph.issues}
         stitchCountsByRound={graph.rounds.map((round) => ({
           round: round.number,
