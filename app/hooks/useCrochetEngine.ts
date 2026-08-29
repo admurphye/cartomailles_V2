@@ -7,6 +7,8 @@ import { layoutFlatGroups } from "../lib/engine/layout/layoutFlatGroups";
 import { layoutGrannyGroups } from "../lib/engine/layout/layoutGrannyGroups";
 import { StitchAdjustments } from "@/app/lib/engine/model/StitchAdjustments";
 import { usePreferences } from "@/app/components/preferences/PreferencesContext";
+import { preparePatternForEngine } from "@/app/lib/written-pattern/preparePatternForEngine";
+import { applyFlatRowDirections } from "@/app/lib/engine/layout/flatRowDirection";
 
 export function useCrochetEngine(
   pattern: string,
@@ -16,12 +18,20 @@ export function useCrochetEngine(
 ) {
   const { preferences } = usePreferences();
   
- const graph = useMemo(() => {
+ const parsedGraph = useMemo(() => {
+  const prepared = preparePatternForEngine(pattern);
+  const result = parsePattern(prepared.notation);
 
-  const result = parsePattern(pattern);
+  return {
+    ...result,
+    issues: [...prepared.issues, ...result.issues],
+  };
+ }, [pattern]);
 
-  return result;
-}, [pattern]);
+  const graph = useMemo(
+    () => diagramType === "flat" ? applyFlatRowDirections(parsedGraph) : parsedGraph,
+    [parsedGraph, diagramType]
+  );
 
   const positioned = useMemo(() => {
     const layout = diagramType === "flat"

@@ -151,6 +151,17 @@ describe("contrat de notation Cartomailles", () => {
 });
 
 describe("contrat du futur traducteur de patron écrit", () => {
+  it("accepte les répétitions éditoriales entre astérisques", () => {
+    const graph = parsePattern(
+      "Rang 1 : 20 ms\nRang 2 : *1 ms, 2 ml, sauter 1 maille* répéter 10 fois"
+    );
+    const secondRound = graph.stitches.filter((stitch) => stitch.round === 2);
+
+    expect(graph.issues).toEqual([]);
+    expect(secondRound.filter((stitch) => stitch.type === "sc")).toHaveLength(10);
+    expect(secondRound.filter((stitch) => stitch.role === "chainSpace")).toHaveLength(20);
+  });
+
   it("fige la notation cible de l'exemple de référence", () => {
     const source = "Rang 2 : 3 ml, 2 brides dans la même maille, 1 ml, sauter 1 maille. Répéter 5 fois.";
     const expectedCartomailles = "R2 3 ml, (1 aug(br), 1 ml, 1 skip) x5";

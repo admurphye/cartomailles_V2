@@ -190,7 +190,10 @@ export function layoutGrannyGroups(
 
         const cluster = clusters[clusterIndex];
         cluster.forEach((group, stitchIndex) => {
-          const offset = (stitchIndex - (cluster.length - 1) / 2) * CLUSTER_SPACING;
+          const isStartingCluster = clusterIndex === 0 && turningChains.length > 0;
+          const offset = isStartingCluster
+            ? (stitchIndex + 1 - cluster.length / 2) * CLUSTER_SPACING
+            : (stitchIndex - (cluster.length - 1) / 2) * CLUSTER_SPACING;
 
           positionedGroups.push({
             id: group.id,
@@ -264,12 +267,12 @@ export function layoutGrannyGroups(
       });
     });
 
+    const startingPoint = clusterPoints[0];
+    const startingClusterLength = clusters[0]?.length ?? 0;
+
     turningChains.forEach((group, index) => {
-      const progress = (index + 1) / turningChains.length;
-      const tangentOffset =
-        (index - (turningChains.length - 1) / 2) * CLUSTER_SPACING;
-      const outwardOffset = Math.sin(progress * Math.PI) * 12;
-      const diagonal = Math.SQRT1_2;
+      const tangentOffset = -startingClusterLength / 2 * CLUSTER_SPACING;
+      const inwardOffset = (turningChains.length - 1 - index) * 12;
 
       positionedGroups.push({
         id: group.id,
@@ -278,17 +281,26 @@ export function layoutGrannyGroups(
         operation: group.operation,
         role: group.role,
         countsAsStitch: group.countsAsStitch,
-        centerX:
-          CENTER_X - halfSize + tangentOffset * diagonal - outwardOffset * diagonal,
-        centerY:
-          CENTER_Y - halfSize - tangentOffset * diagonal - outwardOffset * diagonal,
-        rotation: -Math.PI / 4,
+        centerX: startingPoint
+          ? startingPoint.x + startingPoint.tangentX * tangentOffset -
+            startingPoint.normalX * inwardOffset
+          : CENTER_X - halfSize,
+        centerY: startingPoint
+          ? startingPoint.y + startingPoint.tangentY * tangentOffset -
+            startingPoint.normalY * inwardOffset
+          : CENTER_Y - halfSize,
+        rotation: startingPoint
+          ? Math.atan2(startingPoint.tangentY, startingPoint.tangentX)
+          : 0,
         orientation: "horizontal",
         stitches: group.stitches,
       });
     });
 
     joinGroups.forEach((group, index) => {
+      const startingChainX = startingPoint
+        ? startingPoint.x - startingClusterLength / 2 * CLUSTER_SPACING
+        : CENTER_X - halfSize;
       positionedGroups.push({
         id: group.id,
         round: group.round,
@@ -296,8 +308,8 @@ export function layoutGrannyGroups(
         operation: group.operation,
         role: group.role,
         countsAsStitch: group.countsAsStitch,
-        centerX: CENTER_X - halfSize + index * 10,
-        centerY: CENTER_Y - halfSize,
+        centerX: startingChainX - (index + 1) * CLUSTER_SPACING,
+        centerY: startingPoint?.y ?? CENTER_Y - halfSize,
         rotation: 0,
         orientation: "horizontal",
         stitches: group.stitches,

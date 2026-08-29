@@ -33,11 +33,14 @@ export function buildGroups(pattern: CrochetPattern): StitchGroup[] {
 
             type: instruction.type,
 
-            operation: instruction.operation,
+            operation: instruction.role === "chainSpaceTarget"
+              ? "normal"
+              : instruction.operation,
             groupSize: Math.max(instruction.consumes, instruction.produces),
             role: instruction.role,
             countsAsStitch: instruction.role === "turningChain"
-              ? repeat === instruction.count - 1 && i === instruction.produces - 1
+              ? instruction.countsAsStitch &&
+                repeat === instruction.count - 1 && i === instruction.produces - 1
               : instruction.countsAsStitch,
 
             round: round.number,
@@ -68,7 +71,7 @@ export function buildGroups(pattern: CrochetPattern): StitchGroup[] {
           operation: instruction.operation,
           role: instruction.role,
           countsAsStitch: instruction.role === "turningChain"
-            ? repeat === instruction.count - 1
+            ? instruction.countsAsStitch && repeat === instruction.count - 1
             : instruction.countsAsStitch,
 
           stitches,

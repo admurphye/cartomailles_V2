@@ -7,7 +7,7 @@ import type {
   WrittenPatternSourceKind,
 } from "./types";
 
-const EXPLICIT_ROW = /^\s*(rang|rg|r|tour|tr)\s*\.?\s*(\d+)\s*(?:(?:[:.)-])\s*|\s+)?(.*)$/i;
+const EXPLICIT_ROW = /^\s*(rang|rg|r|tour|tr)\s*\.?\s*(\d+)\s*(?:(?:[:.)-])\s*)?(.*)$/i;
 
 type RowDraft = {
   kind: WrittenPatternRowKind;
@@ -151,4 +151,3 @@ export function detectWrittenPatternRows(
     issues,
   };
 }
-

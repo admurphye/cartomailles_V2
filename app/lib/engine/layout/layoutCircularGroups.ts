@@ -49,10 +49,17 @@ export function layoutCircularGroups(
     const chainSpaces = currentGroups.filter(
       (group) => group.role === "chainSpace"
     );
+    const firstChainSpaceOrder = chainSpaces[0]?.order ?? Number.POSITIVE_INFINITY;
+    const leadingMotifGroups = turningChains.length > 0 && chainSpaces.length > 0
+      ? structuralGroups.filter((group) => group.order < firstChainSpaceOrder)
+      : [];
     const circularGroups = [...structuralGroups, ...chainSpaces].sort(
       (a, b) => a.order - b.order
     );
+    // La chaînette de début remplace la première bride : elle occupe donc un
+    // seul emplacement et reste accolée aux brides suivantes du motif.
     const turningChainSlots = turningChains.length > 0 ? 1 : 0;
+    const turningChainOffset = turningChainSlots;
     const circularSlotCount = circularGroups.length + turningChainSlots;
     const hasIncompleteParentLinks = structuralGroups.some((group) =>
       group.stitches.every((stitch) =>
@@ -60,7 +67,7 @@ export function layoutCircularGroups(
       )
     );
     const angleForGroup = (group: typeof circularGroups[number]) => {
-      const index = circularGroups.indexOf(group) + turningChainSlots;
+      const index = circularGroups.indexOf(group) + turningChainOffset;
 
       return (2 * Math.PI * index) / circularSlotCount - Math.PI / 2;
     };
@@ -150,15 +157,21 @@ export function layoutCircularGroups(
     });
 
     structuralGroups.forEach((group) => {
-      const groupAngle = parentAngleForGroup(group);
+      const leadingMotifIndex = leadingMotifGroups.indexOf(group);
+      const isLeadingMotifGroup = leadingMotifIndex >= 0;
+      const groupAngle = isLeadingMotifGroup
+        ? -Math.PI / 2
+        : parentAngleForGroup(group);
       const isSameParentBride = group.role === "sameParent";
       const sameParentTilt = isSameParentBride ? Math.PI / 7 : 0;
       const groupRadius = isSameParentBride && turningChains.length > 0
         ? radius - (turningChains.length - 1) * 6
         : radius;
-      const tangentOffset = isSameParentBride
-        ? 16 * Math.sin(sameParentTilt)
-        : 0;
+      const tangentOffset = isLeadingMotifGroup
+        ? (leadingMotifIndex + 1 - leadingMotifGroups.length / 2) * 18
+        : isSameParentBride
+          ? 16 * Math.sin(sameParentTilt)
+          : 0;
 
       positionedGroups.push({
         id: group.id,
@@ -232,6 +245,9 @@ export function layoutCircularGroups(
     }
 
     const turningChainGap = 12;
+    const turningChainTangentOffset = leadingMotifGroups.length > 0
+      ? -leadingMotifGroups.length / 2 * 18
+      : 0;
 
     turningChains.forEach((group, index) => {
       const chainRadius = radius -
@@ -244,7 +260,7 @@ export function layoutCircularGroups(
         operation: group.operation,
         role: group.role,
         countsAsStitch: group.countsAsStitch,
-        centerX,
+        centerX: centerX + turningChainTangentOffset,
         centerY: centerY - chainRadius,
         rotation: -Math.PI / 2,
         orientation: "radial",

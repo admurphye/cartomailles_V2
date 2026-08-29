@@ -62,8 +62,19 @@ export function linkRound(
 
   // Liens entre les rangs
   for (let r = 1; r < pattern.rounds.length; r++) {
+    const previousAll = stitchesByRound.get(pattern.rounds[r - 1].number) ?? [];
     const previous =
-      stitchesByRound.get(pattern.rounds[r - 1].number) ?? [];
+      previousAll
+        .filter((stitch) => stitch.role !== "magicRing" && stitch.countsAsStitch);
+    const chainSpaces: Stitch[][] = [];
+    for (const stitch of previousAll.filter((candidate) => candidate.role === "chainSpace")) {
+      const active = chainSpaces.at(-1);
+      if (active && stitch.order === active.at(-1)!.order + 1) {
+        active.push(stitch);
+      } else {
+        chainSpaces.push([stitch]);
+      }
+    }
 
     const current =
       stitchesByRound.get(pattern.rounds[r].number) ?? [];
@@ -86,10 +97,41 @@ export function linkRound(
           });
         }
 
-        // Toute la chaînette de début de rang remplace une seule bride :
-        // la maille suivante doit donc commencer sur le parent suivant.
-        parentCursor += parent ? 1 : 0;
+        // La chaîne avance le curseur uniquement lorsqu'elle remplace
+        // réellement la première maille du rang.
+        parentCursor += parent && instruction.countsAsStitch ? 1 : 0;
         childCursor += chainLength;
+        continue;
+      }
+
+      if (instruction.target?.type === "chainSpace") {
+        const matchingSpaces = chainSpaces.filter((space) =>
+          instruction.target?.chainCount === undefined ||
+          space.length === instruction.target.chainCount
+        );
+
+        for (let repeat = 0; repeat < instruction.count; repeat++) {
+          const targetSpace = instruction.target.index === undefined
+            ? matchingSpaces[repeat]
+            : matchingSpaces[instruction.target.index];
+          const children = current.slice(
+            childCursor,
+            childCursor + instruction.produces
+          );
+          if (targetSpace) {
+            for (const parent of targetSpace) {
+              for (const child of children) {
+                links.push({
+                  id: String(linkId++),
+                  from: parent.id,
+                  to: child.id,
+                  type: instruction.produces > 1 ? "increase" : "normal",
+                });
+              }
+            }
+          }
+          childCursor += instruction.produces;
+        }
         continue;
       }
 

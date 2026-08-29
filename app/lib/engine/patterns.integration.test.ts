@@ -93,7 +93,7 @@ describe("patrons métier complets", () => {
     expect(counts).toEqual([10, 11, 11]);
     expect(graph.stitches.filter((stitch) => stitch.role === "foundationChain")).toHaveLength(10);
     expect(graph.stitches.filter((stitch) => stitch.role === "turningChain")).toHaveLength(2);
-    expect(graph.stitches.filter((stitch) => stitch.countsAsStitch)).toHaveLength(32);
+    expect(graph.stitches.filter((stitch) => stitch.countsAsStitch)).toHaveLength(30);
 
     const yByRound = [1, 2, 3].map(
       (round) => positioned.find((stitch) => stitch.round === round)?.y

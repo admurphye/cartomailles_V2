@@ -34,6 +34,8 @@ export interface WrittenPatternInterpretationItem {
   /** Fragment de notation moteur, absent lorsque l'élément reste incompris. */
   cartomaillesText?: string;
   issues: WrittenPatternIssue[];
+  repeatMode?: "count" | "untilEnd" | "forEachTarget";
+  repeatCount?: number;
 }
 
 /**

@@ -78,9 +78,12 @@ if (!stitchToken) {
   consumes: parsed.consumes,
   produces: parsed.produces,
   role: parsed.role ?? (parsed.type === "mr" ? "magicRing" : "normal"),
-  countsAsStitch: true,
+  // Le cercle magique est un support de départ rendu dans le diagramme,
+  // mais il ne constitue jamais une maille crochetée.
+  countsAsStitch: parsed.type !== "mr",
   round: currentRound,
   operation: parsed.operation,
+  target: parsed.target,
 });
   }
 
@@ -117,7 +120,10 @@ if (!stitchToken) {
 
       if (isLeadingChain) {
         instruction.role = "turningChain";
-        instruction.countsAsStitch = false;
+        // Une seule instruction peut constituer la chaîne de début. Une
+        // seconde séquence de ML appartient déjà au motif du rang (arceau),
+        // même si aucune maille travaillée n'a encore été rencontrée.
+        isLeadingChain = false;
         return;
       }
 

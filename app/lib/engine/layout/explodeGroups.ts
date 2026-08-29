@@ -7,16 +7,18 @@ export function explodeGroups(
 
   const stitches: PositionedStitch[] = [];
 
-  const spacing = 16;
-
   for (const group of groups) {
+
+    const spacing = group.stitchSpacing ?? 16;
 
     const count = group.stitches.length;
 
     for (let i = 0; i < count; i++) {
 
       const isGroupedIncrease =
-        group.operation === "increase" && group.stitches.length > 1;
+        group.operation === "increase" &&
+        group.role !== "chainSpaceTarget" &&
+        group.stitches.length > 1;
       const offset = isGroupedIncrease
         ? 0
         : (i - (count - 1) / 2) * spacing;

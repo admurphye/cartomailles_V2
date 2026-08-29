@@ -3,7 +3,14 @@ export function normalizePattern(text: string): string {
     .toLowerCase()
 
     // Libellés de rang courants dans les patrons éditoriaux.
-    .replace(/\brang\s+(\d+)(?:\s*\([^)]*\))?\s*:\s*/gi, "r$1 ")
+    .replace(/\b(?:rang|tour)\s+(\d+)(?:\s*\([^)]*\))?\s*:\s*/gi, "r$1 ")
+
+    // Répétitions éditoriales délimitées par des astérisques :
+    // « *1 ms, 2 ml, sauter 1 maille* répéter 10 fois ».
+    .replace(
+      /\*([^*\r\n]+)\*\s*,?\s*r[ée]p[ée]ter\s+(\d+)\s+fois/gi,
+      (_, content, count) => `(${content}) x${count}`
+    )
 
     // Les précisions telles que « 3 ml compte comme 1ère br » décrivent la
     // maille de début mais ne constituent pas une instruction supplémentaire.

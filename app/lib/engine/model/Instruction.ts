@@ -6,6 +6,7 @@ export type InstructionRole =
   | "turningChain"
   | "sameParent"
   | "chainSpace"
+  | "chainSpaceTarget"
   | "freeChain"
   | "magicRing"
   | "join"
@@ -36,4 +37,10 @@ export interface Instruction {
   operation: InstructionOperation;
 
   round: number;
+
+  target?: {
+    type: "chainSpace";
+    chainCount?: number;
+    index?: number;
+  };
 }

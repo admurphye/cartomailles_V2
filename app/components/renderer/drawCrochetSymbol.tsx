@@ -104,8 +104,8 @@ export function drawMC(
     <ellipse
       cx={x + 20}
       cy={y + 20}
-      rx={8}
-      ry={4}
+      rx={6}
+      ry={3}
       fill={color}
       transform={`rotate(${rotation} ${x + 20} ${y + 20})`}
     />

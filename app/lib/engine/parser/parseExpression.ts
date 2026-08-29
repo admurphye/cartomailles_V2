@@ -7,6 +7,11 @@ export interface ParsedExpression {
   consumes: number;
   produces: number;
   role?: InstructionRole;
+  target?: {
+    type: "chainSpace";
+    chainCount?: number;
+    index?: number;
+  };
 }
 
 const STITCH_MAP: Record<string, StitchType> = {
@@ -50,6 +55,48 @@ export function parseExpression(
   }
 
   expression = expression.trim().toLowerCase();
+
+  const chainSpaceTarget = expression.match(
+    /^arch_(\d+)_(ms|db|br|dbr|tb|tbr)_(\d+|any)$/
+  );
+  if (chainSpaceTarget) {
+    const produces = Number(chainSpaceTarget[1]);
+    const type = STITCH_MAP[chainSpaceTarget[2]];
+    return {
+      type,
+      operation: produces > 1 ? "increase" : "normal",
+      consumes: 0,
+      produces,
+      role: "chainSpaceTarget",
+      target: {
+        type: "chainSpace",
+        chainCount: chainSpaceTarget[3] === "any"
+          ? undefined
+          : Number(chainSpaceTarget[3]),
+      },
+    };
+  }
+
+  const indexedChainSpaceTarget = expression.match(
+    /^archat_(\d+)_(\d+)_(ms|db|br|dbr|tb|tbr)_(\d+|any)$/
+  );
+  if (indexedChainSpaceTarget) {
+    const produces = Number(indexedChainSpaceTarget[2]);
+    return {
+      type: STITCH_MAP[indexedChainSpaceTarget[3]],
+      operation: produces > 1 ? "increase" : "normal",
+      consumes: 0,
+      produces,
+      role: "chainSpaceTarget",
+      target: {
+        type: "chainSpace",
+        index: Number(indexedChainSpaceTarget[1]),
+        chainCount: indexedChainSpaceTarget[4] === "any"
+          ? undefined
+          : Number(indexedChainSpaceTarget[4]),
+      },
+    };
+  }
 
   const sameParentMatch = expression.match(/^(ms|db|br|dbr|tb|tbr|brav|brar)_same_parent$/);
 

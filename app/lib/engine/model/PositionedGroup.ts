@@ -24,6 +24,8 @@ export interface PositionedGroup {
 
   orientation: "horizontal" | "radial";
 
+  stitchSpacing?: number;
+
   stitches: PositionedStitch[];
 
 }

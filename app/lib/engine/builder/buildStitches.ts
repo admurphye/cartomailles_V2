@@ -22,13 +22,18 @@ export function buildStitches(pattern: CrochetPattern): Stitch[] {
 
   type: instruction.type,
 
-  operation: instruction.operation,
+  // Une cible d'arceau regroupe plusieurs brides par leur parent commun,
+  // mais chaque bride reste un symbole simple dans le rendu.
+  operation: instruction.role === "chainSpaceTarget"
+    ? "normal"
+    : instruction.operation,
   groupSize: Math.max(instruction.consumes, instruction.produces),
   role: instruction.role,
   // Une chaînette tournante remplace une seule maille, quelle que soit sa
   // hauteur : seule sa dernière ml compte comme maille du nouveau rang.
   countsAsStitch: instruction.role === "turningChain"
-    ? i === instruction.count - 1 && j === instruction.produces - 1
+    ? instruction.countsAsStitch &&
+      i === instruction.count - 1 && j === instruction.produces - 1
     : instruction.countsAsStitch,
 
   round: round.number,
