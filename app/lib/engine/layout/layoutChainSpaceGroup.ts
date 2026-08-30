@@ -1,4 +1,47 @@
 import type { FlatRowDirection } from "./flatRowDirection";
+import type { StitchType } from "../model/Stitch";
+
+export type ChainSpaceFanPosition = {
+  x: number;
+  yOffset: number;
+  rotation: number;
+};
+
+const stitchLift: Partial<Record<StitchType, number>> = {
+  slst: 0,
+  sc: 0,
+  ch: 3,
+  hdc: 8,
+  dc: 16,
+  fpdc: 16,
+  bpdc: 16,
+  tr: 24,
+  dtr: 32,
+};
+
+/** Dispose les têtes en éventail autour du centre d'un même arceau. */
+export function layoutChainSpaceFan({
+  targetX,
+  stitchTypes,
+  stitchGap,
+}: {
+  targetX: number;
+  stitchTypes: StitchType[];
+  stitchGap: number;
+}): ChainSpaceFanPosition[] {
+  const middle = (stitchTypes.length - 1) / 2;
+  const maxDistance = Math.max(1, middle);
+  const maxTilt = Math.PI / 10;
+
+  return stitchTypes.map((type, index) => {
+    const localPosition = index - middle;
+    return {
+      x: targetX + localPosition * stitchGap,
+      yOffset: -(stitchLift[type] ?? 8),
+      rotation: localPosition / maxDistance * maxTilt,
+    };
+  });
+}
 
 export type ChainSpaceGroupLayout = {
   leftCenterX: number;

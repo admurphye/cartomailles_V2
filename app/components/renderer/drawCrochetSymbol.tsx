@@ -803,3 +803,51 @@ export function drawCrochetSymbol(
       return null;
   }
 }
+
+export function drawFanStitch(
+  type: "hdc" | "dc" | "dtr" | "tr",
+  geometry: { baseX: number; baseY: number; headX: number; headY: number },
+  color = "black"
+) {
+  const { baseX, baseY, headX, headY } = geometry;
+  const dx = headX - baseX;
+  const dy = headY - baseY;
+  const length = Math.max(1, Math.hypot(dx, dy));
+  const normalX = -dy / length;
+  const normalY = dx / length;
+  const alongX = dx / length;
+  const alongY = dy / length;
+  const barCount = type === "dc" ? 1 : type === "dtr" ? 2 : type === "tr" ? 3 : 0;
+  const bar = (distanceFromHead: number, halfWidth: number, key: string) => {
+    const centerX = headX - alongX * distanceFromHead;
+    const centerY = headY - alongY * distanceFromHead;
+    return (
+      <line
+        key={key}
+        x1={centerX - normalX * halfWidth}
+        y1={centerY - normalY * halfWidth}
+        x2={centerX + normalX * halfWidth}
+        y2={centerY + normalY * halfWidth}
+        stroke={color}
+        strokeWidth="2"
+      />
+    );
+  };
+
+  return (
+    <g>
+      <line
+        x1={baseX}
+        y1={baseY}
+        x2={headX}
+        y2={headY}
+        stroke={color}
+        strokeWidth="2"
+      />
+      {type === "hdc" && bar(5, 6, "half")}
+      {Array.from({ length: barCount }, (_, index) =>
+        bar(index * 7, 8, `bar-${index}`)
+      )}
+    </g>
+  );
+}

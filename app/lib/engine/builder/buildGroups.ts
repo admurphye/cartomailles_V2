@@ -42,6 +42,8 @@ export function buildGroups(pattern: CrochetPattern): StitchGroup[] {
               ? instruction.countsAsStitch &&
                 repeat === instruction.count - 1 && i === instruction.produces - 1
               : instruction.countsAsStitch,
+            chainCountsAsStitch: instruction.chainCountsAsStitch,
+            chainRepresents: instruction.chainRepresents,
 
             round: round.number,
 
@@ -73,6 +75,8 @@ export function buildGroups(pattern: CrochetPattern): StitchGroup[] {
           countsAsStitch: instruction.role === "turningChain"
             ? instruction.countsAsStitch && repeat === instruction.count - 1
             : instruction.countsAsStitch,
+          chainCountsAsStitch: instruction.chainCountsAsStitch,
+          chainRepresents: instruction.chainRepresents,
 
           stitches,
 

@@ -34,6 +34,11 @@ export interface Instruction {
 
   countsAsStitch: boolean;
 
+  chainCountsAsStitch?: boolean;
+
+  /** Type de maille logiquement remplacé par une chaînette de début. */
+  chainRepresents?: StitchType;
+
   operation: InstructionOperation;
 
   round: number;

@@ -1,6 +1,6 @@
 import { PositionedStitch } from "@/app/lib/engine/model/PositionedStitch";
 import { Link } from "@/app/lib/engine/model/Link";
-import { drawCrochetSymbol } from "./drawCrochetSymbol";
+import { drawCrochetSymbol, drawFanStitch } from "./drawCrochetSymbol";
 import { colors } from "@/app/theme/colors";
 import { useRef, useState, type RefObject } from "react";
 import { Tool } from "@/app/lib/engine/model/Tool";
@@ -300,17 +300,23 @@ export default function CircularRenderer({
               data-stitch-role={stitch.role}
               data-stitch-group-size={stitch.groupSize ?? 1}
               style={{ "--symbol-stroke-width": preferences.strokeWidth } as React.CSSProperties}
-              transform={`translate(${stitch.x} ${stitch.y}) scale(${preferences.symbolSize}) translate(${-stitch.x} ${-stitch.y})`}
+              transform={`translate(${stitch.fanGeometry?.baseX ?? stitch.x} ${stitch.fanGeometry?.baseY ?? stitch.y}) scale(${preferences.symbolSize}) translate(${-(stitch.fanGeometry?.baseX ?? stitch.x)} ${-(stitch.fanGeometry?.baseY ?? stitch.y)})`}
             >
-              {drawCrochetSymbol(
-                stitch.type,
-                stitch.operation,
-                stitch.x,
-                stitch.y,
-                symbolColor,
-                stitch.rotation ?? 0,
-                stitch.groupSize
-              )}
+              {stitch.fanGeometry && ["hdc", "dc", "dtr", "tr"].includes(stitch.type)
+                ? drawFanStitch(
+                    stitch.type as "hdc" | "dc" | "dtr" | "tr",
+                    stitch.fanGeometry,
+                    symbolColor
+                  )
+                : drawCrochetSymbol(
+                    stitch.type,
+                    stitch.operation,
+                    stitch.x,
+                    stitch.y,
+                    symbolColor,
+                    stitch.rotation ?? 0,
+                    stitch.groupSize
+                  )}
             </g>
 
             {selectedId === stitch.id && (

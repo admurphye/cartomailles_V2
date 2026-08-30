@@ -15,6 +15,8 @@ export interface PositionedGroup {
   operation: InstructionOperation;
   role: InstructionRole;
   countsAsStitch: boolean;
+  chainCountsAsStitch?: boolean;
+  chainRepresents?: PositionedStitch["type"];
 
   centerX: number;
 

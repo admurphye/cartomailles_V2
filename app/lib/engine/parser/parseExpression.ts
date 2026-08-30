@@ -7,6 +7,7 @@ export interface ParsedExpression {
   consumes: number;
   produces: number;
   role?: InstructionRole;
+  chainRepresents?: StitchType;
   target?: {
     type: "chainSpace";
     chainCount?: number;
@@ -55,6 +56,18 @@ export function parseExpression(
   }
 
   expression = expression.trim().toLowerCase();
+
+  const representedChain = expression.match(/^ml_as_(sc|hdc|dc|tr|dtr)$/);
+  if (representedChain) {
+    return {
+      type: "ch",
+      operation: "normal",
+      consumes: 0,
+      produces: 1,
+      role: "turningChain",
+      chainRepresents: representedChain[1] as StitchType,
+    };
+  }
 
   const chainSpaceTarget = expression.match(
     /^arch_(\d+)_(ms|db|br|dbr|tb|tbr)_(\d+|any)$/

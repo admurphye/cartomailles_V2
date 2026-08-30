@@ -68,6 +68,20 @@ function interpretSegment(
 ): WrittenPatternInterpretationItem {
   const normalized = sourceText.trim().replace(/^puis\s+/i, "");
 
+  const representedStartChain = normalized.match(
+    new RegExp(`^${NUMBER}\\s+ml_as_(sc|hdc|dc|tr|dtr)$`, "i")
+  );
+  if (representedStartChain) {
+    const count = numberValue(representedStartChain[1]);
+    return item(
+      id,
+      "stitch",
+      sourceText,
+      `${count} maille${count === 1 ? "" : "s"} en l'air de début de rang comptant comme première maille`,
+      `${count} ml_as_${representedStartChain[2].toLowerCase()}`
+    );
+  }
+
   const inferredDecrease = normalized.match(
     /^(?:crocheter|crochetez|faire|faites|travailler|travaillez)\s+les\s+(\d+|deux)\s+mailles\s+suivantes\s+ensemble$/i
   );
@@ -344,8 +358,22 @@ function extractForEachChainSpace(sourceText: string): {
   prefix: string;
   content: string;
   chainCount?: number;
+  targetMode: "each" | "next";
   source: string;
 } | null {
+  const leadingTarget = sourceText.match(
+    /^\s*(?:(.*?[,;])\s*)?(?:puis\s+)?dans\s+(?:(chaque)\s+(?:arceau|espace)|(l['’]arceau\s+suivant|le\s+prochain\s+arceau))(?:\s+de\s+(\d+|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)\s+(?:ml|mailles?\s+en\s+l['’]air))?(?:\s+du\s+rang\s+pr[ée]c[ée]dent)?\s*,?\s*(?:(?:crocheter|crochetez|faire|faites|r[ée]aliser|r[ée]alisez|travailler|travaillez)\s+)?(.+?)\s*$/i
+  );
+  if (leadingTarget) {
+    return {
+      prefix: (leadingTarget[1] ?? "").replace(/[,;\s]+$/, "").trim(),
+      content: leadingTarget[5].replace(/\.\s*$/, "").trim(),
+      chainCount: leadingTarget[4] ? numberValue(leadingTarget[4]) : undefined,
+      targetMode: leadingTarget[2] ? "each" : "next",
+      source: sourceText.slice((leadingTarget[1] ?? "").length).trim(),
+    };
+  }
+
   const match = sourceText.match(
     /^\s*(.*?)\s*(?:,?\s*(?:puis\s+)?r[ée]p[ée](?:ter|tez)\s+)\*([^*]+)\*\s+dans\s+chaque\s+(?:arceau|espace)(?:\s+de\s+(\d+|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)\s+(?:ml|mailles?\s+en\s+l['’]air))?(?:\s+du\s+rang\s+pr[ée]c[ée]dent)?\s*\.?\s*$/i
   );
@@ -354,7 +382,69 @@ function extractForEachChainSpace(sourceText: string): {
     prefix: match[1].replace(/[,;\s]+$/, "").trim(),
     content: match[2].trim(),
     chainCount: match[3] ? numberValue(match[3]) : undefined,
+    targetMode: "each",
     source: sourceText.slice(match[1].length).trim(),
+  };
+}
+
+type ChainSpaceTargetRule = {
+  chainCount: number;
+  stitch: StitchVocabulary;
+  stitchCount: number;
+  source: string;
+};
+
+function extractChainSpaceTargetRules(sourceText: string): {
+  prefix: string;
+  rules: ChainSpaceTargetRule[];
+  source: string;
+} | null {
+  const number = "(\\d+|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)";
+  const stitchPattern = STITCHES
+    .filter(({ code }) => !["ml", "mc"].includes(code))
+    .map(({ pattern }) => pattern)
+    .join("|");
+  const rulePattern = new RegExp(
+    `${number}\\s+(${stitchPattern})\\s+dans\\s+chaque\\s+(?:arceau|espace)\\s+de\\s+${number}\\s+(?:ml|mailles?\\s+en\\s+l['’]air)`,
+    "gi"
+  );
+  const matches = [...sourceText.matchAll(rulePattern)];
+  if (matches.length < 2) return null;
+
+  const firstIndex = matches[0].index ?? 0;
+  for (let index = 1; index < matches.length; index++) {
+    const previous = matches[index - 1];
+    const previousEnd = (previous.index ?? 0) + previous[0].length;
+    const separator = sourceText.slice(previousEnd, matches[index].index);
+    if (!/^\s*,?\s*et\s+$/i.test(separator)) return null;
+  }
+  const last = matches.at(-1)!;
+  const tail = sourceText.slice((last.index ?? 0) + last[0].length);
+  if (!/^\s*(?:du\s+rang\s+pr[ée]c[ée]dent)?\s*\.?\s*$/i.test(tail)) {
+    return null;
+  }
+
+  const rules = matches.map((match): ChainSpaceTargetRule | null => {
+    const stitch = STITCHES.find((candidate) =>
+      new RegExp(`^(?:${candidate.pattern})$`, "i").test(match[2])
+    );
+    if (!stitch) return null;
+    return {
+      stitchCount: numberValue(match[1]),
+      stitch,
+      chainCount: numberValue(match[3]),
+      source: match[0],
+    };
+  });
+  if (rules.some((rule) => rule === null)) return null;
+
+  return {
+    prefix: sourceText.slice(0, firstIndex)
+      .replace(/(?:,?\s*(?:puis\s+)?)?(?:crocheter|crochetez)?\s*$/i, "")
+      .replace(/[,;\s]+$/, "")
+      .trim(),
+    rules: rules as ChainSpaceTargetRule[],
+    source: sourceText.slice(firstIndex).trim(),
   };
 }
 
@@ -381,6 +471,81 @@ export function interpretWrittenPatternRow(
   previousChainSpaces: number[] = []
 ): WrittenPatternRow {
   const normalizedSource = normalizeWrittenPatternText(row.sourceText);
+  const targetRules = extractChainSpaceTargetRules(normalizedSource);
+  if (targetRules) {
+    const prefixSegments = targetRules.prefix
+      .split(/[,;]+/)
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+    const prefixInstructions = prefixSegments.map((segment, index) =>
+      interpretSegment(
+        segment,
+        `${row.id}-prefix-${index + 1}`,
+        index === 0,
+        undefined,
+        previousChainSpaces
+      )
+    );
+    const prefixFragments = prefixInstructions
+      .map((entry) => entry.cartomaillesText)
+      .filter((value): value is string => Boolean(value));
+    const groupInstructions: WrittenPatternInterpretationItem[] = [];
+    const groupFragments: string[] = [];
+    let matchedTargetCount = 0;
+
+    previousChainSpaces.forEach((chainCount, archIndex) => {
+      const rule = targetRules.rules.find(
+        (candidate) => candidate.chainCount === chainCount
+      );
+      if (!rule) return;
+      matchedTargetCount++;
+      const interpreted = interpretSegment(
+        `${rule.stitchCount} ${rule.stitch.code}`,
+        `${row.id}-target-${archIndex + 1}`,
+        false,
+        undefined,
+        previousChainSpaces
+      );
+      interpreted.sourceText = rule.source;
+      interpreted.description += ` dans l'arceau de ${chainCount} mailles en l'air`;
+      interpreted.cartomaillesText =
+        `1 archat_${archIndex}_${rule.stitchCount}_${rule.stitch.code}_${chainCount}`;
+      groupInstructions.push(interpreted);
+      groupFragments.push(interpreted.cartomaillesText);
+    });
+
+    const targetIssues: WrittenPatternIssue[] = targetRules.rules.flatMap((rule) =>
+      previousChainSpaces.includes(rule.chainCount) ? [] : [{
+        code: "missing-chain-space-target",
+        message: `Aucun arceau de ${rule.chainCount} mailles en l'air trouvé dans le rang précédent.`,
+        severity: "error" as const,
+      }]
+    );
+    const repeatItem = item(
+      `${row.id}-target-rules`,
+      "repeat",
+      targetRules.source,
+      `Appliquer les règles dans l'ordre des ${matchedTargetCount} arceaux correspondants`,
+      groupFragments.length > 0 ? groupFragments.join(", ") : undefined,
+      targetIssues
+    );
+    repeatItem.repeatMode = "forEachTarget";
+    repeatItem.repeatCount = matchedTargetCount;
+    const interpretation = [...prefixInstructions, ...groupInstructions, repeatItem];
+    const issues = [...row.issues, ...interpretation.flatMap((entry) => entry.issues)];
+
+    return {
+      ...row,
+      interpretation,
+      cartomaillesText: groupFragments.length > 0
+        ? `R${row.number} ${[...prefixFragments, ...groupFragments].join(", ")}`
+        : "",
+      issues,
+      review: issues.some((issue) => issue.severity === "error")
+        ? { status: "needs-correction" }
+        : { status: "pending" },
+    };
+  }
   const forEachChainSpace = extractForEachChainSpace(normalizedSource);
   if (forEachChainSpace) {
     const prefixSegments = forEachChainSpace.prefix
@@ -400,12 +565,13 @@ export function interpretWrittenPatternRow(
       .map((entry) => entry.cartomaillesText)
       .filter((value): value is string => Boolean(value));
     const matchingTargets = previousChainSpaces
-      .filter((count) =>
+      .map((count, index) => ({ count, index }))
+      .filter(({ count }) =>
         forEachChainSpace.chainCount === undefined || count === forEachChainSpace.chainCount
       )
-      .map((count, index) => ({ count, index }));
+      .slice(0, forEachChainSpace.targetMode === "next" ? 1 : undefined);
     const groupSegments = forEachChainSpace.content
-      .split(/[,;]+/)
+      .split(/\s*(?:[,;]+|\bet\b)\s*/i)
       .map((segment) => segment.trim())
       .filter(Boolean);
     const groupInstructions: WrittenPatternInterpretationItem[] = [];
@@ -525,9 +691,9 @@ export function interpretWrittenPatternRow(
         });
       } else {
         const explicitCountedStartChain =
-          /elles\s+comptent\s+comme\s+(?:(?:la\s+)?premi[èe]re|une)\s+bride/i
+          /(?:elle|elles)\s+compte(?:nt)?\s+comme\s+(?:(?:la\s+)?premi[èe]re|une)\s+(?:maille\s+serr[ée]e|demi[-\s]?bride|double\s+bride|bride)/i
             .test(row.sourceText) &&
-          !/elles\s+ne\s+comptent\s+pas/i.test(row.sourceText);
+          !/(?:elle|elles)\s+ne\s+compte(?:nt)?\s+pas/i.test(row.sourceText);
         const alreadyConsumed = consumedParents(prefixFragments) +
           (explicitCountedStartChain ? 1 : 0);
         const motifConsumption = consumedParents(fragments);

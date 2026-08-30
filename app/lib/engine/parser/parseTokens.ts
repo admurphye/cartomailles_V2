@@ -81,6 +81,8 @@ if (!stitchToken) {
   // Le cercle magique est un support de départ rendu dans le diagramme,
   // mais il ne constitue jamais une maille crochetée.
   countsAsStitch: parsed.type !== "mr",
+  chainCountsAsStitch: parsed.chainRepresents === undefined ? undefined : true,
+  chainRepresents: parsed.chainRepresents,
   round: currentRound,
   operation: parsed.operation,
   target: parsed.target,

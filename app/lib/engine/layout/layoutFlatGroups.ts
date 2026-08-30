@@ -3,7 +3,10 @@ import { PositionedGroup } from "../model/PositionedGroup";
 import { PositionedStitch } from "../model/PositionedStitch";
 import { explodeGroups } from "./explodeGroups";
 import { applyFlatRowDirections, flatRowDirection } from "./flatRowDirection";
-import { layoutChainSpaceGroup } from "./layoutChainSpaceGroup";
+import {
+  layoutChainSpaceFan,
+  layoutChainSpaceGroup,
+} from "./layoutChainSpaceGroup";
 
 function replacementVerticalBand(
   type: PositionedStitch["type"] | undefined,
@@ -30,6 +33,7 @@ export function layoutFlatGroups(
   const groups = graph.groups;
   const positionedGroups: PositionedGroup[] = [];
   const positionedById = new Map<string, PositionedStitch>();
+  const localPositionOverrides = new Map<string, PositionedStitch>();
   const parentIdsByChildId = new Map<string, string[]>();
 
   for (const link of graph.links) {
@@ -101,14 +105,17 @@ export function layoutFlatGroups(
       anchoredSingleCounts.set(key, (anchoredSingleCounts.get(key) ?? 0) + 1);
     }
     const anchoredSingleIndexes = new Map<string, number>();
-    const targetedGroupCounts = new Map<string, number>();
+    const targetedStitchCounts = new Map<string, number>();
     for (const group of displayGroups) {
       if (group.role !== "chainSpaceTarget") continue;
       const parents = parentPositionsFor(group);
       if (parents.length === 0) continue;
       const x = parents.reduce((total, parent) => total + parent.x, 0) / parents.length;
       const key = anchorKey(x);
-      targetedGroupCounts.set(key, (targetedGroupCounts.get(key) ?? 0) + 1);
+      targetedStitchCounts.set(
+        key,
+        (targetedStitchCounts.get(key) ?? 0) + group.stitches.length
+      );
     }
     const targetedGroupIndexes = new Map<string, number>();
 
@@ -122,7 +129,11 @@ export function layoutFlatGroups(
         ? parentPositions.reduce((total, parent) => total + parent.x, 0) /
           parentPositions.length
         : defaultCenterX;
-      if (group.stitches.length === 1 && parentPositions.length > 0) {
+      if (
+        group.stitches.length === 1 &&
+        group.role !== "chainSpaceTarget" &&
+        parentPositions.length > 0
+      ) {
         const key = anchorKey(groupCenterX);
         const count = anchoredSingleCounts.get(key) ?? 1;
         const position = anchoredSingleIndexes.get(key) ?? 0;
@@ -131,14 +142,31 @@ export function layoutFlatGroups(
       }
       if (group.role === "chainSpaceTarget" && parentPositions.length > 0) {
         const key = anchorKey(groupCenterX);
-        const count = targetedGroupCounts.get(key) ?? 1;
+        const count = targetedStitchCounts.get(key) ?? 1;
         const position = targetedGroupIndexes.get(key) ?? 0;
-        groupCenterX += (position - (count - 1) / 2) * 24;
-        targetedGroupIndexes.set(key, position + 1);
+        const groupMidpoint = position + (group.stitches.length - 1) / 2;
+        groupCenterX += (groupMidpoint - (count - 1) / 2) * stitchSpacing;
+        targetedGroupIndexes.set(key, position + group.stitches.length);
       }
       const isSameParentBride = group.role === "sameParent";
       const sameParentTilt = isSameParentBride
         ? (isRightToLeft ? Math.PI / 4 : -Math.PI / 4)
+        : 0;
+      const targetedParents = group.role === "chainSpaceTarget"
+        ? parentPositionsFor(group)
+        : [];
+      const targetedKey = targetedParents.length > 0
+        ? anchorKey(targetedParents.reduce((sum, parent) => sum + parent.x, 0) /
+          targetedParents.length)
+        : "";
+      const targetedCount = targetedStitchCounts.get(targetedKey) ?? 1;
+      const targetedMidpoint = group.role === "chainSpaceTarget"
+        ? (targetedGroupIndexes.get(targetedKey) ?? group.stitches.length) -
+          (group.stitches.length + 1) / 2
+        : 0;
+      const targetedTilt = group.role === "chainSpaceTarget" && targetedCount > 1
+        ? (targetedMidpoint - (targetedCount - 1) / 2) /
+          ((targetedCount - 1) / 2) * (Math.PI / 5)
         : 0;
       // Écarte suffisamment la bride de la chaînette pour que sa tige ne
       // traverse pas les ovales, tout en gardant visuellement le même pied.
@@ -164,7 +192,7 @@ export function layoutFlatGroups(
 
         centerY: groupCenterY,
 
-        rotation: sameParentTilt,
+        rotation: isSameParentBride ? sameParentTilt : targetedTilt,
 
         orientation: "horizontal",
 
@@ -333,7 +361,8 @@ export function layoutFlatGroups(
       (group) => group.id === logicalReplacedGroup?.id
     );
     const replacementBand = replacementVerticalBand(
-      replacedGroup?.stitches[0]?.type,
+      turningChains.find((group) => group.chainRepresents)?.chainRepresents ??
+        replacedGroup?.stitches[0]?.type,
       replacedGroup?.centerY ?? rowCenterY
     );
 
@@ -349,6 +378,8 @@ export function layoutFlatGroups(
         operation: group.operation,
         role: group.role,
         countsAsStitch: group.countsAsStitch,
+        chainCountsAsStitch: group.chainCountsAsStitch,
+        chainRepresents: group.chainRepresents,
         centerX: turningChainAnchorParent?.x ?? startXForRound,
         // La première ml part du parent et la dernière atteint exactement
         // la ligne du nouveau rang (elle remplace la première bride).
@@ -368,13 +399,99 @@ export function layoutFlatGroups(
       positionedRowGroups.push(positionedGroup);
     });
 
+    const archMotifStitchIds = new Set(
+      motifs.flatMap((motif) => [
+        ...motif.left.stitches.map((stitch) => stitch.id),
+        ...motif.right.stitches.map((stitch) => stitch.id),
+      ])
+    );
+    const rowStitches = explodeGroups(positionedRowGroups);
+    const targetedByParent = new Map<string, PositionedStitch[]>();
+    for (const stitch of rowStitches) {
+      if (stitch.role !== "chainSpaceTarget" || archMotifStitchIds.has(stitch.id)) {
+        continue;
+      }
+      const key = [...(parentIdsByChildId.get(stitch.id) ?? [])].sort().join("-");
+      const targeted = targetedByParent.get(key) ?? [];
+      targeted.push(stitch);
+      targetedByParent.set(key, targeted);
+    }
+
+    const fans = [...targetedByParent.entries()].map(([key, stitches]) => {
+      const parents = key.split("-").map(visualParentPosition)
+        .filter((parent): parent is PositionedStitch => parent !== undefined);
+      return {
+        stitches: stitches.sort((a, b) => a.x - b.x),
+        targetX: parents.reduce((sum, parent) => sum + parent.x, 0) /
+          Math.max(1, parents.length),
+        targetY: Math.min(...parents.map((parent) => parent.y)),
+      };
+    }).sort((a, b) => a.targetX - b.targetX);
+
+    for (const [fanIndex, fan] of fans.entries()) {
+      const leftDistance = fanIndex > 0
+        ? fan.targetX - fans[fanIndex - 1].targetX
+        : Number.POSITIVE_INFINITY;
+      const rightDistance = fanIndex < fans.length - 1
+        ? fans[fanIndex + 1].targetX - fan.targetX
+        : Number.POSITIVE_INFINITY;
+      const neighborDistance = Math.min(leftDistance, rightDistance);
+      const stitchCount = fan.stitches.length;
+      const desiredGap = stitchSpacing *
+        (stitchCount <= 3 ? 1.5 : stitchCount <= 5 ? 1.3125 : 1);
+      const desiredWidth = desiredGap * Math.max(1, stitchCount - 1);
+      const neighborWidthRatio = stitchCount <= 3 ? 0.62 : 0.8;
+      const groupWidth = Math.min(
+        desiredWidth,
+        neighborDistance * neighborWidthRatio
+      );
+      const localGap = groupWidth / Math.max(1, stitchCount - 1);
+      const positions = layoutChainSpaceFan({
+        targetX: fan.targetX,
+        stitchTypes: fan.stitches.map((stitch) => stitch.type),
+        stitchGap: localGap,
+      });
+      fan.stitches.forEach((stitch, index) => {
+        const rotation = positions[index].rotation;
+        const normalized = fan.stitches.length === 1
+          ? 0
+          : index / (fan.stitches.length - 1) * 2 - 1;
+        const baseSpread = Math.min(8, fan.stitches.length * 1.5);
+        const stitchHeight = stitch.type === "hdc"
+          ? 22
+          : stitch.type === "dc" || stitch.type === "fpdc" || stitch.type === "bpdc"
+            ? 28
+            : stitch.type === "tr"
+              ? 36
+              : stitch.type === "dtr"
+                ? 44
+                : 12;
+        const baseX = fan.targetX + normalized * baseSpread;
+        const baseY = fan.targetY - 6;
+        const headX = positions[index].x;
+        const headY = baseY - stitchHeight;
+        const positioned = {
+          ...stitch,
+          x: headX,
+          y: headY,
+          rotation: rotation * 180 / Math.PI,
+          fanGeometry: ["hdc", "dc", "dtr", "tr"].includes(stitch.type)
+            ? { baseX, baseY, headX, headY }
+            : undefined,
+        };
+        localPositionOverrides.set(stitch.id, positioned);
+      });
+    }
+
     // Rend les positions du rang disponibles aux enfants du rang suivant.
     for (const stitch of explodeGroups(positionedRowGroups)) {
-      positionedById.set(stitch.id, stitch);
+      positionedById.set(stitch.id, localPositionOverrides.get(stitch.id) ?? stitch);
     }
 
   }
 
-  return explodeGroups(positionedGroups);
+  return explodeGroups(positionedGroups).map(
+    (stitch) => localPositionOverrides.get(stitch.id) ?? stitch
+  );
 
 }

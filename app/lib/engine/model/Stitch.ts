@@ -22,6 +22,8 @@ export interface Stitch {
   groupSize?: number;
   role: InstructionRole;
   countsAsStitch: boolean;
+  chainCountsAsStitch?: boolean;
+  chainRepresents?: StitchType;
   
   round: number;
 

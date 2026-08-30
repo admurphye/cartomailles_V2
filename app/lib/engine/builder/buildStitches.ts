@@ -35,6 +35,8 @@ export function buildStitches(pattern: CrochetPattern): Stitch[] {
     ? instruction.countsAsStitch &&
       i === instruction.count - 1 && j === instruction.produces - 1
     : instruction.countsAsStitch,
+  chainCountsAsStitch: instruction.chainCountsAsStitch,
+  chainRepresents: instruction.chainRepresents,
 
   round: round.number,
 

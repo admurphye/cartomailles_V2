@@ -118,6 +118,31 @@ Tour 5 : Crochetez *1 ms dans chacune des 2 mailles suivantes, puis crochetez le
     expect(secondRound.filter((stitch) => stitch.countsAsStitch)).toHaveLength(15);
   });
 
+  it.each([
+    [1, "elle compte comme la première maille serrée", "sc"],
+    [2, "elles comptent comme la première demi-bride", "hdc"],
+    [3, "elles comptent comme la première bride", "dc"],
+    [4, "elles comptent comme la première double bride", "dtr"],
+  ] as const)("mémorise le type remplacé par %i ML", (chainCount, wording, representedType) => {
+    const prepared = preparePatternForEngine(
+      `Rang 1 : Faites 6 mailles serrées.\nRang 2 : Faites ${chainCount} mailles en l'air, ${wording}, puis crochetez 5 mailles serrées.`
+    );
+    const graph = parsePattern(prepared.notation);
+    const chain = graph.stitches.filter(
+      (stitch) => stitch.round === 2 && stitch.role === "turningChain"
+    );
+
+    expect(prepared.issues).toEqual([]);
+    expect(graph.issues).toEqual([]);
+    expect(chain).toHaveLength(chainCount);
+    expect(chain.filter((stitch) => stitch.countsAsStitch)).toHaveLength(1);
+    expect(chain.every((stitch) => stitch.chainCountsAsStitch)).toBe(true);
+    expect(chain.every((stitch) => stitch.chainRepresents === representedType)).toBe(true);
+    expect(graph.stitches.filter(
+      (stitch) => stitch.round === 2 && stitch.countsAsStitch
+    )).toHaveLength(6);
+  });
+
   it("produit une seule erreur de lecture pour une phrase naturelle inconnue", () => {
     const prepared = preparePatternForEngine(
       "Tour 1 : Crochetez le mystérieux motif étoilé."

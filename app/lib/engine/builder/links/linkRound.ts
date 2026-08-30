@@ -113,7 +113,7 @@ export function linkRound(
         for (let repeat = 0; repeat < instruction.count; repeat++) {
           const targetSpace = instruction.target.index === undefined
             ? matchingSpaces[repeat]
-            : matchingSpaces[instruction.target.index];
+            : chainSpaces[instruction.target.index];
           const children = current.slice(
             childCursor,
             childCursor + instruction.produces

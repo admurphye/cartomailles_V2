@@ -169,7 +169,7 @@ describe("interprétation minimale d'un patron écrit", () => {
     const repeat = thirdRow.interpretation.find((entry) => entry.kind === "repeat");
 
     expect(thirdRow.cartomaillesText)
-      .toBe("R3 3 ml, (2 ml, 2 skip, 1 br) x4");
+      .toBe("R3 3 ml_as_dc, (2 ml, 2 skip, 1 br) x4");
     expect(repeat).toMatchObject({ repeatMode: "untilEnd", repeatCount: 4 });
     expect(thirdRow.issues).toContainEqual(expect.objectContaining({
       code: "until-end-remainder",
@@ -196,7 +196,7 @@ describe("interprétation minimale d'un patron écrit", () => {
     ].join("\n"));
 
     expect(document.rows[1].cartomaillesText)
-      .toBe("R2 3 ml, (2 ml, 2 skip, 1 br) x4");
+      .toBe("R2 3 ml_as_dc, (2 ml, 2 skip, 1 br) x4");
     expect(document.rows[1].issues).toEqual([]);
   });
 
@@ -212,7 +212,7 @@ describe("interprétation minimale d'un patron écrit", () => {
     );
 
     expect(document.rows[1].cartomaillesText)
-      .toBe("R2 3 ml, (2 ml, 2 skip, 1 br) x4");
+      .toBe("R2 3 ml_as_dc, (2 ml, 2 skip, 1 br) x4");
     expect(document.rows[1].issues).toEqual([]);
     expect(document.rows[1].interpretation.at(-1)).toMatchObject({
       repeatMode: "untilEnd",
@@ -384,7 +384,7 @@ Tour 3 : Faites 3 mailles en l'air. Crochetez 1 bride dans la même maille, puis
 
     expect(document.rows.map((row) => row.issues)).toEqual([[], [], [], []]);
     expect(document.rows[3].cartomaillesText)
-      .toBe("R4 3 ml, 6 arch_3_br_2");
+      .toBe("R4 3 ml_as_dc, 6 arch_3_br_2");
 
     const graph = applyFlatRowDirections(parsePattern(
       document.rows.map((row) => row.cartomaillesText).join("\n")
@@ -480,5 +480,131 @@ Tour 3 : Faites 3 mailles en l'air. Crochetez 1 bride dans la même maille, puis
         (Math.min(...centers) + Math.max(...centers)) / 2;
       expect(motifCenterX).toBeCloseTo(targetX);
     }
+  });
+
+  it("applique une liste de mailles mixtes à chaque arceau avant de la segmenter", () => {
+    const source = [
+      "Rang 1 : Faites 19 mailles en l'air.",
+      "Rang 2 : Faites 3 mailles en l'air, elles comptent comme la première bride, puis crochetez 18 brides.",
+      "Rang 3 : Faites 3 mailles en l'air, elles comptent comme la première bride, puis répétez *2 mailles en l'air, sautez 2 mailles, crochetez 2 brides dans la maille suivante* jusqu'à la fin du rang.",
+      "Rang 4 : dans chaque arceau du rang précédent crochetez 1 maille serrée, 1 demi-bride, 2 brides, 1 demi-bride et 1 maille serrée.",
+    ].join("\n");
+    const document = interpret(source);
+    const fourthRow = document.rows[3];
+
+    expect(fourthRow.issues).toEqual([]);
+    expect(fourthRow.interpretation.at(-1)).toMatchObject({
+      repeatMode: "forEachTarget",
+      repeatCount: 6,
+    });
+
+    const graph = applyFlatRowDirections(parsePattern(
+      document.rows.map((row) => row.cartomaillesText).join("\n")
+    ));
+    const targeted = graph.stitches.filter(
+      (stitch) => stitch.round === 4 && stitch.role === "chainSpaceTarget"
+    );
+    expect(targeted).toHaveLength(36);
+    expect(targeted.filter((stitch) => stitch.type === "sc")).toHaveLength(12);
+    expect(targeted.filter((stitch) => stitch.type === "hdc")).toHaveLength(12);
+    expect(targeted.filter((stitch) => stitch.type === "dc")).toHaveLength(12);
+
+    const positioned = layoutFlatGroups(graph);
+    const byTarget = new Map<string, typeof targeted>();
+    for (const stitch of targeted) {
+      const key = graph.links.filter((link) => link.to === stitch.id)
+        .map((link) => link.from).sort().join("-");
+      byTarget.set(key, [...(byTarget.get(key) ?? []), stitch]);
+    }
+    expect(byTarget.size).toBe(6);
+    for (const stitches of byTarget.values()) {
+      const visual = stitches.map((stitch) => positioned.find(
+        (candidate) => candidate.id === stitch.id
+      )!);
+      const xs = visual.map((stitch) => stitch.x).sort((a, b) => a - b);
+      expect(new Set(xs).size).toBe(6);
+      expect(xs[0] + xs[5]).toBeCloseTo(xs[1] + xs[4]);
+      expect(xs[1] + xs[4]).toBeCloseTo(xs[2] + xs[3]);
+      expect(visual.some((stitch) => (stitch.rotation ?? 0) < 0)).toBe(true);
+      expect(visual.some((stitch) => (stitch.rotation ?? 0) > 0)).toBe(true);
+    }
+  });
+
+  it.each([
+    "dans chaque arceau crochetez 1 ms et 1 demi-bride",
+    "dans chaque arceau, crochetez 1 ms et 1 demi-bride",
+    "dans chaque espace crochetez 1 ms et 1 demi-bride",
+    "dans chaque espace de 2 ml crochetez 1 ms et 1 demi-bride",
+  ])("reconnaît la portée d'une cible d'arceau : %s", (instruction) => {
+    const row = interpretWrittenPatternRow(
+      detectWrittenPatternRows(`Rang 2 : ${instruction}.`).document.rows[0],
+      undefined,
+      [2, 2]
+    );
+    expect(row.issues).toEqual([]);
+    expect(row.interpretation.at(-1)).toMatchObject({
+      repeatMode: "forEachTarget",
+      repeatCount: 2,
+    });
+  });
+
+  it.each([
+    "dans l'arceau suivant crochetez 1 ms et 1 demi-bride",
+    "dans le prochain arceau faites 1 ms et 1 demi-bride",
+  ])("ne cible qu'un seul arceau avec : %s", (instruction) => {
+    const row = interpretWrittenPatternRow(
+      detectWrittenPatternRows(`Rang 2 : ${instruction}.`).document.rows[0],
+      undefined,
+      [2, 2]
+    );
+    expect(row.issues).toEqual([]);
+    expect(row.interpretation.at(-1)).toMatchObject({
+      repeatMode: "forEachTarget",
+      repeatCount: 1,
+    });
+  });
+
+  it("applique plusieurs règles de ciblage dans l'ordre spatial des arceaux", () => {
+    const source = [
+      "Rang 1 : Faites 22 mailles en l'air.",
+      "Rang 2 : Faites 1 maille en l'air, elle compte comme la première maille serrée, puis crochetez 21 mailles serrées.",
+      "Rang 3 : Faites 1 maille en l'air, elle compte comme la première maille serrée, puis répétez *2 mailles en l'air, sautez 2 mailles, 1 maille serrée dans la maille suivante, 4 mailles en l'air, sautez 3 mailles, 1 maille serrée dans la maille suivante* jusqu'à la fin du rang.",
+      "Rang 4 : Faites 3 mailles en l'air, elles comptent comme la première bride, puis crochetez 3 brides dans chaque arceau de 2 mailles en l'air et 5 brides dans chaque arceau de 4 mailles en l'air du rang précédent.",
+    ].join("\n");
+    const document = interpret(source);
+    const fourthRow = document.rows[3];
+
+    expect(document.rows.map((row) => row.issues)).toEqual([[], [], [], []]);
+    expect(fourthRow.interpretation.at(-1)).toMatchObject({
+      repeatMode: "forEachTarget",
+      repeatCount: 6,
+    });
+
+    const graph = parsePattern(
+      document.rows.map((row) => row.cartomaillesText).join("\n")
+    );
+    const startChain = graph.stitches.filter(
+      (stitch) => stitch.round === 4 && stitch.role === "turningChain"
+    );
+    const targeted = graph.groups.filter(
+      (group) => group.round === 4 && group.role === "chainSpaceTarget"
+    );
+    expect(startChain).toHaveLength(3);
+    expect(startChain.every((stitch) => stitch.chainRepresents === "dc")).toBe(true);
+    expect(targeted.map((group) => group.stitches.length)).toEqual([3, 5, 3, 5, 3, 5]);
+
+    const thirdRoundSpaces = graph.stitches.filter(
+      (stitch) => stitch.round === 3 && stitch.role === "chainSpace"
+    );
+    const expectedParentRuns = [2, 4, 2, 4, 2, 4];
+    targeted.forEach((group, index) => {
+      const parentIds = new Set(group.stitches.flatMap((stitch) =>
+        graph.links.filter((link) => link.to === stitch.id).map((link) => link.from)
+      ));
+      expect(parentIds.size).toBe(expectedParentRuns[index]);
+      expect([...parentIds].every((id) =>
+        thirdRoundSpaces.some((stitch) => stitch.id === id)
+      )).toBe(true);
+    });
   });
 });

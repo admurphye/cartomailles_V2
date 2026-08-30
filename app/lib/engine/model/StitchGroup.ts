@@ -14,6 +14,8 @@ export interface StitchGroup {
   operation: InstructionOperation;
   role: InstructionRole;
   countsAsStitch: boolean;
+  chainCountsAsStitch?: boolean;
+  chainRepresents?: Stitch["type"];
 
   stitches: Stitch[];
 

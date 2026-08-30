@@ -39,7 +39,9 @@ export function buildPattern(instructions: Instruction[]): CrochetPattern {
       current.instructions
         .filter((instruction) => instruction.role === "turningChain")
         .forEach((instruction) => {
-          instruction.countsAsStitch = consumedByWorkedStitches < availableParents;
+          instruction.countsAsStitch = instruction.chainRepresents !== undefined ||
+            consumedByWorkedStitches < availableParents;
+          instruction.chainCountsAsStitch = instruction.countsAsStitch;
         });
     }
 
