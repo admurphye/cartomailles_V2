@@ -9,7 +9,7 @@ export type PreparedPattern = {
 };
 
 const NATURAL_PATTERN_MARKERS =
-  /\b(?:faire|faites|crocheter|crochetez|r[ée]aliser|r[ée]alisez|cr[ée]er|cr[ée]ez|former|formez|travailler|travaillez|dans\s+chaque|dans\s+chacune|cercle\s+magique)\b/i;
+  /\b(?:faire|faites|crocheter|crochetez|r[ée]aliser|r[ée]alisez|cr[ée]er|cr[ée]ez|former|formez|travailler|travaillez|dans\s+chaque|dans\s+chacune|dans\s+(?:un\s+)?mr|cercle\s+magique)\b/i;
 
 /**
  * Frontière entre le lecteur de français naturel et le moteur Cartomailles.

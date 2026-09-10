@@ -13,7 +13,7 @@ type Props = {
     y: number;
   };
 
-  setOffset: React.Dispatch<
+  
     React.SetStateAction<{
       x: number;
       y: number;
@@ -21,6 +21,7 @@ type Props = {
   >;
 
   tool: Tool;
+
 };
 
 const MIN_ZOOM = 0.2;

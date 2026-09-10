@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parsePattern } from "../engine/parser/parsePattern";
 import { applyFlatRowDirections } from "../engine/layout/flatRowDirection";
 import { layoutFlatGroups } from "../engine/layout/layoutFlatGroups";
+import { layoutCircularGroups } from "../engine/layout/layoutCircularGroups";
 import { detectWrittenPatternRows } from "./detectRows";
 import {
   interpretWrittenPatternDocument,
@@ -281,10 +282,13 @@ Tour 3 : Faites 3 mailles en l'air. Crochetez 1 bride dans la même maille, puis
   });
 
   it.each([
+    "Répétez *1 ms dans la maille suivante, 2 ms dans la maille suivante* 6 fois.",
+    "Répéter *1 ms dans la maille suivante, 2 ms dans la maille suivante* 6 fois.",
     "Crochetez *1 ms dans la maille suivante, 2 ms dans la maille suivante*, répétez 6 fois.",
     "*1 ms dans la maille suivante, 2 ms dans la maille suivante* répétez 6 fois",
     "*1 ms dans la maille suivante, 2 ms dans la maille suivante*, répéter 6 fois",
     "*1 ms dans la maille suivante, 2 ms dans la maille suivante* à répéter 6 fois",
+    "*1 ms dans la maille suivante, 2 ms dans la maille suivante* 6 fois",
     "(1 ms dans la maille suivante, 2 ms dans la maille suivante), répétez 6 fois",
   ])("protège un bloc avant de segmenter ses instructions : %s", (instruction) => {
     const document = interpret(`Tour 3 : ${instruction}`);
@@ -298,6 +302,80 @@ Tour 3 : Faites 3 mailles en l'air. Crochetez 1 bride dans la même maille, puis
     expect(graph.issues).toEqual([]);
     expect(graph.stitches.filter((stitch) => stitch.round === 3 && stitch.type === "sc"))
       .toHaveLength(18);
+  });
+
+  it("développe les répétitions des tours circulaires avant leur segmentation", () => {
+    const document = interpret([
+      "Tour 1 : Faites un cercle magique et crochetez 6 mailles serrées dans le cercle.",
+      "Tour 2 : Crochetez 2 mailles serrées dans chaque maille du tour précédent.",
+      "Tour 3 : Répétez *1 maille serrée dans la maille suivante, 2 mailles serrées dans la maille suivante* 6 fois.",
+      "Tour 4 : Répétez *1 maille serrée dans chacune des 2 mailles suivantes, 2 mailles serrées dans la maille suivante* 6 fois.",
+    ].join("\n"));
+
+    expect(document.rows.map((row) => row.issues)).toEqual([[], [], [], []]);
+    expect(document.rows.map((row) => row.cartomaillesText)).toEqual([
+      "R1 1 mr, 6 ms",
+      "R2 6 aug(ms)",
+      "R3 (1 ms, 1 aug(ms)) x6",
+      "R4 (2 ms, 1 aug(ms)) x6",
+    ]);
+
+    const graph = parsePattern(
+      document.rows.map((row) => row.cartomaillesText).join("\n")
+    );
+    expect(graph.issues).toEqual([]);
+    expect([1, 2, 3, 4].map((round) => graph.stitches.filter(
+      (stitch) => stitch.round === round && stitch.countsAsStitch
+    ).length)).toEqual([6, 12, 18, 24]);
+  });
+
+  it("protège une répétition française placée au milieu d'une séquence", () => {
+    const standalone = interpret(
+      "Tour 3 : répétez *2 mailles en l'air, sautez 2 mailles, 1 bride dans la maille suivante* 3 fois"
+    ).rows[0];
+    expect(standalone.issues).toEqual([]);
+    expect(standalone.cartomaillesText).toBe("R3 (2 ml, 2 skip, 1 br) x3");
+    expect(standalone.interpretation.filter((entry) => entry.kind !== "repeat"))
+      .toHaveLength(3);
+    expect(standalone.interpretation.find((entry) => entry.kind === "repeat"))
+      .toMatchObject({ repeatMode: "count", repeatCount: 3 });
+
+    const surrounded = interpret(
+      "Tour 3 : puis répétez *2 mailles en l'air, sautez 2 mailles, 1 bride dans la maille suivante* 3 fois, puis faites 2 mailles en l'air, sautez 2 mailles"
+    ).rows[0];
+    expect(surrounded.issues).toEqual([]);
+    expect(surrounded.cartomaillesText)
+      .toBe("R3 (2 ml, 2 skip, 1 br) x3, 2 ml, 2 skip");
+    expect(surrounded.interpretation.some((entry) =>
+      entry.kind === "unresolved" && entry.sourceText.includes("*")
+    ))
+      .toBe(false);
+  });
+
+  it("crée quatre arceaux puis les cible dans le patron de référence", () => {
+    const document = interpret([
+      "Tour 1 : Faites 12 brides dans un cercle magique.",
+      "Tour 2 : Faites 3 mailles en l'air, elles comptent comme la première bride, puis crochetez 1 bride dans chacune des 11 mailles suivantes.",
+      "Tour 3 : Faites 3 mailles en l'air, elles comptent comme la première bride, puis répétez *2 mailles en l'air, sautez 2 mailles, 1 bride dans la maille suivante* 3 fois, puis faites 2 mailles en l'air, sautez 2 mailles.",
+      "Tour 4 : Faites 3 mailles en l'air, elles comptent comme la première bride, puis crochetez 3 brides dans chaque arceau de 2 mailles en l'air du tour précédent.",
+    ].join("\n"));
+
+    expect(document.rows.map((row) => row.issues)).toEqual([[], [], [], []]);
+    expect(document.rows[2].cartomaillesText).toBe(
+      "R3 3 ml_as_dc, (2 ml, 2 skip, 1 br) x3, 2 ml, 2 skip"
+    );
+    expect(document.rows[3].cartomaillesText).toBe("R4 3 ml_as_dc, 4 arch_3_br_2");
+
+    const graph = parsePattern(
+      document.rows.map((row) => row.cartomaillesText).join("\n")
+    );
+    expect(graph.issues).toEqual([]);
+    expect(graph.stitches.filter(
+      (stitch) => stitch.round === 3 && stitch.role === "chainSpace"
+    )).toHaveLength(8);
+    expect(graph.groups.filter(
+      (group) => group.round === 4 && group.role === "chainSpaceTarget"
+    )).toHaveLength(4);
   });
 
   it.each([
@@ -338,6 +416,98 @@ Tour 3 : Faites 3 mailles en l'air. Crochetez 1 bride dans la même maille, puis
 
     expect(row.cartomaillesText).toBe(notation);
     expect(row.issues).toEqual([]);
+  });
+
+  it.each([
+    ["1 diminution de mailles serrées", "R3 1 dim(ms)"],
+    ["1 diminution de maille serrée", "R3 1 dim(ms)"],
+    ["une diminution de mailles serrées", "R3 1 dim(ms)"],
+    ["une diminution de maille serrée", "R3 1 dim(ms)"],
+    ["1 diminution de ms", "R3 1 dim(ms)"],
+    ["une diminution de ms", "R3 1 dim(ms)"],
+    ["1 dim de ms", "R3 1 dim(ms)"],
+    ["dim ms", "R3 1 dim(ms)"],
+    ["une diminution de brides", "R3 1 dim(br)"],
+    ["1 diminution de demi-brides", "R3 1 dim(db)"],
+    ["1 diminution de doubles brides", "R3 1 dim(dbr)"],
+  ])("traduit une diminution naturelle avec les alias partagés : %s", (source, notation) => {
+    const row = interpret(`Tour 3 : ${source}`).rows[0];
+
+    expect(row.cartomaillesText).toBe(notation);
+    expect(row.issues).toEqual([]);
+  });
+
+  it("interprète les diminutions naturelles dans le patron complet", () => {
+    const document = interpret([
+      "Tour 1 : Faites 24 mailles serrées dans un cercle magique.",
+      "Tour 2 : Crochetez 1 maille serrée dans chaque maille du tour précédent.",
+      "Tour 3 : Répétez *2 mailles serrées, 1 diminution de mailles serrées* 6 fois.",
+      "Tour 4 : Répétez *1 maille serrée, 1 diminution de mailles serrées* 6 fois.",
+    ].join("\n"));
+
+    expect(document.rows.map((row) => row.issues)).toEqual([[], [], [], []]);
+    expect(document.rows.map((row) => row.cartomaillesText)).toEqual([
+      "R1 1 mr, 24 ms",
+      "R2 24 ms",
+      "R3 (2 ms, 1 dim(ms)) x6",
+      "R4 (1 ms, 1 dim(ms)) x6",
+    ]);
+
+    const graph = parsePattern(
+      document.rows.map((row) => row.cartomaillesText).join("\n")
+    );
+    expect(graph.issues).toEqual([]);
+    expect([1, 2, 3, 4].map((round) => graph.stitches.filter(
+      (stitch) => stitch.round === round && stitch.countsAsStitch
+    ).length)).toEqual([24, 24, 18, 12]);
+
+    const decreases = graph.groups.filter((group) => group.operation === "decrease");
+    expect(decreases).toHaveLength(12);
+    expect(decreases.every((group) =>
+      graph.links.filter((link) => link.to === group.stitches[0]?.id).length === 2
+    )).toBe(true);
+    expect(layoutCircularGroups(graph)).toHaveLength(graph.stitches.length);
+    expect(layoutFlatGroups(applyFlatRowDirections(graph))).toHaveLength(graph.stitches.length);
+  });
+
+  it("conserve les types et le parent commun d'une coquille mixte répétée", () => {
+    const document = interpret([
+      "Tour 1 : Faites 12 mailles serrées dans un cercle magique.",
+      "Tour 2 : Crochetez 1 maille serrée dans chaque maille du tour précédent.",
+      "Tour 3 : Répétez *dans la maille suivante, crochetez 1 demi-bride, 1 bride, 1 double bride, 1 bride et 1 demi-bride dans la même maille, puis 1 maille serrée dans la maille suivante* 6 fois.",
+    ].join("\n"));
+
+    expect(document.rows.map((row) => row.issues)).toEqual([[], [], []]);
+    expect(document.rows[2].cartomaillesText).toBe(
+      "R3 (1 db, 1 br_same_parent, 1 dbr_same_parent, 1 br_same_parent, 1 db_same_parent, 1 ms) x6"
+    );
+
+    const graph = parsePattern(
+      document.rows.map((row) => row.cartomaillesText).join("\n")
+    );
+    const thirdRound = graph.stitches.filter((stitch) => stitch.round === 3);
+    expect(graph.issues).toEqual([]);
+    expect(thirdRound).toHaveLength(36);
+    expect(thirdRound.map((stitch) => stitch.type).slice(0, 6)).toEqual([
+      "hdc", "dc", "dtr", "dc", "hdc", "sc",
+    ]);
+
+    for (let index = 0; index < thirdRound.length; index += 6) {
+      const shell = thirdRound.slice(index, index + 5);
+      const shellParents = shell.map((stitch) =>
+        graph.links.find((link) => link.to === stitch.id)?.from
+      );
+      const followingParent = graph.links.find(
+        (link) => link.to === thirdRound[index + 5].id
+      )?.from;
+      expect(new Set(shellParents).size).toBe(1);
+      expect(followingParent).not.toBe(shellParents[0]);
+    }
+
+    const consumedParents = new Set(thirdRound.flatMap((stitch) =>
+      graph.links.filter((link) => link.to === stitch.id).map((link) => link.from)
+    ));
+    expect(consumedParents.size).toBe(12);
   });
 
   it.each([
@@ -606,5 +776,38 @@ Tour 3 : Faites 3 mailles en l'air. Crochetez 1 bride dans la même maille, puis
         thirdRoundSpaces.some((stitch) => stitch.id === id)
       )).toBe(true);
     });
+  });
+
+  it("filtre indépendamment les arceaux par nombre de ML et conserve leur ordre", () => {
+    const row = interpretWrittenPatternRow(
+      detectWrittenPatternRows(
+        "Rang 4 : crochetez 3 brides dans chaque arceau de 2 mailles en l'air et 1 maille serrée, 1 demi-bride, 3 brides, 1 demi-bride, 1 maille serrée dans chaque arceau de 5 mailles en l'air du rang précédent."
+      ).document.rows[0],
+      undefined,
+      [2, 5, 2, 5]
+    );
+
+    expect(row.issues).toEqual([]);
+    expect(row.interpretation.at(-1)).toMatchObject({
+      repeatMode: "forEachTarget",
+      repeatCount: 4,
+    });
+    expect(row.cartomaillesText).toBe(
+      "R4 1 archat_0_3_br_2, " +
+      "1 archat_1_1_ms_5, 1 archat_1_1_db_5, 1 archat_1_3_br_5, 1 archat_1_1_db_5, 1 archat_1_1_ms_5, " +
+      "1 archat_2_3_br_2, " +
+      "1 archat_3_1_ms_5, 1 archat_3_1_db_5, 1 archat_3_3_br_5, 1 archat_3_1_db_5, 1 archat_3_1_ms_5"
+    );
+
+    const graph = parsePattern(row.cartomaillesText);
+    const targeted = graph.stitches.filter(
+      (stitch) => stitch.round === 4 && stitch.role === "chainSpaceTarget"
+    );
+    expect(targeted.map((stitch) => stitch.type)).toEqual([
+      "dc", "dc", "dc",
+      "sc", "hdc", "dc", "dc", "dc", "hdc", "sc",
+      "dc", "dc", "dc",
+      "sc", "hdc", "dc", "dc", "dc", "hdc", "sc",
+    ]);
   });
 });

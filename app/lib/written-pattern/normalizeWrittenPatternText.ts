@@ -15,6 +15,7 @@ export function normalizeWrittenPatternText(text: string): string {
   );
 
   return text
+    .replace(/\bdu\s+tour\s+pr.c.dent\b/gi, "du rang precedent")
     .replace(
       /\b(\d+|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)\s+(?:ml|mailles?\s+en\s+l['’]air)\s*,?\s*(?:elle|elles)\s+compte(?:nt)?\s+comme\s+(?:(?:la\s+)?premi[èe]re|une)\s+(maille\s+serr[ée]e|demi[-\s]?bride|double\s+bride|bride)\s*,?/gi,
       (_, count: string, represented: string) => {

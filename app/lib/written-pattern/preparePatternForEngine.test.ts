@@ -3,6 +3,28 @@ import { parsePattern } from "../engine/parser/parsePattern";
 import { preparePatternForEngine } from "./preparePatternForEngine";
 
 describe("préparation d'un patron avant le moteur", () => {
+  it("utilise le pipeline commun pour la notation courte d'un patron circulaire", () => {
+    const source = `Tour 1 : 12 br dans MR
+Tour 2 : 2 br dans chaque maille
+Tour 3 : *1 br dans la maille suivante, 2 br dans la maille suivante* x12
+Tour 4 : *1 br dans chacune des 2 mailles suivantes, 2 br dans la maille suivante* x12`;
+    const prepared = preparePatternForEngine(source);
+    const graph = parsePattern(prepared.notation);
+
+    expect(prepared.interpreted).toBe(true);
+    expect(prepared.issues).toEqual([]);
+    expect(prepared.notation).toBe(
+      "R1 1 mr, 12 br\n" +
+      "R2 12 aug(br)\n" +
+      "R3 (1 br, 1 aug(br)) x12\n" +
+      "R4 (2 br, 1 aug(br)) x12"
+    );
+    expect(graph.issues).toEqual([]);
+    expect([1, 2, 3, 4].map((round) => graph.stitches.filter(
+      (stitch) => stitch.round === round && stitch.countsAsStitch
+    ).length)).toEqual([12, 24, 36, 48]);
+  });
+
   it("interprète le français avant de valider la notation Cartomailles", () => {
     const source = `Tour 1 : Faire un cercle magique et crocheter 6 ms dans le cercle.
 Tour 2 : Crochetez 2 ms dans chaque maille du tour précédent.`;

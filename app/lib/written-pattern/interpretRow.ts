@@ -146,6 +146,20 @@ function interpretSegment(
   }
 
   for (const stitch of STITCHES) {
+    const naturalDecrease = normalized.match(new RegExp(
+      `^(?:(?:1|un|une)\\s+)?(?:dim|diminution)(?:\\s+de)?\\s+${stitch.pattern}$`,
+      "i"
+    ));
+    if (naturalDecrease) {
+      return item(
+        id,
+        "stitch",
+        sourceText,
+        `Diminution de ${stitch.plural}`,
+        `1 dim(${stitch.code})`
+      );
+    }
+
     const chainSpaceTarget = normalized.match(new RegExp(
       `^${NUMBER}\\s+${stitch.pattern}\\s+(?:dans|sous)\\s+(chaque|l['’]arceau\\s+suivant|le\\s+prochain\\s+arceau)\\s*(?:arceau|espace)?(?:\\s+de\\s+${NUMBER}\\s+(?:ml|mailles?\\s+en\\s+l['’]air))?(?:\\s+du\\s+rang\\s+pr[ée]c[ée]dent)?$`,
       "i"
@@ -240,9 +254,11 @@ function interpretSegment(
     ));
     if (sameParent) {
       const count = numberValue(sameParent[1]);
-      const notation = count === 2
-        ? `1 aug(${stitch.code})`
-        : `1 same_${count}_${stitch.code}`;
+      const notation = count === 1
+        ? `1 ${stitch.code}_same_parent`
+        : count === 2
+          ? `1 aug(${stitch.code})`
+          : `1 same_${count}_${stitch.code}`;
       return item(
         id,
         "stitch",
@@ -324,20 +340,39 @@ function extractRepeat(sourceText: string): {
 function extractProtectedRepeat(sourceText: string): {
   prefix: string;
   content: string;
+  suffix: string;
   repeatSource: string;
   repeatMode: "count" | "untilEnd";
   repeatCount?: number;
 } | null {
   const match = sourceText.match(
-    /^\s*(?:(?:crocheter|crochetez)\s+)?(?:\*([^*]+)\*|\(([^()]*)\))\s*,?\s*(?:[àa]\s+)?(r[ée]p[ée](?:ter|tez)\s+(\d+|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)\s+fois)\s*\.?\s*$/i
+    /^\s*(.*?)(?:,?\s*(?:puis\s+)?)?(?:(?:crocheter|crochetez|r[ée]p[ée](?:ter|tez))\s+)?\*([^*]+)\*\s*,?\s*(?:[àa]\s+)?(?:(?:r[ée]p[ée](?:ter|tez)\s+)?(\d+|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)\s+fois|x\s*(\d+))([\s\S]*?)\s*\.?\s*$/i
   );
   if (match) {
     return {
-      prefix: "",
-      content: (match[1] ?? match[2]).trim(),
-      repeatSource: match[3],
+      prefix: match[1].replace(/[,;\s]+$/, "").trim(),
+      content: match[2].trim(),
+      suffix: match[5]
+        .replace(/^\s*[,;]?\s*(?:puis\s+)?/i, "")
+        .replace(/\.\s*$/, "")
+        .trim(),
+      repeatSource: `*${match[2].trim()}* ${match[3] ?? `x${match[4]}`}`,
       repeatMode: "count",
-      repeatCount: numberValue(match[4]),
+      repeatCount: numberValue(match[3] ?? match[4]),
+    };
+  }
+
+  const parenthesized = sourceText.match(
+    /^\s*(?:(?:crocheter|crochetez)\s+)?\(([^()]*)\)\s*,?\s*(?:[àa]\s+)?(?:r[ée]p[ée](?:ter|tez)\s+)?(\d+|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)\s+fois\s*\.?\s*$/i
+  );
+  if (parenthesized) {
+    return {
+      prefix: "",
+      content: parenthesized[1].trim(),
+      suffix: "",
+      repeatSource: parenthesized[0].trim(),
+      repeatMode: "count",
+      repeatCount: numberValue(parenthesized[2]),
     };
   }
 
@@ -349,6 +384,7 @@ function extractProtectedRepeat(sourceText: string): {
   return {
     prefix: untilEnd[1].replace(/[,;\s]+$/, "").trim(),
     content: untilEnd[2].trim(),
+    suffix: "",
     repeatSource: sourceText.slice(untilEnd[1].length).trim(),
     repeatMode: "untilEnd",
   };
@@ -389,8 +425,7 @@ function extractForEachChainSpace(sourceText: string): {
 
 type ChainSpaceTargetRule = {
   chainCount: number;
-  stitch: StitchVocabulary;
-  stitchCount: number;
+  content: string;
   source: string;
 };
 
@@ -399,13 +434,15 @@ function extractChainSpaceTargetRules(sourceText: string): {
   rules: ChainSpaceTargetRule[];
   source: string;
 } | null {
-  const number = "(\\d+|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)";
+  const number = "(?:\\d+|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix)";
   const stitchPattern = STITCHES
     .filter(({ code }) => !["ml", "mc"].includes(code))
     .map(({ pattern }) => pattern)
     .join("|");
+  const stitchItem = `${number}\\s+(?:${stitchPattern})`;
+  const stitchList = `${stitchItem}(?:\\s*(?:,|\\bet\\b)\\s*${stitchItem})*`;
   const rulePattern = new RegExp(
-    `${number}\\s+(${stitchPattern})\\s+dans\\s+chaque\\s+(?:arceau|espace)\\s+de\\s+${number}\\s+(?:ml|mailles?\\s+en\\s+l['’]air)`,
+    `(?<content>${stitchList})\\s+dans\\s+chaque\\s+(?:arceau|espace)\\s+de\\s+(?<chainCount>${number})\\s+(?:ml|mailles?\\s+en\\s+l['’]air)`,
     "gi"
   );
   const matches = [...sourceText.matchAll(rulePattern)];
@@ -424,26 +461,18 @@ function extractChainSpaceTargetRules(sourceText: string): {
     return null;
   }
 
-  const rules = matches.map((match): ChainSpaceTargetRule | null => {
-    const stitch = STITCHES.find((candidate) =>
-      new RegExp(`^(?:${candidate.pattern})$`, "i").test(match[2])
-    );
-    if (!stitch) return null;
-    return {
-      stitchCount: numberValue(match[1]),
-      stitch,
-      chainCount: numberValue(match[3]),
-      source: match[0],
-    };
-  });
-  if (rules.some((rule) => rule === null)) return null;
+  const rules = matches.map((match): ChainSpaceTargetRule => ({
+    content: match.groups!.content,
+    chainCount: numberValue(match.groups!.chainCount),
+    source: match[0],
+  }));
 
   return {
     prefix: sourceText.slice(0, firstIndex)
       .replace(/(?:,?\s*(?:puis\s+)?)?(?:crocheter|crochetez)?\s*$/i, "")
       .replace(/[,;\s]+$/, "")
       .trim(),
-    rules: rules as ChainSpaceTargetRule[],
+    rules,
     source: sourceText.slice(firstIndex).trim(),
   };
 }
@@ -463,6 +492,37 @@ function stitchForNotation(notation?: string): StitchVocabulary | undefined {
     `(?:^|[_(\\s])${stitch.code}(?:$|[)\\s])`,
     "i"
   ).test(notation));
+}
+
+/**
+ * DÃ©veloppe une liste de types diffÃ©rents annoncÃ©e comme travaillÃ©e dans une
+ * mÃªme maille. La premiÃ¨re maille avance sur le parent suivant ; les suivantes
+ * rÃ©utilisent ce parent via la syntaxe naturelle dÃ©jÃ  comprise par
+ * interpretSegment.
+ */
+function expandMixedSameParentWording(content: string): string {
+  const match = content.match(
+    /^\s*dans\s+la\s+maille\s+suivante\s*,?\s*(?:crocheter|crochetez|faire|faites)?\s*(.+?)\s+dans\s+la\s+m.me\s+maille\s*,?\s*(?:puis\s+)?(.+)$/i
+  );
+  if (!match) return content;
+
+  const shell = match[1]
+    .split(/\s*(?:,|\bet\b)\s*/i)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+  if (shell.length < 2) return content;
+
+  const stitchClause = new RegExp(
+    `^${NUMBER}\\s+(?:${STITCHES.map(({ pattern }) => pattern).join("|")})$`,
+    "i"
+  );
+  if (!shell.every((segment) => stitchClause.test(segment))) return content;
+
+  return [
+    shell[0],
+    ...shell.slice(1).map((segment) => `${segment} dans la meme maille`),
+    match[2].trim(),
+  ].join(", ");
 }
 
 export function interpretWrittenPatternRow(
@@ -499,19 +559,32 @@ export function interpretWrittenPatternRow(
       );
       if (!rule) return;
       matchedTargetCount++;
-      const interpreted = interpretSegment(
-        `${rule.stitchCount} ${rule.stitch.code}`,
-        `${row.id}-target-${archIndex + 1}`,
-        false,
-        undefined,
-        previousChainSpaces
-      );
-      interpreted.sourceText = rule.source;
-      interpreted.description += ` dans l'arceau de ${chainCount} mailles en l'air`;
-      interpreted.cartomaillesText =
-        `1 archat_${archIndex}_${rule.stitchCount}_${rule.stitch.code}_${chainCount}`;
-      groupInstructions.push(interpreted);
-      groupFragments.push(interpreted.cartomaillesText);
+      const segments = rule.content
+        .split(/\s*(?:[,;]+|\bet\b)\s*/i)
+        .map((segment) => segment.trim())
+        .filter(Boolean);
+      segments.forEach((segment, segmentIndex) => {
+        const interpreted = interpretSegment(
+          segment,
+          `${row.id}-target-${archIndex + 1}-${segmentIndex + 1}`,
+          false,
+          undefined,
+          previousChainSpaces
+        );
+        interpreted.sourceText = rule.source;
+        interpreted.description += ` dans l'arceau de ${chainCount} mailles en l'air`;
+        const simpleStitch = interpreted.cartomaillesText?.match(
+          /^(\d+)\s+(ms|db|br|dbr|tb|tbr)$/i
+        );
+        if (simpleStitch) {
+          interpreted.cartomaillesText =
+            `1 archat_${archIndex}_${simpleStitch[1]}_${simpleStitch[2].toLowerCase()}_${chainCount}`;
+        }
+        groupInstructions.push(interpreted);
+        if (interpreted.cartomaillesText) {
+          groupFragments.push(interpreted.cartomaillesText);
+        }
+      });
     });
 
     const targetIssues: WrittenPatternIssue[] = targetRules.rules.flatMap((rule) =>
@@ -643,7 +716,7 @@ export function interpretWrittenPatternRow(
       .split(/[,;]+/)
       .map((segment) => segment.trim())
       .filter(Boolean);
-    const segments = protectedRepeat.content
+    const segments = expandMixedSameParentWording(protectedRepeat.content)
       .split(/[,;]+/)
       .map((segment) => segment.trim())
       .filter(Boolean);
@@ -671,13 +744,31 @@ export function interpretWrittenPatternRow(
         inheritedStitch;
       return interpreted;
     });
+    const suffixSegments = protectedRepeat.suffix
+      .split(/[,;]+/)
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+    const suffixInstructions = suffixSegments.map((segment, index) => {
+      const interpreted = interpretSegment(
+        segment,
+        `${row.id}-suffix-${index + 1}`,
+        false,
+        inheritedStitch,
+        previousChainSpaces
+      );
+      inheritedStitch = stitchForNotation(interpreted.cartomaillesText) ?? inheritedStitch;
+      return interpreted;
+    });
     const fragments = instructions
       .map((entry) => entry.cartomaillesText)
       .filter((value): value is string => Boolean(value));
     const prefixFragments = prefixInstructions
       .map((entry) => entry.cartomaillesText)
       .filter((value): value is string => Boolean(value));
-    const repeatIssues = [...prefixInstructions, ...instructions]
+    const suffixFragments = suffixInstructions
+      .map((entry) => entry.cartomaillesText)
+      .filter((value): value is string => Boolean(value));
+    const repeatIssues = [...prefixInstructions, ...instructions, ...suffixInstructions]
       .flatMap((entry) => entry.issues);
     let calculatedRepeatCount = protectedRepeat.repeatCount;
     const calculationIssues: WrittenPatternIssue[] = [];
@@ -743,6 +834,7 @@ export function interpretWrittenPatternRow(
       ...prefixInstructions,
       ...instructions,
       repeatItem,
+      ...suffixInstructions,
     ];
     const issues = [
       ...row.issues,
@@ -753,8 +845,8 @@ export function interpretWrittenPatternRow(
     return {
       ...row,
       interpretation,
-      cartomaillesText: repeatNotation
-        ? `R${row.number} ${[...prefixFragments, repeatNotation].join(", ")}`
+      cartomaillesText: repeatNotation && suffixFragments.length === suffixInstructions.length
+        ? `R${row.number} ${[...prefixFragments, repeatNotation, ...suffixFragments].join(", ")}`
         : "",
       issues,
       review: issues.some((issue) => issue.severity === "error")
@@ -832,6 +924,37 @@ function interpretEditorialRound(
 ): { row: WrittenPatternRow; stitchCount: number } | null {
   const source = normalizeWrittenPatternText(row.sourceText).toLowerCase();
   const closure = /fermez[\s\S]*maille\s+coul[ée]e/.test(source) ? ", 1 mc" : "";
+  const shortMagicRing = STITCHES
+    .filter(({ code }) => !["ml", "mc"].includes(code))
+    .map((stitch) => ({
+      stitch,
+      match: source.match(new RegExp(
+        `^\\s*${NUMBER}\\s+${stitch.pattern}\\s+dans\\s+(?:un\\s+)?(?:mr|cercle\\s+magique)\\s*\\.?\\s*$`,
+        "i"
+      )),
+    }))
+    .find(({ match }) => match !== null);
+
+  if (shortMagicRing?.match) {
+    const count = numberValue(shortMagicRing.match[1]);
+    const notation = `R${row.number} 1 mr, ${count} ${shortMagicRing.stitch.code}`;
+    return {
+      stitchCount: count,
+      row: {
+        ...row,
+        cartomaillesText: notation,
+        interpretation: [item(
+          `${row.id}-magic-ring`,
+          "stitch",
+          row.sourceText,
+          `${count} ${shortMagicRing.stitch.plural} dans un cercle magique`,
+          notation.replace(/^R\d+\s+/, "")
+        )],
+        issues: [],
+        review: { status: "pending" },
+      },
+    };
+  }
   const magicRing = source.match(new RegExp(
     `cercle\\s+magique[\\s\\S]*?${NUMBER}\\s+(?:ms|mailles?\\s+serr[ée]es?)`,
     "i"
