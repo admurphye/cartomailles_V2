@@ -13,7 +13,7 @@ type Props = {
     y: number;
   };
 
-  
+  setOffset: React.Dispatch<
     React.SetStateAction<{
       x: number;
       y: number;
