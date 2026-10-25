@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // All access goes through trusted Admin SDK code and IAM, not browser SDKs.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   cert: vi.fn(),
   initializeApp: vi.fn(),
   verifyIdToken: vi.fn(),
+  getFirestore: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -16,8 +17,9 @@ vi.mock("firebase-admin/app", () => ({
 vi.mock("firebase-admin/auth", () => ({
   getAuth: () => ({ verifyIdToken: mocks.verifyIdToken }),
 }));
+vi.mock("firebase-admin/firestore", () => ({ getFirestore: mocks.getFirestore }));
 
-import { FirebaseIdTokenError, getFirebaseAdminApp, verifyFirebaseIdToken } from "./firebaseAdmin";
+import { FirebaseIdTokenError, getFirebaseAdminApp, getFirebaseAdminFirestore, verifyFirebaseIdToken } from "./firebaseAdmin";
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -37,6 +39,14 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe("Firebase Admin configuration", () => {
+  it("gets the default Firestore client using the reusable Admin app", () => {
+    const client = {};
+    mocks.getFirestore.mockReturnValue(client);
+    expect(getFirebaseAdminFirestore()).toBe(client);
+    expect(getFirebaseAdminFirestore()).toBe(client);
+    expect(mocks.getFirestore).toHaveBeenCalledWith(getFirebaseAdminApp());
+    expect(mocks.initializeApp).toHaveBeenCalledTimes(1);
+  });
   it.each(["FIREBASE_ADMIN_PROJECT_ID", "FIREBASE_ADMIN_CLIENT_EMAIL", "FIREBASE_ADMIN_PRIVATE_KEY"])(
     "rejects missing %s before initializing", (name) => {
       vi.stubEnv(name, "   ");

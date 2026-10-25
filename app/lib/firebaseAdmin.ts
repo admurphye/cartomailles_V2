@@ -2,8 +2,14 @@ import "server-only";
 
 import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
+import { getFirestore, type Firestore } from "firebase-admin/firestore";
 
 const APP_NAME = "cartomailles-server";
+
+/** Reuses the Admin SDK client for the (default) database. No document I/O. */
+export function getFirebaseAdminFirestore(): Firestore {
+  return getFirestore(getFirebaseAdminApp());
+}
 
 // Lazy initialization: importing this module does not require deployment secrets.
 export function getFirebaseAdminApp(): App {

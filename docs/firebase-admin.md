@@ -2,7 +2,9 @@
 
 Le module `app/lib/firebaseAdmin.ts` est réservé aux modules serveur Next.js
 (`server-only`) et au runtime Node.js, pas Edge. Il n'est pas encore branché
-aux pages ou au webhook. Il ne crée aucun compte et n'initialise pas Firestore.
+aux pages ou au webhook. Il ne crée aucun compte. `getFirebaseAdminFirestore()`
+donne accès à la base `(default)` uniquement lorsqu'il est appelé, sans lecture
+ni écriture de document à l'initialisation. Voir `docs/firestore-server.md`.
 
 ## Configuration Vercel
 
@@ -28,8 +30,9 @@ Après un changement de configuration, redémarrer le serveur.
 
 Le compte de service doit avoir les permissions nécessaires à Firebase Auth,
 notamment la lecture des utilisateurs pour vérifier révocation et désactivation.
-Ne pas lui attribuer Owner/Editor par défaut. Aucun rôle Firestore n'est requis
-par ce module. `FIREBASE_AUTH_EMULATOR_HOST` est refusé pour éviter une
+Ne pas lui attribuer Owner/Editor par défaut. L'utilisation des fonctions Firestore
+nécessitera aussi les permissions de données décrites dans `firestore-server.md`.
+`FIREBASE_AUTH_EMULATOR_HOST` est refusé pour éviter une
 vérification accidentelle de jetons non signés via l'émulateur.
 
 ## Utilisation future
