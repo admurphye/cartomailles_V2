@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  apps: [] as { name: string }[],
+  apps: [] as { name: string; options: { projectId?: string } }[],
   cert: vi.fn(),
   initializeApp: vi.fn(),
   verifyIdToken: vi.fn(),
@@ -19,18 +19,20 @@ vi.mock("firebase-admin/auth", () => ({
 }));
 vi.mock("firebase-admin/firestore", () => ({ getFirestore: mocks.getFirestore }));
 
-import { FirebaseIdTokenError, getFirebaseAdminApp, getFirebaseAdminFirestore, verifyFirebaseIdToken } from "./firebaseAdmin";
+import { FirebaseAuthServiceError, FirebaseIdTokenError, getFirebaseAdminApp, getFirebaseAdminFirestore, verifyFirebaseIdToken } from "./firebaseAdmin";
 
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.apps.length = 0;
   vi.stubEnv("FIREBASE_ADMIN_PROJECT_ID", "test-project");
+  vi.stubEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID", "test-project");
+  vi.stubEnv("FIRESTORE_EMULATOR_HOST", "");
   vi.stubEnv("FIREBASE_ADMIN_CLIENT_EMAIL", "admin@example.invalid");
   vi.stubEnv("FIREBASE_ADMIN_PRIVATE_KEY", "fake-key\\nsecond-line");
   vi.stubEnv("FIREBASE_AUTH_EMULATOR_HOST", "");
   mocks.cert.mockReturnValue("mock-credential");
   mocks.initializeApp.mockImplementation((_options, name: string) => {
-    const app = { name };
+    const app = { name, options: { projectId: "test-project" } };
     mocks.apps.push(app);
     return app;
   });
@@ -65,7 +67,7 @@ describe("Firebase Admin configuration", () => {
   });
 
   it("reuses the named app after module reload and ignores unrelated apps", async () => {
-    mocks.apps.push({ name: "unrelated" });
+    mocks.apps.push({ name: "unrelated", options: {} });
     const first = getFirebaseAdminApp();
     vi.resetModules();
     const reloaded = await import("./firebaseAdmin");
@@ -82,6 +84,25 @@ describe("Firebase Admin configuration", () => {
     getFirebaseAdminApp();
     vi.stubEnv("FIREBASE_AUTH_EMULATOR_HOST", "localhost:9099");
     expect(getFirebaseAdminApp).toThrow("emulator is not supported");
+  });
+
+  it.each(["", "other-project"])("rejects public project configuration %s even with a cached app", (project) => {
+    getFirebaseAdminApp();
+    vi.stubEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID", project);
+    expect(getFirebaseAdminApp).toThrow("matching server and public project IDs");
+  });
+
+  it("rejects a cached app initialized for a different project", () => {
+    mocks.apps.push({ name: "cartomailles-server", options: { projectId: "other-project" } });
+    expect(getFirebaseAdminApp).toThrow("app project does not match");
+  });
+
+  it.each(["NODE_ENV", "VERCEL_ENV"])("rejects Firestore emulator when %s is production", (name) => {
+    getFirebaseAdminApp();
+    vi.stubEnv(name, "production");
+    vi.stubEnv("FIRESTORE_EMULATOR_HOST", "localhost:8080");
+    expect(getFirebaseAdminFirestore).toThrow("Firestore emulator is not supported in production");
+    expect(mocks.getFirestore).not.toHaveBeenCalled();
   });
 });
 
@@ -113,5 +134,11 @@ describe("Firebase ID token verification", () => {
     vi.stubEnv("FIREBASE_ADMIN_PROJECT_ID", "");
     await expect(verifyFirebaseIdToken("test-token")).rejects.toThrow("Firebase Admin requires");
     expect(mocks.verifyIdToken).not.toHaveBeenCalled();
+  });
+
+  it("distinguishes authentication outages from invalid tokens without leaking SDK details", async () => {
+    mocks.verifyIdToken.mockRejectedValue(Object.assign(new Error("sensitive SDK detail"), { code: "auth/internal-error" }));
+    await expect(verifyFirebaseIdToken("test-token")).rejects.toBeInstanceOf(FirebaseAuthServiceError);
+    await expect(verifyFirebaseIdToken("test-token")).rejects.toThrow("Firebase authentication verification unavailable.");
   });
 });

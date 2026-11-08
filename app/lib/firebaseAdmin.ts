@@ -8,6 +8,10 @@ const APP_NAME = "cartomailles-server";
 
 /** Reuses the Admin SDK client for the (default) database. No document I/O. */
 export function getFirebaseAdminFirestore(): Firestore {
+  if (process.env.FIRESTORE_EMULATOR_HOST &&
+      (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production")) {
+    throw new Error("Firestore emulator is not supported in production.");
+  }
   return getFirestore(getFirebaseAdminApp());
 }
 
@@ -17,10 +21,19 @@ export function getFirebaseAdminApp(): App {
     throw new Error("Firebase Admin authentication emulator is not supported here.");
   }
 
-  const existing = getApps().find((app) => app.name === APP_NAME);
-  if (existing) return existing;
-
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID?.trim();
+  const publicProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim();
+  if (!projectId || !publicProjectId || projectId !== publicProjectId) {
+    throw new Error("Firebase Admin requires matching server and public project IDs.");
+  }
+  const existing = getApps().find((app) => app.name === APP_NAME);
+  if (existing) {
+    if (existing.options.projectId !== projectId) {
+      throw new Error("Firebase Admin app project does not match configuration.");
+    }
+    return existing;
+  }
+
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL?.trim();
   const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n").trim();
 
@@ -48,6 +61,13 @@ export class FirebaseIdTokenError extends Error {
   }
 }
 
+export class FirebaseAuthServiceError extends Error {
+  constructor() {
+    super("Firebase authentication verification unavailable.");
+    this.name = "FirebaseAuthServiceError";
+  }
+}
+
 /** Accepts the raw ID token, not an Authorization header. No subscription check. */
 export async function verifyFirebaseIdToken(idToken: string): Promise<string> {
   if (typeof idToken !== "string" || !idToken.trim()) {
@@ -61,8 +81,15 @@ export async function verifyFirebaseIdToken(idToken: string): Promise<string> {
     const decoded = await auth.verifyIdToken(idToken, true);
     if (!decoded.uid) throw new FirebaseIdTokenError();
     return decoded.uid;
-  } catch {
+  } catch (error) {
     // Fail closed without returning SDK details or the submitted token.
-    throw new FirebaseIdTokenError();
+    const code = error && typeof error === "object" && "code" in error ? error.code : null;
+    if (error instanceof FirebaseIdTokenError || [
+      "auth/argument-error", "auth/id-token-expired", "auth/id-token-revoked",
+      "auth/user-disabled", "auth/user-not-found", "auth/invalid-id-token",
+    ].includes(code as string)) {
+      throw new FirebaseIdTokenError();
+    }
+    throw new FirebaseAuthServiceError();
   }
 }
