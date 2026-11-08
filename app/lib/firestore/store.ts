@@ -32,13 +32,20 @@ const fields: { [K in CollectionName]: { [P in keyof FirestoreRecords[K]]: Valid
     orderId: id, uid: nullable(id), sessionId: nullable(id), customerId: nullable(id), subscriptionId: nullable(id),
     status: oneOf("pending", "paid", "claimed", "expired", "failed"), expiresAt: date, paidAt: nullable(date),
   },
+  checkoutAccounts: {
+    uid: id, customerId: nullable(id), customerOperationId: id, currentOrderId: id, priceId: id,
+    appUrl: (v) => {
+      if (typeof v !== "string") return false;
+      try { const url = new URL(v); return url.protocol === "https:" && url.origin === v; } catch { return false; }
+    },
+  },
 };
 const identity: Record<CollectionName, string> = {
   users: "uid", stripeCustomers: "customerId", subscriptions: "subscriptionId",
-  entitlements: "uid", stripeEvents: "eventId", checkoutOrders: "orderId",
+  entitlements: "uid", stripeEvents: "eventId", checkoutOrders: "orderId", checkoutAccounts: "uid",
 };
 
-function validate(collection: CollectionName, documentId: string, data: unknown): asserts data is Record<string, unknown> {
+export function validateFirestoreRecord(collection: CollectionName, documentId: string, data: unknown): asserts data is Record<string, unknown> {
   if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Invalid Firestore record.");
   const values = data as Record<string, unknown>;
   const schema = fields[collection];
@@ -61,11 +68,11 @@ function validate(collection: CollectionName, documentId: string, data: unknown)
   }
 }
 
-function readStored<K extends CollectionName>(collection: K, documentId: string, environment: StripeEnvironment, raw: unknown): StoredRecord<K> {
+export function readStoredFirestoreRecord<K extends CollectionName>(collection: K, documentId: string, environment: StripeEnvironment, raw: unknown): StoredRecord<K> {
   if (!raw || typeof raw !== "object") throw new Error("Invalid stored Firestore record.");
   const { environment: storedEnvironment, createdAt, updatedAt, ...data } = raw as Record<string, unknown>;
   if (storedEnvironment !== environment || !date(createdAt) || !date(updatedAt)) throw new Error("Invalid Firestore metadata.");
-  validate(collection, documentId, data);
+  validateFirestoreRecord(collection, documentId, data);
   return raw as StoredRecord<K>;
 }
 
@@ -81,13 +88,13 @@ export function createServerFirestoreStore(environment: StripeEnvironment) {
   return {
     async read<K extends CollectionName>(collection: K, documentId: string): Promise<StoredRecord<K> | null> {
       const snapshot = await reference(collection, documentId).get();
-      return snapshot.exists ? readStored(collection, documentId, environment, snapshot.data()) : null;
+      return snapshot.exists ? readStoredFirestoreRecord(collection, documentId, environment, snapshot.data()) : null;
     },
 
     /** Create-only: existing IDs fail rather than overwrite ownership or duplicate an event. */
     async create<K extends CollectionName>(collection: K, documentId: string, data: FirestoreRecords[K]): Promise<void> {
       const ref = reference(collection, documentId);
-      validate(collection, documentId, data);
+      validateFirestoreRecord(collection, documentId, data);
       if (collection === "entitlements" && "status" in data && data.status === "active") throw new Error("Paid access activation is not implemented.");
       await ref.create({ ...data, environment, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
     },
@@ -95,13 +102,13 @@ export function createServerFirestoreStore(environment: StripeEnvironment) {
     /** Full replacement with optimistic concurrency; callers must first read the record. */
     async replace<K extends CollectionName>(collection: K, documentId: string, data: FirestoreRecords[K], expectedUpdatedAt: Timestamp): Promise<void> {
       const ref = reference(collection, documentId);
-      validate(collection, documentId, data);
+      validateFirestoreRecord(collection, documentId, data);
       if (!date(expectedUpdatedAt)) throw new Error("Expected update timestamp required.");
       if (collection === "entitlements" && "status" in data && data.status === "active") throw new Error("Paid access activation is not implemented.");
       await getFirebaseAdminFirestore().runTransaction(async (transaction) => {
         const snapshot = await transaction.get(ref);
         if (!snapshot.exists) throw new Error("Firestore record not found.");
-        const previous = readStored(collection, documentId, environment, snapshot.data());
+        const previous = readStoredFirestoreRecord(collection, documentId, environment, snapshot.data());
         if (!previous.updatedAt.isEqual(expectedUpdatedAt)) throw new Error("Firestore record changed; read it again.");
         if ("uid" in previous && previous.uid !== null && (!("uid" in data) || previous.uid !== data.uid)) throw new Error("Firestore ownership cannot be reassigned.");
         transaction.set(ref, { ...data, environment, createdAt: previous.createdAt, updatedAt: FieldValue.serverTimestamp() });

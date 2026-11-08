@@ -59,6 +59,16 @@ export interface CheckoutOrderRecord {
   paidAt: Timestamp | null;
 }
 
+/** One durable customer creation attempt and one current checkout per Firebase UID. */
+export interface CheckoutAccountRecord {
+  uid: string;
+  customerId: string | null;
+  customerOperationId: string;
+  currentOrderId: string;
+  priceId: string;
+  appUrl: string;
+}
+
 export interface FirestoreRecords {
   users: UserRecord;
   stripeCustomers: StripeCustomerRecord;
@@ -66,6 +76,7 @@ export interface FirestoreRecords {
   entitlements: EntitlementRecord;
   stripeEvents: StripeEventRecord;
   checkoutOrders: CheckoutOrderRecord;
+  checkoutAccounts: CheckoutAccountRecord;
 }
 
 export type CollectionName = keyof FirestoreRecords;
