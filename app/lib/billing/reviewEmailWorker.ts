@@ -2,14 +2,15 @@ import "server-only";
 import { createReviewNotificationStore } from "./reviewNotificationStore";
 import { renderReviewEmail } from "./reviewEmail";
 import type { StripeEnvironment } from "../firestore/types";
+import { ReviewEmailDeliveryError } from "./reviewEmailErrors";
 
 /** Future approved provider adapter. It MUST deduplicate the same immutable
  * payload by idempotencyKey for retentionMs, including after ambiguous timeouts,
- * and honor the abort signal. No real adapter is installed in this step. */
+ * and honor the abort signal. */
 export interface ReviewEmailTransport {
   id: string;
   retentionMs: number;
-  send(message: { to: "contact@cartomailles.com"; from: string; subject: string; text: string; idempotencyKey: string; signal: AbortSignal }): Promise<void>;
+  send(message: { to: "contact@cartomailles.com"; from: string; subject: string; text: string; idempotencyKey: string; signal: AbortSignal; sendBefore: number }): Promise<void | { messageId: string }>;
 }
 function settings(): { environment: StripeEnvironment; from: string } | null {
   if (process.env.REVIEW_EMAIL_ENABLED !== "true") return null;
@@ -29,13 +30,23 @@ async function processOne(id: string, transport: ReviewEmailTransport) {
   let delivered = false;
   try {
     const email = renderReviewEmail(claim.message, config.environment);
+    const sendBefore = await store.preflight(id, claim.leaseId, transport.id, transport.retentionMs);
+    if (sendBefore === null) return { status: "skipped" as const };
     // This external operation is deliberately outside every Firestore transaction.
-    await transport.send({ ...email, from: claim.message.sender!, idempotencyKey: `cartomailles-review-${id}`, signal: AbortSignal.timeout(10_000) });
+    const receipt = await transport.send({ ...email, from: claim.message.sender!, idempotencyKey: `cartomailles-review-${id}`, signal: AbortSignal.timeout(10_000), sendBefore });
     delivered = true;
-    if (!await store.sent(id, claim.leaseId)) throw new Error("Notification acknowledgement unavailable.");
+    if (!await store.sent(id, claim.leaseId, receipt?.messageId)) throw new Error("Notification acknowledgement unavailable.");
     return { status: "sent" as const };
-  } catch {
-    try { await store.retry(id, claim.leaseId, delivered ? "ACK_FAILED" : "SEND_FAILED"); }
+  } catch (error) {
+    try {
+      if (!delivered && error instanceof ReviewEmailDeliveryError && error.permanent) {
+        await store.block(id, claim.leaseId, error.code);
+        return { status: "blocked" as const };
+      }
+      const result = await store.retry(id, claim.leaseId, delivered ? "ACK_FAILED" : error instanceof ReviewEmailDeliveryError ? error.code : "SEND_FAILED", error instanceof ReviewEmailDeliveryError ? error.retryAfterMs : 0);
+      if (result === "blocked") return { status: "blocked" as const };
+      if (result === "skipped") return { status: "skipped" as const };
+    }
     catch { throw new Error("Review notification persistence unavailable."); }
     return { status: "retry_pending" as const };
   }

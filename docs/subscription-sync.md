@@ -151,8 +151,9 @@ payload Stripe, message SDK ni détail bancaire n'est enregistré. Ces identifia
 restent réservés au serveur et à un futur outil opérateur autorisé.
 
 Une file durable `reviewNotifications`, créée dans la même transaction, prépare
-les alertes vers `contact@cartomailles.com`. Les envois restent désactivés et aucun
-fournisseur n'est installé. Voir `review-notifications.md` pour les transitions,
+les alertes vers `contact@cartomailles.com`. Les envois restent désactivés ; un
+adaptateur Resend via fetch est préparé sans dépendance ni appel réel.
+Voir `review-notifications.md` pour les transitions,
 la déduplication, les reprises et la procédure opérateur proposée.
 
 Sans preuve historique attribuable à une facture, le service ne reconstitue pas

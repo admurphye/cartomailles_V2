@@ -55,7 +55,7 @@ const fields: { [K in CollectionName]: { [P in keyof FirestoreRecords[K]]: Valid
     detectedAt: date, templateVersion: oneOf("v1"), status: oneOf("pending", "processing", "sent", "blocked"),
     attempts: count, nextAttemptAt: date, leaseId: nullable(id), leaseUntil: nullable(date), firstAttemptAt: nullable(date),
     sender: nullable(email), providerId: nullable(id), retentionMs: nullable((v) => count(v) && (v as number) >= 120_000),
-    sentAt: nullable(date), lastErrorCode: nullable(oneOf("SEND_FAILED", "ACK_FAILED", "DELIVERY_UNCERTAIN", "PROVIDER_CHANGED")),
+    sentAt: nullable(date), providerMessageId: nullable(id), lastErrorCode: nullable(oneOf("SEND_FAILED", "ACK_FAILED", "DELIVERY_UNCERTAIN", "PROVIDER_CHANGED", "IDEMPOTENCY_CONFLICT", "PROVIDER_REJECTED", "PROVIDER_CONFIGURATION", "RATE_LIMIT", "CONCURRENT_REQUEST")),
   },
 };
 const identity: Record<CollectionName, string> = {
@@ -65,7 +65,8 @@ const identity: Record<CollectionName, string> = {
 
 export function validateFirestoreRecord(collection: CollectionName, documentId: string, data: unknown): asserts data is Record<string, unknown> {
   if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Invalid Firestore record.");
-  const values = data as Record<string, unknown>;
+  // Backward-compatible optional receipt for notifications queued before Resend.
+  const values = collection === "reviewNotifications" ? { providerMessageId: null, ...data } as Record<string, unknown> : data as Record<string, unknown>;
   const schema = fields[collection];
   if (Object.keys(values).length !== Object.keys(schema).length ||
       !Object.entries(schema).every(([key, check]) => Object.hasOwn(values, key) && check(values[key])) ||

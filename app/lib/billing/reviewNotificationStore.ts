@@ -4,6 +4,7 @@ import { FieldValue, Timestamp, type Transaction } from "firebase-admin/firestor
 import { getFirebaseAdminFirestore } from "../firebaseAdmin";
 import { readStoredFirestoreRecord, validateFirestoreRecord } from "../firestore/store";
 import type { ReviewNotificationRecord, StoredRecord, StripeEnvironment } from "../firestore/types";
+import type { ReviewDeliveryErrorCode } from "./reviewEmailErrors";
 
 export function createReviewNotificationStore(environment: StripeEnvironment) {
   if (environment !== "test" && environment !== "live") throw new Error("Invalid notification environment.");
@@ -58,22 +59,50 @@ export function createReviewNotificationStore(environment: StripeEnvironment) {
         return { message: next, leaseId };
       });
     },
-    async sent(id: string, leaseId: string) {
+    async preflight(id: string, leaseId: string, providerId: string, retentionMs: number) {
+      return db.runTransaction(async (tx) => {
+        const doc = await tx.get(ref(id)); if (!doc.exists) return null;
+        const message = readStoredFirestoreRecord("reviewNotifications", id, environment, doc.data());
+        const now = Date.now();
+        if (message.status !== "processing" || message.leaseId !== leaseId || message.leaseUntil!.toMillis() <= now) return null;
+        const deadline = message.firstAttemptAt!.toMillis() + Math.min(message.retentionMs!, retentionMs) - 60_000;
+        const code = message.providerId !== providerId ? "PROVIDER_CHANGED" : deadline <= now + 10_000 ? "DELIVERY_UNCERTAIN" : null;
+        if (code) {
+          replace(tx, message, { status: "blocked", leaseId: null, leaseUntil: null, lastErrorCode: code }); return null;
+        }
+        replace(tx, message, { leaseUntil: Timestamp.fromMillis(now + 60_000) });
+        return Math.min(now + 45_000, deadline - 10_000);
+      });
+    },
+    async sent(id: string, leaseId: string, providerMessageId?: string) {
       return db.runTransaction(async (tx) => {
         const doc = await tx.get(ref(id)); if (!doc.exists) return false;
         const message = readStoredFirestoreRecord("reviewNotifications", id, environment, doc.data());
         if (message.status !== "processing" || message.leaseId !== leaseId || message.leaseUntil!.toMillis() <= Date.now()) return false;
-        replace(tx, message, { status: "sent", sentAt: Timestamp.now(), leaseId: null, leaseUntil: null, lastErrorCode: null });
+        replace(tx, message, { status: "sent", sentAt: Timestamp.now(), providerMessageId: providerMessageId ?? message.providerMessageId ?? null, leaseId: null, leaseUntil: null, lastErrorCode: null });
         return true;
       });
     },
-    async retry(id: string, leaseId: string, errorCode: "SEND_FAILED" | "ACK_FAILED") {
+    async block(id: string, leaseId: string, errorCode: ReviewDeliveryErrorCode) {
       await db.runTransaction(async (tx) => {
         const doc = await tx.get(ref(id)); if (!doc.exists) return;
         const message = readStoredFirestoreRecord("reviewNotifications", id, environment, doc.data());
         if (message.status !== "processing" || message.leaseId !== leaseId) return;
-        const delay = Math.min(6 * 60 * 60 * 1000, 30_000 * 2 ** Math.min(message.attempts - 1, 10));
+        replace(tx, message, { status: "blocked", leaseId: null, leaseUntil: null, lastErrorCode: errorCode });
+      });
+    },
+    async retry(id: string, leaseId: string, errorCode: ReviewDeliveryErrorCode, retryAfterMs = 0) {
+      return db.runTransaction(async (tx) => {
+        const doc = await tx.get(ref(id)); if (!doc.exists) return "skipped" as const;
+        const message = readStoredFirestoreRecord("reviewNotifications", id, environment, doc.data());
+        if (message.status !== "processing" || message.leaseId !== leaseId) return "skipped" as const;
+        const backoff = Math.min(6 * 60 * 60 * 1000, 30_000 * 2 ** Math.min(message.attempts - 1, 10));
+        const delay = Math.max(backoff, Number.isFinite(retryAfterMs) ? Math.max(0, Math.min(24 * 3_600_000, retryAfterMs)) : 0);
+        if (Date.now() + delay >= message.firstAttemptAt!.toMillis() + message.retentionMs! - 60_000) {
+          replace(tx, message, { status: "blocked", leaseId: null, leaseUntil: null, lastErrorCode: "DELIVERY_UNCERTAIN" }); return "blocked" as const;
+        }
         replace(tx, message, { status: "pending", nextAttemptAt: Timestamp.fromMillis(Date.now() + delay), leaseId: null, leaseUntil: null, lastErrorCode: errorCode });
+        return "pending" as const;
       });
     },
   };

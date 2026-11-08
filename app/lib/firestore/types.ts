@@ -112,7 +112,8 @@ export interface ReviewNotificationRecord {
   providerId: string | null;
   retentionMs: number | null;
   sentAt: Timestamp | null;
-  lastErrorCode: "SEND_FAILED" | "ACK_FAILED" | "DELIVERY_UNCERTAIN" | "PROVIDER_CHANGED" | null;
+  providerMessageId?: string | null;
+  lastErrorCode: "SEND_FAILED" | "ACK_FAILED" | "DELIVERY_UNCERTAIN" | "PROVIDER_CHANGED" | "IDEMPOTENCY_CONFLICT" | "PROVIDER_REJECTED" | "PROVIDER_CONFIGURATION" | "RATE_LIMIT" | "CONCURRENT_REQUEST" | null;
 }
 
 export interface FirestoreRecords {

@@ -6,6 +6,7 @@ vi.mock("../firebaseAdmin", () => ({ getFirebaseAdminFirestore: mocks.db }));
 import { createReviewNotificationStore } from "./reviewNotificationStore";
 import { drainReviewNotifications, processReviewNotification, type ReviewEmailTransport } from "./reviewEmailWorker";
 import type { ReviewNotificationRecord } from "../firestore/types";
+import { createResendReviewEmailTransport } from "./resendReviewEmail";
 
 type Data = Record<string, unknown>;
 type Ref = { path: string; filters: [string, string, unknown][]; maximum: number };
@@ -38,9 +39,12 @@ function put(notificationId = id) {
 }
 let provider: ReviewEmailTransport & { send: ReturnType<typeof vi.fn> };
 let deliveries: Set<string>;
+const fetchMock = vi.fn();
 beforeEach(() => {
   vi.useFakeTimers(); vi.setSystemTime(now); vi.stubEnv("REVIEW_EMAIL_ENABLED", "true");
   vi.stubEnv("REVIEW_EMAIL_FROM", "notifications@example.invalid"); vi.stubEnv("STRIPE_ENVIRONMENT", "test");
+  vi.stubEnv("RESEND_API_KEY", "re_fake_for_tests"); vi.stubGlobal("fetch", fetchMock);
+  fetchMock.mockReset(); fetchMock.mockRejectedValue(new Error("Unmocked network access forbidden"));
   documents = new Map(); failSentCommit = false; deliveries = new Set();
   let tail = Promise.resolve();
   mocks.db.mockReturnValue({ collection: (name: string) => reference(name), runTransaction: (callback: (tx: unknown) => Promise<unknown>) => {
@@ -55,7 +59,7 @@ beforeEach(() => {
   provider = { id: "fake", retentionMs: 24 * 3_600_000, send: vi.fn(async (message: { idempotencyKey: string }) => { deliveries.add(message.idempotencyKey); }) };
   put();
 });
-afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs(); });
+afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
 describe("durable provider-neutral review email worker", () => {
   it("sends once and persists the acknowledgement", async () => {
@@ -127,5 +131,68 @@ describe("durable provider-neutral review email worker", () => {
     put("c".repeat(64)); documents.get(`${prefix}${"c".repeat(64)}`)!.nextAttemptAt = Timestamp.fromMillis(now + 1000);
     expect(await drainReviewNotifications(provider)).toEqual([{ status: "sent" }]);
     vi.stubEnv("STRIPE_ENVIRONMENT", "live"); expect(await drainReviewNotifications(provider)).toEqual([]);
+  });
+  it("persists the Resend receipt and prevents concurrent duplicate HTTP calls", async () => {
+    vi.stubEnv("REVIEW_EMAIL_FROM", "notifications@cartomailles.com");
+    const receipt = "49a3999c-0ce1-4ea6-ab68-afcd6dc2e794";
+    fetchMock.mockResolvedValue(Response.json({ id: receipt }));
+    const transport = createResendReviewEmailTransport();
+    await Promise.all([processReviewNotification(id, transport), processReviewNotification(id, transport)]);
+    expect(fetchMock).toHaveBeenCalledOnce(); expect(documents.get(`${prefix}${id}`)?.providerMessageId).toBe(receipt);
+  });
+  it.each(["concurrent_idempotent_requests", "invalid_idempotent_request"])("handles Resend 409 %s durably", async (name) => {
+    vi.stubEnv("REVIEW_EMAIL_FROM", "notifications@cartomailles.com");
+    fetchMock.mockResolvedValueOnce(Response.json({ name }, { status: 409 }));
+    const transport = createResendReviewEmailTransport();
+    const result = await processReviewNotification(id, transport);
+    const permanent = name === "invalid_idempotent_request";
+    expect(result.status).toBe(permanent ? "blocked" : "retry_pending");
+    expect(documents.get(`${prefix}${id}`)?.status).toBe(permanent ? "blocked" : "pending");
+    vi.setSystemTime(now + 30_001);
+    fetchMock.mockResolvedValue(Response.json({ id: "49a3999c-0ce1-4ea6-ab68-afcd6dc2e794" }));
+    await processReviewNotification(id, transport); expect(fetchMock).toHaveBeenCalledTimes(permanent ? 1 : 2);
+    if (!permanent) expect(fetchMock.mock.calls[0][1].headers["Idempotency-Key"]).toBe(fetchMock.mock.calls[1][1].headers["Idempotency-Key"]);
+  });
+  it("respects Resend rate limiting and blocks retries beyond the safe window", async () => {
+    vi.stubEnv("REVIEW_EMAIL_FROM", "notifications@cartomailles.com");
+    fetchMock.mockResolvedValue(Response.json({ name: "rate_limit_exceeded" }, { status: 429, headers: { "Retry-After": "120" } }));
+    await processReviewNotification(id, createResendReviewEmailTransport());
+    expect((documents.get(`${prefix}${id}`)!.nextAttemptAt as Timestamp).toMillis()).toBe(now + 120_000);
+    vi.setSystemTime(now + 24 * 3_600_000); await processReviewNotification(id, createResendReviewEmailTransport());
+    expect(fetchMock).toHaveBeenCalledOnce(); expect(documents.get(`${prefix}${id}`)?.status).toBe("blocked");
+  });
+  it("rechecks leases and the safe deadline immediately before sending", async () => {
+    const store = createReviewNotificationStore("test");
+    const first = (await store.claim(id, "notifications@example.invalid", provider.id, provider.retentionMs))!;
+    vi.setSystemTime(now + 60_001); expect(await store.preflight(id, first.leaseId, provider.id, provider.retentionMs)).toBeNull();
+    const next = (await store.claim(id, "notifications@example.invalid", provider.id, provider.retentionMs))!;
+    expect(await store.preflight(id, first.leaseId, provider.id, provider.retentionMs)).toBeNull();
+    // Simulate a worker resuming at the end of the safe provider window.
+    const entry = documents.get(`${prefix}${id}`)!; entry.firstAttemptAt = Timestamp.fromMillis(now - 24 * 3_600_000 + 65_000);
+    expect(await store.preflight(id, next.leaseId, provider.id, provider.retentionMs)).toBeNull();
+    expect(documents.get(`${prefix}${id}`)?.lastErrorCode).toBe("DELIVERY_UNCERTAIN"); expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it("keeps Resend entirely offline when notifications are disabled", async () => {
+    vi.stubEnv("REVIEW_EMAIL_ENABLED", "false"); mocks.db.mockClear();
+    expect(await processReviewNotification(id, createResendReviewEmailTransport())).toEqual({ status: "disabled" });
+    expect(await drainReviewNotifications(createResendReviewEmailTransport())).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled(); expect(mocks.db).not.toHaveBeenCalled();
+  });
+  it("retries a Resend timeout with the identical HTTP payload and idempotency key", async () => {
+    vi.stubEnv("REVIEW_EMAIL_FROM", "notifications@cartomailles.com");
+    fetchMock.mockRejectedValueOnce(new DOMException("timeout", "TimeoutError"));
+    const transport = createResendReviewEmailTransport();
+    await processReviewNotification(id, transport); vi.setSystemTime(now + 30_001);
+    fetchMock.mockResolvedValue(Response.json({ id: "49a3999c-0ce1-4ea6-ab68-afcd6dc2e794" }));
+    await processReviewNotification(id, transport);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][1].body).toBe(fetchMock.mock.calls[1][1].body);
+    expect(fetchMock.mock.calls[0][1].headers["Idempotency-Key"]).toBe(fetchMock.mock.calls[1][1].headers["Idempotency-Key"]);
+  });
+  it("does not schedule a rate-limit retry outside the Resend retention window", async () => {
+    vi.stubEnv("REVIEW_EMAIL_FROM", "notifications@cartomailles.com");
+    fetchMock.mockResolvedValue(Response.json({ name: "rate_limit_exceeded" }, { status: 429, headers: { "Retry-After": "86400" } }));
+    expect(await processReviewNotification(id, createResendReviewEmailTransport())).toEqual({ status: "blocked" });
+    expect(documents.get(`${prefix}${id}`)?.lastErrorCode).toBe("DELIVERY_UNCERTAIN");
   });
 });

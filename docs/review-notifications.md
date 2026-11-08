@@ -4,8 +4,8 @@
 
 Le destinataire est fixé dans le code à `contact@cartomailles.com`. Aucun champ
 de requête ni variable d'environnement ne peut remplacer cette adresse.
-Aucun fournisseur ni SDK d'e-mail n'est installé ou choisi. Aucun adaptateur réel,
-ordonnanceur, tableau de bord ou route publique n'est ajouté. Les envois sont
+L'adaptateur serveur Resend est disponible via `fetch`, sans SDK ni dépendance
+supplémentaire. Aucun ordonnanceur, tableau de bord ou route publique n'est ajouté. Les envois sont
 désactivés par défaut ; aucune configuration Vercel ou `.env` n'est modifiée.
 Le webhook Stripe et PasswordGate restent inchangés.
 
@@ -50,7 +50,7 @@ sont des entrées serveur pour un futur job de confiance. Elles ne sont appelée
 par aucune route. Les requêtes de sélection sont bornées et séparées par
 environnement. La livraison externe est toujours hors transaction Firestore.
 
-Cycle : `pending` → `processing` → `sent`. Une erreur renvoie à `pending` avec
+Cycle : `pending` → `processing` → `sent`. Une erreur temporaire renvoie à `pending` avec
 backoff exponentiel de 30 secondes à 6 heures. Un bail de 60 secondes et un
 identifiant aléatoire empêchent deux workers de posséder simultanément un bail
 valide pour le même message. Un envoi déjà parti peut néanmoins survivre à un
@@ -59,7 +59,9 @@ peut récupérer un bail expiré ; un ancien worker ne peut
 plus valider une livraison réservée par un autre.
 
 Les erreurs persistées sont uniquement `SEND_FAILED`, `ACK_FAILED`,
-`DELIVERY_UNCERTAIN` ou `PROVIDER_CHANGED`, sans message SDK brut. Les données
+`DELIVERY_UNCERTAIN`, `PROVIDER_CHANGED`, `IDEMPOTENCY_CONFLICT`,
+`PROVIDER_REJECTED`, `PROVIDER_CONFIGURATION`, `RATE_LIMIT` ou
+`CONCURRENT_REQUEST`, sans corps de réponse ni message réseau brut. Les données
 envoyées sont figées : version du modèle, codes, date, destinataire et référence ;
 l'expéditeur et l'identité du fournisseur sont figés à la première tentative.
 
@@ -67,10 +69,11 @@ l'expéditeur et l'identité du fournisseur sont figés à la première tentativ
 
 Une transaction Firestore ne peut pas confirmer atomiquement un e-mail livré
 chez un fournisseur externe. La fiabilité repose donc aussi sur le contrat de
-l'adaptateur futur : dédupliquer la clé stable
+l'adaptateur Resend : dédupliquer la clé stable
 `cartomailles-review-{notificationId}` pour une durée documentée `retentionMs`,
 y compris après timeout ou perte de réponse, avec le même contenu.
-Les tests simulent ce contrat ; ils ne prouvent pas celui d'un fournisseur réel.
+Resend annonce une rétention de 24 heures, fixée à `86_400_000` ms dans
+l'adaptateur. Les tests simulent ce contrat ; aucun appel à Resend n'est effectué.
 
 L'adaptateur doit avoir une identité stable et annoncer une rétention d'au moins
 deux minutes ; la durée réelle devra couvrir les reprises opérationnelles choisies.
@@ -86,15 +89,52 @@ confirmer chez le fournisseur si l'e-mail a été livré avant toute réémissio
 Sans cette capacité d'idempotence, l'adaptateur n'est pas prêt à être branché.
 Le système ne promet pas un « exactement une fois » indépendant du fournisseur.
 
+Le worker relit transactionnellement le bail et la fenêtre juste avant l'appel,
+renouvelle le bail s'il est encore valide et fournit une date limite courte à
+l'adaptateur. Celui-ci vérifie à nouveau cette limite et le signal d'annulation
+juste avant `fetch`. Un worker dont le bail est expiré ou réattribué n'envoie rien.
+Une reprise qui dépasserait la fenêtre sûre est bloquée, y compris lorsque
+`Retry-After` demanderait d'attendre trop longtemps.
+
+## Adaptateur Resend
+
+`createResendReviewEmailTransport()` ne lit aucune clé et n'effectue aucun appel
+à sa construction. Le futur job pourra fournir cet adaptateur à
+`drainReviewNotifications`, sans changement de webhook. Aucun appel automatique
+n'est branché par cette étape. L'adaptateur contrôle aussi le drapeau d'activation
+à l'instant de l'envoi : désactivé, il n'appelle jamais `fetch`.
+
+Il appelle uniquement `POST https://api.resend.com/emails`, avec redirections
+refusées, `Authorization` côté serveur, l'en-tête `Idempotency-Key` stable et le
+signal de dix secondes transmis par le worker. L'expéditeur est strictement
+`notifications@cartomailles.com`, le destinataire `contact@cartomailles.com`.
+Aucun montant, secret ou détail personnel n'est ajouté au modèle français existant.
+
+| Réponse / incident | Traitement |
+| --- | --- |
+| Succès avec identifiant UUID valide | Accusé Firestore `sent` et conservation de `providerMessageId` |
+| Timeout, réseau, 408, 500, 503 ou autre 5xx | Reprise avec la même clé et le même contenu |
+| 409 `concurrent_idempotent_requests` | Reprise différée, code `CONCURRENT_REQUEST` |
+| 409 `invalid_idempotent_request` | Blocage `IDEMPOTENCY_CONFLICT`, examen opérateur |
+| 429 | Reprise `RATE_LIMIT`, avec `Retry-After` borné et contrôle de la fenêtre |
+| 401 ou 403 | Blocage `PROVIDER_CONFIGURATION` |
+| Autre erreur permanente, dont 400/422 ou conflit inconnu | Blocage `PROVIDER_REJECTED` |
+| Succès sans accusé exploitable | Livraison incertaine ; reprise avec la même clé |
+
+Les anciennes notifications sans champ `providerMessageId` restent lisibles ;
+aucune migration distante n'est lancée. Un échec de persistance après acceptation
+Resend se reprend par la clé identique pour récupérer le même identifiant.
+`sent` signifie accepté par Resend et non réception effective en boîte mail.
+
 ## Configuration serveur à préparer après validation
 
 | Configuration | Comportement |
 | --- | --- |
-| `REVIEW_EMAIL_ENABLED` | Absent ou différent de `true` : aucun traitement d'envoi. Ne pas activer avant validation du fournisseur et du job. |
-| `REVIEW_EMAIL_FROM` | Adresse d'expéditeur serveur validée, à authentifier chez le futur fournisseur. Requise si les envois sont activés. |
+| `REVIEW_EMAIL_ENABLED` | Doit rester absent ou `false` pendant cette préparation. Seul `true` autorise le worker et l'adaptateur à envoyer. |
+| `REVIEW_EMAIL_FROM` | `notifications@cartomailles.com`, requise pour un futur essai autorisé. Toute autre adresse est refusée par l'adaptateur Resend. |
+| `RESEND_API_KEY` | Secret serveur Resend, déjà déclaré dans Vercel Production selon la configuration fournie. Jamais `NEXT_PUBLIC_*`, jamais affiché ni ajouté au dépôt. |
 | `STRIPE_ENVIRONMENT` | `test` ou `live`, requis pour sélectionner la file ; aucun repli entre environnements. |
-| Identifiants fournisseur | À définir avec le fournisseur approuvé, uniquement en secrets serveur, jamais `NEXT_PUBLIC_*`. Aucun nom de clé spécifique ni valeur réelle n'est ajouté ici. |
-| Adaptateur serveur | Implémentation approuvée de `ReviewEmailTransport`, avec identité et rétention d'idempotence vérifiées. Aucun adaptateur réel disponible aujourd'hui. |
+| Adaptateur serveur | `createResendReviewEmailTransport()`, identité stable `resend-cartomailles-v1`, rétention 24 h. Ne pas changer de compte Resend sous cette même identité. |
 
 Il faudra également installer un job authentifié hors des routes publiques,
 vérifier IAM, et configurer les index Firestore nécessaires pour :
@@ -105,7 +145,10 @@ vérifier IAM, et configurer les index Firestore nécessaires pour :
 Les règles clientes doivent rester fermées. Les workers utilisent Firebase Admin
 et ses permissions IAM. Les configurations, domaines expéditeurs (SPF/DKIM/DMARC),
 quotas, délais d'envoi et conditions de conservation seront à valider avec le
-fournisseur avant tout essai réel. Aucun de ces changements distants n'est effectué.
+fournisseur avant tout essai réel. Le domaine est annoncé vérifié par l'utilisateur ;
+cette étape ne contrôle ni ne modifie son DNS, sa clé ou ses variables Vercel.
+Le mode Stripe `test` ne simule pas les e-mails : une activation de Resend enverrait
+de vrais messages à contact@cartomailles.com. Maintenir le drapeau désactivé.
 
 ## Traitement manuel sécurisé sans tableau de bord
 
@@ -146,3 +189,11 @@ résolutions partielles, travailleurs simultanés, erreurs d'envoi, réponse per
 accusé Firestore perdu, bail expiré, fenêtre d'idempotence dépassée, changement
 de fournisseur, expéditeur figé, destinataire fixe et séparation test/live.
 Aucun e-mail réel, appel fournisseur ou écriture réelle Firestore n'est effectué.
+
+L'adaptateur est testé avec `fetch` remplacé par un mock : succès, 409 concurrents
+et permanents, 429, 500, 503, timeout, réponse invalide, signal annulé, délai expiré,
+reprises et travailleurs concurrents. Les tests n'utilisent aucune clé réelle.
+
+Références :
+- https://resend.com/docs/dashboard/emails/idempotency-keys
+- https://resend.com/docs/api-reference/errors
