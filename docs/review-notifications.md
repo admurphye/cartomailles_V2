@@ -5,7 +5,8 @@
 Le destinataire est fixé dans le code à `contact@cartomailles.com`. Aucun champ
 de requête ni variable d'environnement ne peut remplacer cette adresse.
 L'adaptateur serveur Resend est disponible via `fetch`, sans SDK ni dépendance
-supplémentaire. Aucun ordonnanceur, tableau de bord ou route publique n'est ajouté. Les envois sont
+supplémentaire. Un handler cron protégé par CRON_SECRET est préparé, sans
+planification Vercel active ni tableau de bord. Les envois sont
 désactivés par défaut ; aucune configuration Vercel ou `.env` n'est modifiée.
 Le webhook Stripe et PasswordGate restent inchangés.
 
@@ -46,8 +47,8 @@ détection et mention explicite qu'une intervention manuelle est nécessaire.
 Il n'inclut aucun lien d'administration, lien de connexion ni secret d'accès.
 
 `processReviewNotification(id, transport)` et `drainReviewNotifications(transport)`
-sont des entrées serveur pour un futur job de confiance. Elles ne sont appelées
-par aucune route. Les requêtes de sélection sont bornées et séparées par
+sont des entrées serveur utilisées par le handler cron authentifié préparé.
+Les requêtes de sélection sont bornées et séparées par
 environnement. La livraison externe est toujours hors transaction Firestore.
 
 Cycle : `pending` → `processing` → `sent`. Une erreur temporaire renvoie à `pending` avec
@@ -100,8 +101,9 @@ Une reprise qui dépasserait la fenêtre sûre est bloquée, y compris lorsque
 
 `createResendReviewEmailTransport()` ne lit aucune clé et n'effectue aucun appel
 à sa construction. Le futur job pourra fournir cet adaptateur à
-`drainReviewNotifications`, sans changement de webhook. Aucun appel automatique
-n'est branché par cette étape. L'adaptateur contrôle aussi le drapeau d'activation
+`drainReviewNotifications`, sans changement de webhook. Aucune planification automatique
+n'est active. Voir `review-notification-cron.md` pour la préparation Hobby et ses limites.
+L'adaptateur contrôle aussi le drapeau d'activation
 à l'instant de l'envoi : désactivé, il n'appelle jamais `fetch`.
 
 Il appelle uniquement `POST https://api.resend.com/emails`, avec redirections

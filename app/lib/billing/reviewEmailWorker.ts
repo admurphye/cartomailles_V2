@@ -21,17 +21,20 @@ function settings(): { environment: StripeEnvironment; from: string } | null {
   return { environment, from };
 }
 
-async function processOne(id: string, transport: ReviewEmailTransport) {
+async function processOne(id: string, transport: ReviewEmailTransport, deadlineAt = Infinity) {
   const config = settings();
   if (!config) return { status: "disabled" as const };
+  if (Date.now() + 15_000 >= deadlineAt) return { status: "skipped" as const };
   const store = createReviewNotificationStore(config.environment);
   const claim = await store.claim(id, config.from, transport.id, transport.retentionMs);
   if (!claim) return { status: "skipped" as const };
   let delivered = false;
   try {
     const email = renderReviewEmail(claim.message, config.environment);
-    const sendBefore = await store.preflight(id, claim.leaseId, transport.id, transport.retentionMs);
-    if (sendBefore === null) return { status: "skipped" as const };
+    const leaseDeadline = await store.preflight(id, claim.leaseId, transport.id, transport.retentionMs);
+    if (leaseDeadline === null) return { status: "skipped" as const };
+    const sendBefore = Math.min(leaseDeadline, deadlineAt - 5000);
+    if (Date.now() + 10_000 >= sendBefore) throw new ReviewEmailDeliveryError("SEND_FAILED", false);
     // This external operation is deliberately outside every Firestore transaction.
     const receipt = await transport.send({ ...email, from: claim.message.sender!, idempotencyKey: `cartomailles-review-${id}`, signal: AbortSignal.timeout(10_000), sendBefore });
     delivered = true;
@@ -52,19 +55,26 @@ async function processOne(id: string, transport: ReviewEmailTransport) {
   }
 }
 
-export async function processReviewNotification(id: string, transport: ReviewEmailTransport) {
-  try { return await processOne(id, transport); }
+export async function processReviewNotification(id: string, transport: ReviewEmailTransport, deadlineAt = Infinity) {
+  try { return await processOne(id, transport, deadlineAt); }
   catch { throw new Error("Review notification processing unavailable."); }
 }
 
-/** Future trusted scheduler entry point. No scheduler or public route is added. */
-export async function drainReviewNotifications(transport: ReviewEmailTransport, limit = 20) {
+/** Trusted scheduler entry point. No cron schedule is installed here. */
+export async function drainReviewNotifications(transport: ReviewEmailTransport, limit = 20, budgetMs = 40_000) {
   try {
     const config = settings();
     if (!config) return [];
+    if (!Number.isSafeInteger(budgetMs) || budgetMs < 20_000 || budgetMs > 45_000) throw new Error("Invalid notification time budget.");
+    const deadlineAt = Date.now() + budgetMs;
     const ids = await createReviewNotificationStore(config.environment).ready(limit);
-    const results = [];
-    for (const id of ids) results.push(await processReviewNotification(id, transport));
+    const results: ({ status: "error" } | Awaited<ReturnType<typeof processReviewNotification>>)[] = [];
+    for (const id of ids) {
+      // Do not reserve work that cannot start with enough time for sending and ack.
+      if (Date.now() + 20_000 >= deadlineAt) break;
+      try { results.push(await processReviewNotification(id, transport, deadlineAt)); }
+      catch { results.push({ status: "error" }); }
+    }
     return results;
   } catch { throw new Error("Review notification batch unavailable."); }
 }

@@ -195,4 +195,35 @@ describe("durable provider-neutral review email worker", () => {
     expect(await processReviewNotification(id, createResendReviewEmailTransport())).toEqual({ status: "blocked" });
     expect(documents.get(`${prefix}${id}`)?.lastErrorCode).toBe("DELIVERY_UNCERTAIN");
   });
+  it("stops a batch before reserving more work when the execution budget is low", async () => {
+    const second = "c".repeat(64); put(second);
+    provider.send.mockImplementation(async () => { vi.setSystemTime(now + 25_000); });
+    expect(await drainReviewNotifications(provider, 2, 40_000)).toEqual([{ status: "sent" }]);
+    expect(documents.get(`${prefix}${second}`)?.status).toBe("pending");
+    expect(documents.get(`${prefix}${second}`)?.attempts).toBe(0);
+  });
+  it("continues with the next notification after an isolated persistence error", async () => {
+    const second = "c".repeat(64); put(second);
+    const db = mocks.db(); const original = db.runTransaction;
+    db.runTransaction = vi.fn().mockRejectedValueOnce(new Error("private database detail")).mockImplementation(original);
+    expect(await drainReviewNotifications(provider, 2, 40_000)).toEqual([{ status: "error" }, { status: "sent" }]);
+    expect(documents.get(`${prefix}${id}`)?.status).toBe("pending");
+    expect(documents.get(`${prefix}${second}`)?.status).toBe("sent");
+  });
+  it("deduplicates overlapping cron batches through the existing notification leases", async () => {
+    put("c".repeat(64));
+    await Promise.all([drainReviewNotifications(provider, 2, 40_000), drainReviewNotifications(provider, 2, 40_000)]);
+    expect(provider.send).toHaveBeenCalledTimes(2); expect(deliveries.size).toBe(2);
+  });
+  it("releases a claimed notification for retry if database work consumes the send budget", async () => {
+    const db = mocks.db(); const original = db.runTransaction;
+    let first = true;
+    db.runTransaction = async (...args: unknown[]) => {
+      const result = await original(...args);
+      if (first) { first = false; vi.setSystemTime(now + 35_000); }
+      return result;
+    };
+    expect(await drainReviewNotifications(provider, 2, 40_000)).toEqual([{ status: "retry_pending" }]);
+    expect(provider.send).not.toHaveBeenCalled(); expect(documents.get(`${prefix}${id}`)?.status).toBe("pending");
+  });
 });
