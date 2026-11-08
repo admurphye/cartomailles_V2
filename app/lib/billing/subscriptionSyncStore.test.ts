@@ -206,4 +206,41 @@ describe("atomic subscription synchronization", () => {
     expect(documents.get(`${prefix}/subscriptionCoverage/sub_one`)?.periods).toEqual([]);
     expect(documents.get(`${prefix}/stripeEvents/evt_refund_dispute`)?.errorCode).toBe("REVIEW_REQUIRED");
   });
+  it("queues one durable alert atomically with REVIEW_REQUIRED and deduplicates event replays", async () => {
+    const store = createSubscriptionSyncStore("test");
+    const reviewed = { ...paid(), periods: [], evidence: [], reviews: [{ invoiceId: "in_one", code: "DISPUTE" as const }] };
+    const ticket = (await store.begin(event("evt_review"), "cus_one"))!;
+    rejectCommit = true;
+    await expect(store.commit(ticket, ["cus_one"], [reviewed], CARTOMAILLES_SUBSCRIPTION_POLICY)).rejects.toThrow(); rejectCommit = false;
+    expect([...documents.keys()].filter((p) => p.includes("/reviewNotifications/"))).toHaveLength(0);
+    await store.commit((await store.begin(event("evt_review"), "cus_one"))!, ["cus_one"], [reviewed], CARTOMAILLES_SUBSCRIPTION_POLICY);
+    reviewed.orderUpdatedAt = documents.get(`${prefix}/checkoutOrders/order1`)!.updatedAt as Timestamp;
+    await store.commit((await store.begin(event("evt_review"), "cus_one"))!, ["cus_one"], [reviewed], CARTOMAILLES_SUBSCRIPTION_POLICY);
+    const messages = [...documents.entries()].filter(([p]) => p.includes("/reviewNotifications/"));
+    expect(messages).toHaveLength(1); expect(messages[0][1].status).toBe("pending"); expect(messages[0][1].codes).toEqual(["DISPUTE"]);
+    expect(messages[0][1]).not.toHaveProperty("email"); expect(messages[0][1]).not.toHaveProperty("uid");
+  });
+  it("alerts on new anomalies and reopening, without alerting for reordering or partial resolution", async () => {
+    const store = createSubscriptionSyncStore("test"); let sequence = 0;
+    const sync = async (reviews: NonNullable<SubscriptionSnapshot["reviews"]>) => {
+      const data = { ...paid(), periods: [], evidence: [], reviews,
+        orderUpdatedAt: documents.get(`${prefix}/checkoutOrders/order1`)!.updatedAt as Timestamp };
+      await store.commit((await store.begin(event(`evt_${sequence++}`), "cus_one"))!, ["cus_one"], [data], CARTOMAILLES_SUBSCRIPTION_POLICY);
+    };
+    const dispute = { invoiceId: "in_one", code: "DISPUTE" as const };
+    const refund = { invoiceId: "in_two", code: "PARTIAL_REFUND" as const };
+    const count = () => [...documents.keys()].filter((p) => p.includes("/reviewNotifications/")).length;
+    await sync([dispute]); expect(count()).toBe(1);
+    await sync([dispute, refund]); expect(count()).toBe(2);
+    await sync([refund, dispute, dispute]); expect(count()).toBe(2);
+    await sync([dispute]); expect(count()).toBe(2);
+    await sync([]); await sync([dispute]); expect(count()).toBe(3);
+  });
+  it("also queues a generic review alert from the failure path", async () => {
+    const store = createSubscriptionSyncStore("test"); const ticket = (await store.begin(event(), "cus_one"))!;
+    await store.fail(ticket, "REVIEW_REQUIRED");
+    const message = [...documents.entries()].find(([path]) => path.includes("/reviewNotifications/"))![1];
+    expect(message.sourceType).toBe("event"); expect(message.codes).toEqual(["REVIEW_REQUIRED"]);
+    expect(documents.get(`${prefix}/stripeEvents/evt_one`)?.errorCode).toBe("REVIEW_REQUIRED");
+  });
 });

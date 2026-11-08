@@ -85,6 +85,36 @@ export interface SubscriptionCoverageRecord {
   reviews: BillingReview[];
 }
 
+export type ReviewEmailCode = BillingReviewCode | "REVIEW_REQUIRED";
+export interface ReviewNotificationStateRecord {
+  caseId: string;
+  sourceType: "subscription" | "event";
+  sourceId: string;
+  fingerprint: string | null;
+  diagnosticKeys: string[];
+  revision: number;
+}
+export interface ReviewNotificationRecord {
+  notificationId: string;
+  caseId: string;
+  sourceType: "subscription" | "event";
+  sourceId: string;
+  codes: ReviewEmailCode[];
+  detectedAt: Timestamp;
+  templateVersion: "v1";
+  status: "pending" | "processing" | "sent" | "blocked";
+  attempts: number;
+  nextAttemptAt: Timestamp;
+  leaseId: string | null;
+  leaseUntil: Timestamp | null;
+  firstAttemptAt: Timestamp | null;
+  sender: string | null;
+  providerId: string | null;
+  retentionMs: number | null;
+  sentAt: Timestamp | null;
+  lastErrorCode: "SEND_FAILED" | "ACK_FAILED" | "DELIVERY_UNCERTAIN" | "PROVIDER_CHANGED" | null;
+}
+
 export interface FirestoreRecords {
   users: UserRecord;
   stripeCustomers: StripeCustomerRecord;
@@ -95,6 +125,8 @@ export interface FirestoreRecords {
   checkoutAccounts: CheckoutAccountRecord;
   subscriptionSyncStates: SubscriptionSyncStateRecord;
   subscriptionCoverage: SubscriptionCoverageRecord;
+  reviewNotificationStates: ReviewNotificationStateRecord;
+  reviewNotifications: ReviewNotificationRecord;
 }
 
 export type CollectionName = keyof FirestoreRecords;

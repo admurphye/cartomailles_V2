@@ -4,6 +4,7 @@ import { getFirebaseAdminFirestore } from "../firebaseAdmin";
 import { readStoredFirestoreRecord, validateFirestoreRecord } from "../firestore/store";
 import type { CollectionName, FirestoreRecords, StoredRecord, StripeEnvironment, StripeEventRecord } from "../firestore/types";
 import { deriveSubscriptionEntitlement, requireSync, type SubscriptionSnapshot, type SubscriptionPolicy } from "./subscriptionPolicy";
+import { planReviewAlerts } from "./reviewNotifications";
 
 export interface SyncTicket { uid: string; generation: number; eventId: string }
 
@@ -101,6 +102,10 @@ export function createSubscriptionSyncStore(environment: StripeEnvironment) {
             record: { ...snapshot.record, paidThrough: uniquePeriods.length ? Timestamp.fromMillis(Math.max(...uniquePeriods.map((p) => p.end.toMillis()))) : null } };
           existing.push({ snapshot: computed, previous, order, coverage, periods: uniquePeriods });
         }
+        const queueAlerts = await planReviewAlerts(tx, root, environment, existing.map(({ snapshot }) => ({
+          sourceType: "subscription", sourceId: snapshot.record.subscriptionId,
+          details: (snapshot.reviews ?? []).map((review) => ({ reference: review.invoiceId, code: review.code })),
+        })));
         // All reads precede writes. Time is sampled inside each transaction retry.
         const entitlement = deriveSubscriptionEntitlement(ticket.uid, existing.map((item) => item.snapshot), policy, Date.now());
         for (const { snapshot, previous, order, coverage, periods } of existing) {
@@ -118,6 +123,7 @@ export function createSubscriptionSyncStore(environment: StripeEnvironment) {
         const needsReview = existing.some((item) => item.snapshot.reviews?.length);
         write(tx, "stripeEvents", ticket.eventId, { ...eventData, status: needsReview ? "failed" : "processed",
           processedAt: needsReview ? null : Timestamp.now(), errorCode: needsReview ? "REVIEW_REQUIRED" : null }, event);
+        queueAlerts();
         return entitlement;
       });
     },
@@ -130,7 +136,11 @@ export function createSubscriptionSyncStore(environment: StripeEnvironment) {
         const event = readStoredFirestoreRecord("stripeEvents", ticket.eventId, environment, eventDoc.data());
         if (state.generation !== ticket.generation || event.status !== "processing") return;
         const allowed = ["ASSOCIATION_CONFLICT", "INVALID_STRIPE_DATA", "STALE_SYNC", "REVIEW_REQUIRED", "LIMIT_EXCEEDED"];
+        const queueAlerts = errorCode === "REVIEW_REQUIRED" ? await planReviewAlerts(tx, root, environment, [{
+          sourceType: "event", sourceId: ticket.eventId, details: [{ reference: ticket.eventId, code: "REVIEW_REQUIRED" }],
+        }]) : null;
         tx.update(ref("stripeEvents", ticket.eventId), { status: "failed", errorCode: allowed.includes(errorCode) ? errorCode : "TECHNICAL_FAILURE", updatedAt: FieldValue.serverTimestamp() });
+        queueAlerts?.();
       });
     },
   };

@@ -11,6 +11,8 @@ const id: Validator = (v) => text(v) && !/[\/\x00-\x1f]/.test(v as string) && v 
 const date: Validator = (v) => v instanceof Timestamp;
 const nullable = (check: Validator): Validator => (v) => v === null || check(v);
 const oneOf = (...values: string[]): Validator => (v) => typeof v === "string" && values.includes(v);
+const count: Validator = (v) => typeof v === "number" && Number.isSafeInteger(v) && v >= 0;
+const email: Validator = (v) => typeof v === "string" && v.length <= 254 && /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(v);
 const fields: { [K in CollectionName]: { [P in keyof FirestoreRecords[K]]: Validator } } = {
   users: { uid: id, email: nullable(text), activationStatus: oneOf("pending", "ready") },
   stripeCustomers: { uid: nullable(id), customerId: id },
@@ -46,10 +48,19 @@ const fields: { [K in CollectionName]: { [P in keyof FirestoreRecords[K]]: Valid
     periods: (v) => Array.isArray(v) && v.length <= 2000 && v.every((p) => p && Object.keys(p).length === 3 && id(p.invoiceId) && date(p.start) && date(p.end) && p.start.toMillis() < p.end.toMillis()),
     reviews: (v) => Array.isArray(v) && v.length <= 1000 && v.every((r) => r && Object.keys(r).length === 2 && id(r.invoiceId) && BILLING_REVIEW_CODES.includes(r.code)),
   },
+  reviewNotificationStates: { caseId: id, sourceType: oneOf("subscription", "event"), sourceId: id, fingerprint: nullable(id), diagnosticKeys: (v) => Array.isArray(v) && v.length <= 1000 && v.every((key) => id(key)), revision: count },
+  reviewNotifications: {
+    notificationId: id, caseId: id, sourceType: oneOf("subscription", "event"), sourceId: id,
+    codes: (v) => Array.isArray(v) && v.length > 0 && v.length <= 11 && new Set(v).size === v.length && v.every((c) => [...BILLING_REVIEW_CODES, "REVIEW_REQUIRED"].includes(c)),
+    detectedAt: date, templateVersion: oneOf("v1"), status: oneOf("pending", "processing", "sent", "blocked"),
+    attempts: count, nextAttemptAt: date, leaseId: nullable(id), leaseUntil: nullable(date), firstAttemptAt: nullable(date),
+    sender: nullable(email), providerId: nullable(id), retentionMs: nullable((v) => count(v) && (v as number) >= 120_000),
+    sentAt: nullable(date), lastErrorCode: nullable(oneOf("SEND_FAILED", "ACK_FAILED", "DELIVERY_UNCERTAIN", "PROVIDER_CHANGED")),
+  },
 };
 const identity: Record<CollectionName, string> = {
   users: "uid", stripeCustomers: "customerId", subscriptions: "subscriptionId",
-  entitlements: "uid", stripeEvents: "eventId", checkoutOrders: "orderId", checkoutAccounts: "uid", subscriptionSyncStates: "uid", subscriptionCoverage: "subscriptionId",
+  entitlements: "uid", stripeEvents: "eventId", checkoutOrders: "orderId", checkoutAccounts: "uid", subscriptionSyncStates: "uid", subscriptionCoverage: "subscriptionId", reviewNotificationStates: "caseId", reviewNotifications: "notificationId",
 };
 
 export function validateFirestoreRecord(collection: CollectionName, documentId: string, data: unknown): asserts data is Record<string, unknown> {
@@ -72,6 +83,14 @@ export function validateFirestoreRecord(collection: CollectionName, documentId: 
         (values.status === "active" && (!start || !end || !values.subscriptionId))) {
       throw new Error("Invalid entitlement validity.");
     }
+  }
+  if (collection === "reviewNotifications") {
+    const delivery = [values.firstAttemptAt, values.sender, values.providerId, values.retentionMs];
+    if (delivery.some((v) => v !== null) && delivery.some((v) => v === null)) throw new Error("Invalid notification delivery configuration.");
+    if ((values.attempts === 0) !== (values.firstAttemptAt === null) ||
+        (["processing", "sent", "blocked"].includes(values.status as string) && values.firstAttemptAt === null)) throw new Error("Invalid notification attempt state.");
+    if ((values.status === "processing") !== (values.leaseId !== null && values.leaseUntil !== null) ||
+        (values.status === "sent") !== (values.sentAt !== null)) throw new Error("Invalid notification lifecycle.");
   }
 }
 
