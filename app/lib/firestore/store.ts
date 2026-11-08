@@ -3,6 +3,7 @@ import "server-only";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getFirebaseAdminFirestore } from "../firebaseAdmin";
 import type { CollectionName, FirestoreRecords, StoredRecord, StripeEnvironment } from "./types";
+import { BILLING_REVIEW_CODES } from "./types";
 
 type Validator = (value: unknown) => boolean;
 const text: Validator = (v) => typeof v === "string" && v.trim().length > 0 && v.length <= 512;
@@ -39,10 +40,16 @@ const fields: { [K in CollectionName]: { [P in keyof FirestoreRecords[K]]: Valid
       try { const url = new URL(v); return url.protocol === "https:" && url.origin === v; } catch { return false; }
     },
   },
+  subscriptionSyncStates: { uid: id, generation: (v) => typeof v === "number" && Number.isSafeInteger(v) && v > 0 },
+  subscriptionCoverage: {
+    uid: id, customerId: id, subscriptionId: id,
+    periods: (v) => Array.isArray(v) && v.length <= 2000 && v.every((p) => p && Object.keys(p).length === 3 && id(p.invoiceId) && date(p.start) && date(p.end) && p.start.toMillis() < p.end.toMillis()),
+    reviews: (v) => Array.isArray(v) && v.length <= 1000 && v.every((r) => r && Object.keys(r).length === 2 && id(r.invoiceId) && BILLING_REVIEW_CODES.includes(r.code)),
+  },
 };
 const identity: Record<CollectionName, string> = {
   users: "uid", stripeCustomers: "customerId", subscriptions: "subscriptionId",
-  entitlements: "uid", stripeEvents: "eventId", checkoutOrders: "orderId", checkoutAccounts: "uid",
+  entitlements: "uid", stripeEvents: "eventId", checkoutOrders: "orderId", checkoutAccounts: "uid", subscriptionSyncStates: "uid", subscriptionCoverage: "subscriptionId",
 };
 
 export function validateFirestoreRecord(collection: CollectionName, documentId: string, data: unknown): asserts data is Record<string, unknown> {

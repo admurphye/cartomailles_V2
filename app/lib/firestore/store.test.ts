@@ -19,6 +19,8 @@ const records: FirestoreRecords = {
   stripeEvents: { eventId: "evt_1", type: "invoice.paid", objectId: "in_1", status: "pending", attempts: 0, occurredAt: now, processedAt: null, errorCode: null },
   checkoutOrders: { orderId: "order1", uid: null, sessionId: null, customerId: null, subscriptionId: null, status: "pending", expiresAt: later, paidAt: null },
   checkoutAccounts: { uid: "user1", customerId: null, customerOperationId: "op1", currentOrderId: "order1", priceId: "price_1", appUrl: "https://app.example.invalid" },
+  subscriptionSyncStates: { uid: "user1", generation: 1 },
+  subscriptionCoverage: { uid: "user1", customerId: "cus_1", subscriptionId: "sub_1", periods: [], reviews: [] },
 };
 const cases: [CollectionName, string][] = [["users", "user1"], ["stripeCustomers", "cus_1"], ["subscriptions", "sub_1"], ["entitlements", "user1"], ["stripeEvents", "evt_1"], ["checkoutOrders", "order1"], ["checkoutAccounts", "user1"]];
 const stored = (collection: CollectionName, environment: StripeEnvironment = "test") => ({ ...records[collection], environment, createdAt: now, updatedAt: now });
