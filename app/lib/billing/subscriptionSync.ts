@@ -60,9 +60,9 @@ async function synchronize(customerId: string, event: StripeEventRecord, policy:
   }
 }
 
-/** Isolated business entry point. Retrieves the event itself from Stripe, so a
- * caller cannot supply forged event contents. Future webhook still needs signature
- * verification and correct retry/alert handling before invoking this service.
+/** Business entry point used after webhook signature/environment verification.
+ * Retrieves the event itself from Stripe, so a caller cannot supply forged data.
+ * The store preserves deduplication and generation fencing across invocations.
  */
 export async function synchronizeStripeSubscriptionEvent(eventId: string, policy: SubscriptionPolicy = CARTOMAILLES_SUBSCRIPTION_POLICY): Promise<SubscriptionSyncResult> {
   try {

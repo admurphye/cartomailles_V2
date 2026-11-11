@@ -3,16 +3,77 @@
 ## Périmètre
 
 Le service serveur `synchronizeStripeSubscriptionEvent(eventId)` applique les
-règles validées dans `CARTOMAILLES_SUBSCRIPTION_POLICY`. Il n'est
-branché à aucune route. Le webhook existant, PasswordGate et les diagrammes
-restent inchangés. Aucune configuration déployée n'est modifiée.
+règles validées dans `CARTOMAILLES_SUBSCRIPTION_POLICY`. Le webhook
+`POST /api/stripe/webhook` l'appelle après vérification de la signature et du
+mode test. PasswordGate et les diagrammes restent inchangés. Aucune
+configuration déployée n'est modifiée.
 
 Le service récupère l'événement auprès de Stripe, vérifie son environnement puis
 récupère ses objets actuels. Un événement Checkout ne constitue jamais une preuve
-de paiement. Le futur webhook devra toujours vérifier sa signature avant tout
-appel, acquitter seulement un traitement durable et gérer les reprises et alertes.
+de paiement. Le webhook vérifie la signature sur le corps brut avant tout appel
+et acquitte seulement un traitement terminé ; un échec renvoie 503 pour permettre
+une reprise Stripe. Il n'appelle aucun transport e-mail.
 Les événements Connect sont refusés : cette intégration vise le compte Stripe
 direct configuré, sans contexte de compte fourni par un appelant.
+
+## Webhook raccordé, exclusivement en mode test
+
+La route exige `STRIPE_ENVIRONMENT=test`, une clé `STRIPE_SECRET_KEY` préfixée
+`sk_test_` et le secret `STRIPE_WEBHOOK_SECRET` préfixé `whsec_` du bon endpoint.
+Une configuration absente, live ou incohérente renvoie 503 sans synchronisation.
+Signature absente, fausse, expirée ou corps altéré : 400. Même correctement signé,
+un événement dont `livemode` n'est pas strictement false, ou issu de Connect,
+est refusé avant accès au service. Le service relit ensuite l'événement avec la
+clé configurée : la signature ne remplace pas la vérification du compte Stripe.
+
+Événements transmis au service existant :
+
+- `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+  `checkout.session.async_payment_failed`, `checkout.session.expired` ;
+- `invoice.paid` (premier paiement et renouvellements), `invoice.payment_failed`,
+  `invoice.payment_action_required`, `invoice.voided`,
+  `invoice.marked_uncollectible`, `invoice.finalization_failed` ;
+- `customer.subscription.created`, `customer.subscription.updated`,
+  `customer.subscription.deleted`, `customer.subscription.paused`,
+  `customer.subscription.resumed` ;
+- `charge.refunded`, `refund.created`, `refund.updated`, `refund.failed` ;
+- `charge.dispute.created`, `charge.dispute.updated`, `charge.dispute.closed`,
+  `charge.dispute.funds_withdrawn`, `charge.dispute.funds_reinstated`.
+
+Les autres événements test signés sont acquittés avec `ignored`, sans appel au
+service. Les réponses 200 exposent seulement `received` et le statut
+`processed`, `duplicate`, `ignored` ou `review_required`. Les diagnostics privés
+ne sont pas retournés. Les logs contiennent seulement une catégorie fixe et le
+statut, ou `SYNC_FAILED` ; l'ancien log d'adresse e-mail est supprimé.
+
+Le handler attend le service : aucune tâche en arrière-plan après la réponse.
+Une exception (y compris `STALE_SYNC`, panne Stripe/Firestore ou conflit
+d'association non résolu) renvoie 503 sans message brut. Un conflit persistant
+exige une intervention, même si les reprises continuent. `review_required` est
+acquitté uniquement lorsque le service a persisté son traitement métier et son
+alerte ; il ne signifie pas que l'anomalie est résolue. Les révisions et empreintes
+existantes dédupliquent les notifications de revue lors des répétitions.
+
+La route conserve le calcul métier : un impayé ou une annulation ne supprime pas
+une période déjà payée encore valide ; un remboursement intégral confirmé retire
+la couverture concernée ; les cas ambigus suivent REVIEW_REQUIRED. Aucune
+redirection Checkout, adresse e-mail ou simple statut active ne crée de droit.
+
+Avant un futur essai autorisé : confirmer les variables serveur existantes
+(dont `STRIPE_PRICE_ID` de test et `APP_URL` HTTPS), les index et permissions
+Firestore, la version API compatible, et configurer les événements de cet endpoint
+dans Stripe test. Rien de cela n'est configuré par cette modification.
+`REVIEW_EMAIL_ENABLED` reste absent ou false. Le mode Stripe test ne simule pas
+Firestore : utiliser un projet de test isolé ou l'émulateur autorisé pour les
+essais de bout en bout. La route est bornée à 60 secondes ; les lectures paginées
+et appels Stripe successifs peuvent dépasser ce délai sur de gros comptes.
+Ne pas acquitter un timeout comme un succès : reprise et réconciliation restent
+nécessaires. La réconciliation existante n'est pas planifiée par cette étape.
+
+Les tests vérifient les signatures HMAC localement, simulent Stripe et Firestore
+en mémoire, et couvrent paiement, renouvellement, absence de preuve Checkout,
+impayé, annulation, remboursement, REVIEW_REQUIRED, doublons, désordre, concurrence
+et reprise après panne. Aucun appel externe ou écriture réelle n'est effectué.
 
 ## Association et environnements
 

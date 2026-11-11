@@ -1,8 +1,14 @@
 import { Timestamp } from "firebase-admin/firestore";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ db: vi.fn() }));
+import Stripe from "stripe";
+const mocks = vi.hoisted(() => ({ db: vi.fn(), event: vi.fn(), eventCustomer: vi.fn(), subscriptionIds: vi.fn(), subscription: vi.fn(), snapshot: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("../firebaseAdmin", () => ({ getFirebaseAdminFirestore: mocks.db }));
+vi.mock("./subscriptionStripe", async (original) => ({
+  ...await original<typeof import("./subscriptionStripe")>(),
+  createSubscriptionStripe: () => ({ event: mocks.event, eventCustomer: mocks.eventCustomer, subscriptionIds: mocks.subscriptionIds, subscription: mocks.subscription, snapshot: mocks.snapshot }),
+}));
+import { POST } from "../../api/stripe/webhook/route";
 import { createSubscriptionSyncStore } from "./subscriptionSyncStore";
 import { CARTOMAILLES_SUBSCRIPTION_POLICY, type SubscriptionSnapshot, type SubscriptionPolicy } from "./subscriptionPolicy";
 import type { StripeEventRecord } from "../firestore/types";
@@ -75,7 +81,7 @@ beforeEach(() => {
   put("stripeCustomers", "cus_one", { customerId: "cus_one", uid: "uid1" }); putOrder();
 });
 import { afterEach } from "vitest";
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
 describe("atomic subscription synchronization", () => {
   it("commits subscription, entitlement, order and processed event together", async () => {
@@ -242,5 +248,118 @@ describe("atomic subscription synchronization", () => {
     const message = [...documents.entries()].find(([path]) => path.includes("/reviewNotifications/"))![1];
     expect(message.sourceType).toBe("event"); expect(message.codes).toEqual(["REVIEW_REQUIRED"]);
     expect(documents.get(`${prefix}/stripeEvents/evt_one`)?.errorCode).toBe("REVIEW_REQUIRED");
+  });
+});
+
+describe("signed webhook through real synchronization and in-memory Firestore transactions", () => {
+  const signingSecret = "whsec_local_simulation_only";
+  const signatureSdk = new Stripe("sk_test_fake");
+  const events = new Map<string, { id: string; type: string; livemode: boolean; created: number; data: { object: { id: string } } }>();
+  function webhook(eventId = "evt_paid", type = "invoice.paid", created = 10) {
+    const value = { id: eventId, type, livemode: false, created, data: { object: { id: type.startsWith("customer.subscription.") ? "sub_one" : "in_one" } } };
+    events.set(eventId, value);
+    const body = JSON.stringify(value);
+    return new Request("https://app.example.invalid/api/stripe/webhook", { method: "POST", body,
+      headers: { "stripe-signature": signatureSdk.webhooks.generateTestHeaderString({ payload: body, secret: signingSecret }) } });
+  }
+  beforeEach(() => {
+    vi.stubEnv("STRIPE_ENVIRONMENT", "test"); vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_fake");
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", signingSecret); vi.stubEnv("STRIPE_PRICE_ID", "price_example");
+    vi.stubEnv("APP_URL", "https://app.example.invalid"); vi.stubEnv("REVIEW_EMAIL_ENABLED", "false");
+    vi.stubGlobal("fetch", vi.fn(() => { throw new Error("External calls forbidden"); }));
+    vi.spyOn(console, "info").mockImplementation(() => {}); vi.spyOn(console, "error").mockImplementation(() => {});
+    events.clear();
+    for (const name of ["event", "eventCustomer", "subscriptionIds", "subscription", "snapshot"] as const) mocks[name].mockReset();
+    mocks.event.mockImplementation(async (id: string) => events.get(id));
+    mocks.eventCustomer.mockResolvedValue({ customerId: "cus_one", subscriptionId: "sub_one" });
+    mocks.subscriptionIds.mockResolvedValue(["sub_one"]);
+    mocks.subscription.mockResolvedValue({ id: "sub_one", customer: "cus_one", metadata: { firebaseUid: "uid1", orderId: "order1" } });
+    mocks.snapshot.mockImplementation(async (_sub, _uid, order) => ({ ...paid(), orderUpdatedAt: order.updatedAt }));
+  });
+  const entitlement = () => documents.get(`${prefix}/entitlements/uid1`)!;
+  it("commits a confirmed payment once and replays without changing rights", async () => {
+    expect((await POST(webhook())).status).toBe(200);
+    expect(entitlement().status).toBe("active");
+    const previous = new Map(documents);
+    const response = await POST(webhook());
+    expect(await response.json()).toEqual({ received: true, status: "duplicate" });
+    expect(documents).toEqual(previous);
+    expect(mocks.snapshot).toHaveBeenCalledTimes(1);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("uses current renewed coverage even when an older event arrives later", async () => {
+    await POST(webhook());
+    mocks.snapshot.mockImplementation(async (_sub, _uid, order) => ({ ...paid(), orderUpdatedAt: order.updatedAt,
+      periods: [{ start: 10000, end: 40000 }], evidence: [{ invoiceId: "in_renewed", start: 10000, end: 40000 }] }));
+    expect((await POST(webhook("evt_newer", "invoice.paid", 14))).status).toBe(200);
+    expect((await POST(webhook("evt_older", "customer.subscription.updated", 11))).status).toBe(200);
+    expect((entitlement().validUntil as Timestamp).toMillis()).toBe(40000);
+  });
+  it("does not grant initial access merely for a completed Checkout", async () => {
+    mocks.snapshot.mockImplementation(async (_sub, _uid, order) => ({ ...paid(), orderUpdatedAt: order.updatedAt, periods: [], evidence: [], paidAt: null }));
+    expect((await POST(webhook("evt_checkout", "checkout.session.completed"))).status).toBe(200);
+    expect(entitlement().status).toBe("inactive");
+  });
+  it("preserves only already paid coverage after failure and cancellation", async () => {
+    await POST(webhook());
+    mocks.snapshot.mockImplementation(async (_sub, _uid, order) => ({ ...paid("sub_one", "order1", "past_due"), orderUpdatedAt: order.updatedAt,
+      reviews: [{ invoiceId: "in_unpaid", code: "PAYMENT_UNCONFIRMED" }] }));
+    expect((await POST(webhook("evt_failure", "invoice.payment_failed"))).status).toBe(200);
+    expect((entitlement().validUntil as Timestamp).toMillis()).toBe(20000);
+    mocks.snapshot.mockImplementation(async (_sub, _uid, order) => ({ ...paid("sub_one", "order1", "canceled"), orderUpdatedAt: order.updatedAt }));
+    expect((await POST(webhook("evt_cancel", "customer.subscription.deleted"))).status).toBe(200);
+    expect((entitlement().validUntil as Timestamp).toMillis()).toBe(20000);
+    vi.spyOn(Date, "now").mockReturnValue(20000);
+    await POST(webhook("evt_expired", "customer.subscription.deleted"));
+    expect(entitlement().status).toBe("inactive");
+  });
+  it("removes confirmed refunded coverage without changing the approved policy", async () => {
+    await POST(webhook());
+    mocks.snapshot.mockImplementation(async (_sub, _uid, order) => ({ ...paid(), orderUpdatedAt: order.updatedAt,
+      periods: [], evidence: [], refundedInvoices: ["in_one"] }));
+    expect((await POST(webhook("evt_refund", "charge.refunded"))).status).toBe(200);
+    expect(entitlement().status).toBe("inactive");
+    expect(documents.get(`${prefix}/subscriptionCoverage/sub_one`)?.periods).toEqual([]);
+  });
+  it("persists and deduplicates REVIEW_REQUIRED without sending an email", async () => {
+    mocks.snapshot.mockImplementation(async (_sub, _uid, order) => ({ ...paid(), orderUpdatedAt: order.updatedAt,
+      periods: [], evidence: [], reviews: [{ invoiceId: "in_one", code: "PARTIAL_REFUND" }] }));
+    for (let n = 0; n < 2; n++) {
+      const response = await POST(webhook("evt_review", "refund.updated"));
+      expect(await response.json()).toEqual({ received: true, status: "review_required" });
+    }
+    expect(entitlement().status).toBe("inactive");
+    expect(documents.get(`${prefix}/stripeEvents/evt_review`)?.errorCode).toBe("REVIEW_REQUIRED");
+    expect([...documents.keys()].filter((path) => path.includes("/reviewNotifications/"))).toHaveLength(1);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("returns 503 on Firestore failure and permits a successful retry", async () => {
+    rejectCommit = true;
+    expect((await POST(webhook())).status).toBe(503);
+    expect(documents.has(`${prefix}/entitlements/uid1`)).toBe(false);
+    rejectCommit = false;
+    expect((await POST(webhook())).status).toBe(200);
+    expect(entitlement().status).toBe("active");
+  });
+  it("fences concurrent deliveries and allows the stale attempt to retry", async () => {
+    const responses = await Promise.all([POST(webhook()), POST(webhook())]);
+    expect(responses.map((response) => response.status)).toContain(200);
+    expect(responses.every((response) => [200, 503].includes(response.status))).toBe(true);
+    expect(entitlement().status).toBe("active");
+    expect((await POST(webhook())).status).toBe(200);
+    expect(documents.get(`${prefix}/stripeEvents/evt_paid`)?.status).toBe("processed");
+  });
+  it("does not acknowledge a failed commercial commit after reservation", async () => {
+    mocks.snapshot.mockImplementation(async (_sub, _uid, order) => {
+      rejectCommit = true;
+      return { ...paid(), orderUpdatedAt: order.updatedAt };
+    });
+    expect((await POST(webhook())).status).toBe(503);
+    expect(documents.get(`${prefix}/stripeEvents/evt_paid`)?.status).toBe("processing");
+    expect(documents.has(`${prefix}/entitlements/uid1`)).toBe(false);
+    rejectCommit = false;
+    mocks.snapshot.mockImplementation(async (_sub, _uid, order) => ({ ...paid(), orderUpdatedAt: order.updatedAt }));
+    expect((await POST(webhook())).status).toBe(200);
+    expect(entitlement().status).toBe("active");
   });
 });
