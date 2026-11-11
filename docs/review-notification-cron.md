@@ -1,5 +1,8 @@
 # Job Vercel des notifications REVIEW_REQUIRED
 
+Le [contrôle privé de la file](review-notification-monitoring.md) fonctionne
+indépendamment de ce job et de Resend, sans route supplémentaire ni activation.
+
 ## État actuel
 
 Le plan **Hobby** a été confirmé par l'utilisateur. Le dépôt ne contient ni

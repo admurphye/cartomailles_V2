@@ -1,5 +1,8 @@
 # Notifications des dossiers REVIEW_REQUIRED
 
+La consultation privée des notifications bloquées et vieillissantes est décrite
+dans [la procédure de surveillance](review-notification-monitoring.md).
+
 ## Périmètre
 
 Le destinataire est fixé dans le code à `contact@cartomailles.com`. Aucun champ
