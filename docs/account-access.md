@@ -29,8 +29,14 @@ Les règles Firestore clientes restent fermées. Ni clé Admin ni jeton n'est lo
 Le navigateur ne monte l'éditeur qu'après une réponse positive avec une échéance
 future valide. Chargement initial, panne technique et absence d'abonnement sont
 distincts. En cas de panne, l'accès reste fermé et un bouton permet de réessayer.
-L'emplacement « S'abonner — bientôt disponible » est désactivé et ne fait aucun
-appel Checkout. Un retour `?checkout=success` n'est jamais une preuve de paiement.
+Le bouton « S'abonner » est actif uniquement après un refus serveur pour absence
+de droit valide. Il transmet le jeton Firebase à `POST /api/stripe/checkout`,
+sans UID ni paramètre de paiement. La préparation bloque les doubles clics,
+expire après trente secondes et affiche les erreurs sans détails techniques.
+La redirection exige l'origine exacte `https://checkout.stripe.com`, sans
+identifiants dans l'URL. Un retour `?checkout=success` n'est jamais une preuve
+de paiement : les droits sont relus au montage, au focus et à `pageshow`, y
+compris lors d'une restauration depuis le cache de navigation.
 
 La vérification est renouvelée toutes les cinq minutes et au focus de la fenêtre.
 Une minuterie ferme l'éditeur à l'expiration connue même si une nouvelle requête
@@ -46,7 +52,7 @@ pas modifié ici. Les minuteurs du navigateur peuvent être retardés en arrièr
 | Surface existante | Protection / action restante |
 | --- | --- |
 | `/api/billing/access` | Jeton Firebase vérifié ; lecture des seuls droits de l'UID authentifié |
-| `/api/stripe/checkout` | Jeton vérifié, UID serveur, origine et paramètres contrôlés ; doit rester accessible aux personnes sans abonnement ; bouton non branché |
+| `/api/stripe/checkout` | Jeton vérifié, UID serveur, origine et paramètres contrôlés ; accessible sans abonnement ; configuration et objets Stripe exclusivement test |
 | `/api/stripe/webhook` | Signature obligatoire, compte direct et mode test ; droits issus des preuves Stripe relues, jamais de la redirection |
 | `/api/cron/review-notifications` | Secret serveur CRON_SECRET, refus preview, aucun droit d'administration accordé par un compte client |
 | Firestore navigateur | Toutes les lectures/écritures refusées par les règles actuelles ; Admin reste protégé par IAM |
@@ -62,10 +68,12 @@ moment d'une opération sensible, indépendamment des cinq minutes de rafraîchi
 Une révocation peut rester visible côté interface jusqu'à la prochaine vérification.
 La page `/beta` reste une page de présentation publique, sans montage de l'éditeur.
 
-Le service Checkout existant accepte techniquement les configurations `test` et
-`live`, alors que le webhook actuel impose `test`. Aucun mode ni secret n'a été
-modifié ici. Avant un futur branchement du paiement, conserver la configuration
-en test et traiter explicitement cette différence ; le bouton reste désactivé.
+Le service Checkout refuse toute configuration autre que `test` et toute clé
+autre qu'une clé secrète test avant un appel Stripe ou une écriture Firestore.
+Le webhook impose également le mode test. Aucun mode ni secret distant n'a été
+modifié ici. Un clic réel sur le bouton utiliserait les services configurés et
+écrirait les associations de session Firestore ; les validations locales utilisent
+uniquement des simulations et ne déclenchent pas ce parcours réel.
 
 ## Validation avant essai réel, non effectuée ici
 
@@ -79,8 +87,8 @@ en test et traiter explicitement cette différence ; le bouton reste désactivé
    locaux de cette étape simulent Auth, HTTP et Firestore, sans créer de compte réel.
 4. Avec droits simulés, vérifier accès valide, échéance, suspension, session
    révoquée, panne Firestore, changement d'utilisateur et réponses tardives.
-5. Le branchement du bouton de paiement et le test du parcours Stripe complet
-   restent des étapes distinctes. Aucun paiement, e-mail, écriture Firestore,
+5. Le test du parcours Stripe complet reste à effectuer dans un environnement
+   de test isolé. Aucun paiement, e-mail, écriture Firestore,
    modification Vercel, cron, commit ou push n'est réalisé ici.
 
 Références :

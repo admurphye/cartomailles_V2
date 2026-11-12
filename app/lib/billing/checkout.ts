@@ -2,26 +2,25 @@ import "server-only";
 
 import Stripe from "stripe";
 import { CheckoutConflictError, createCheckoutStore } from "./checkoutStore";
-import type { StripeEnvironment } from "../firestore/types";
 
 export function getCheckoutConfig() {
   const environment = process.env.STRIPE_ENVIRONMENT;
   const secretKey = process.env.STRIPE_SECRET_KEY;
   const priceId = process.env.STRIPE_PRICE_ID;
   const appUrl = process.env.APP_URL;
-  if ((environment !== "test" && environment !== "live") ||
-      !secretKey?.startsWith(`sk_${environment}_`) || !/^price_[A-Za-z0-9]+$/.test(priceId ?? "") || !appUrl) {
+  if (environment !== "test" ||
+      !/^sk_test_[A-Za-z0-9_]+$/.test(secretKey ?? "") || !/^price_[A-Za-z0-9]+$/.test(priceId ?? "") || !appUrl) {
     throw new Error("Invalid checkout configuration.");
   }
   const url = new URL(appUrl);
   if (url.protocol !== "https:" || url.origin !== appUrl) throw new Error("Invalid checkout return origin.");
-  return { environment: environment as StripeEnvironment, secretKey, priceId: priceId!, appUrl };
+  return { environment: "test" as const, secretKey: secretKey!, priceId: priceId!, appUrl };
 }
 
 /** Server-only: uid must come from verifyFirebaseIdToken, never from request JSON. */
 export async function createSubscriptionCheckout(uid: string): Promise<string> {
   const config = getCheckoutConfig();
-  const live = config.environment === "live";
+  const live = false;
   const stripe = new Stripe(config.secretKey, { maxNetworkRetries: 2, timeout: 10_000 });
   // Price IDs have no test/live prefix: retrieve using the configured account key.
   const price = await stripe.prices.retrieve(config.priceId);

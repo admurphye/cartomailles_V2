@@ -5,6 +5,7 @@ import { LogOut } from "lucide-react";
 import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, type User } from "firebase/auth";
 import { auth, isFirebaseConfigured } from "../lib/firebase";
+import { navigateToCheckout } from "../lib/checkoutNavigation";
 
 type PasswordGateProps = {
   children: React.ReactNode;
@@ -23,6 +24,9 @@ export default function PasswordGate({ children }: PasswordGateProps) {
   const [message, setMessage] = useState("");
   const emailInput = useRef<HTMLInputElement>(null);
   const refreshAccess = useRef<() => void>(() => {});
+  const sessionUser = useRef<User | null>(null);
+  const checkoutRequest = useRef<AbortController | null>(null);
+  const [preparingCheckout, setPreparingCheckout] = useState(false);
 
   useEffect(() => {
     if (!auth) {
@@ -97,9 +101,17 @@ export default function PasswordGate({ children }: PasswordGateProps) {
       void checkAccess(currentUser);
     };
     window.addEventListener("focus", onFocus);
+    const onPageShow = () => {
+      checkoutRequest.current?.abort(); checkoutRequest.current = null;
+      setPreparingCheckout(false);
+      onFocus();
+    };
+    window.addEventListener("pageshow", onPageShow);
     const unsubscribe = onAuthStateChanged(
       auth,
       (user) => {
+        checkoutRequest.current?.abort(); checkoutRequest.current = null;
+        sessionUser.current = user; setPreparingCheckout(false);
         ++generation; controller?.abort(); clearTimeout(timer); clearTimeout(expiryTimer); clearTimeout(requestTimer);
         currentUser = user; allowedUntil = 0;
         setAuthorized(false); setSignedIn(Boolean(user)); setError(""); setMessage(""); setAccessError("");
@@ -107,6 +119,8 @@ export default function PasswordGate({ children }: PasswordGateProps) {
         if (user) void checkAccess(user);
       },
       () => {
+        sessionUser.current = null; checkoutRequest.current?.abort(); checkoutRequest.current = null;
+        setPreparingCheckout(false);
         ++generation; currentUser = null; controller?.abort(); clearTimeout(timer); clearTimeout(expiryTimer); clearTimeout(requestTimer);
         setAuthorized(false); setSignedIn(false);
         setLoading(false);
@@ -114,10 +128,59 @@ export default function PasswordGate({ children }: PasswordGateProps) {
       }
     );
     return () => {
+      sessionUser.current = null; checkoutRequest.current?.abort(); checkoutRequest.current = null;
       ++generation; currentUser = null; controller?.abort(); clearTimeout(timer); clearTimeout(expiryTimer); clearTimeout(requestTimer);
       window.removeEventListener("focus", onFocus); refreshAccess.current = () => {}; unsubscribe();
+      window.removeEventListener("pageshow", onPageShow);
     };
   }, []);
+
+  const handleSubscribe = async () => {
+    const user = sessionUser.current;
+    if (!user || authorized || loading || accessError || submitting || checkoutRequest.current) return;
+    const controller = new AbortController();
+    checkoutRequest.current = controller;
+    setPreparingCheckout(true); setError("");
+    const isCurrent = () => sessionUser.current === user && checkoutRequest.current === controller;
+    const timeout = setTimeout(() => {
+      controller.abort();
+      if (isCurrent()) {
+        checkoutRequest.current = null; setPreparingCheckout(false);
+        setError("La préparation du paiement prend trop de temps. Veuillez réessayer.");
+      }
+    }, 30_000);
+    let redirected = false;
+    try {
+      const token = await user.getIdToken();
+      if (!isCurrent() || controller.signal.aborted) return;
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST", headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store", credentials: "omit", signal: controller.signal,
+      });
+      if (!isCurrent() || controller.signal.aborted) return;
+      if (!response.ok) {
+        setError(response.status === 401
+          ? "Votre session a expiré. Déconnectez-vous puis reconnectez-vous."
+          : response.status === 409
+            ? "Cette session de paiement ne peut pas être reprise. Réessayez ou contactez l’assistance."
+            : "Impossible de préparer le paiement. Veuillez réessayer dans quelques instants.");
+        return;
+      }
+      const result = await response.json();
+      if (!isCurrent() || controller.signal.aborted) return;
+      const url = new URL(result.url);
+      if (typeof result.url !== "string" || url.origin !== "https://checkout.stripe.com" || url.username || url.password) {
+        throw new Error("Invalid Checkout URL");
+      }
+      navigateToCheckout(url.href);
+      redirected = true;
+    } catch {
+      if (isCurrent() && !controller.signal.aborted) setError("Impossible de préparer le paiement. Veuillez réessayer dans quelques instants.");
+    } finally {
+      clearTimeout(timeout);
+      if (isCurrent() && !redirected) { checkoutRequest.current = null; setPreparingCheckout(false); }
+    }
+  };
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -214,11 +277,12 @@ export default function PasswordGate({ children }: PasswordGateProps) {
           <h1 className="text-2xl font-bold">{accessError ? "Vérification indisponible" : "Un abonnement est nécessaire"}</h1>
           {accessError ? <p role="alert" className="mt-4">{accessError}</p> : <>
             <p className="mt-4">Votre compte est connecté. Un abonnement payé et en cours de validité est nécessaire pour accéder à Cartomailles.</p>
-            <button type="button" disabled className="mt-6 w-full rounded-xl bg-[#D98CA8] py-3 text-white opacity-60">S’abonner — bientôt disponible</button>
+            <button type="button" onClick={handleSubscribe} disabled={preparingCheckout || submitting} className="mt-6 w-full rounded-xl bg-[#D98CA8] py-3 text-white disabled:opacity-60">{preparingCheckout ? "Préparation du paiement…" : "S’abonner"}</button>
+            {preparingCheckout && <p role="status" className="mt-3">Préparation de votre session Stripe test…</p>}
           </>}
           {error && <p role="alert" className="mt-4">{error}</p>}
-          <button type="button" onClick={() => refreshAccess.current()} className="mt-4 w-full underline">Vérifier à nouveau</button>
-          <button type="button" onClick={handleLogout} disabled={submitting} className="mt-4 w-full underline">Déconnexion</button>
+          <button type="button" disabled={preparingCheckout} onClick={() => refreshAccess.current()} className="mt-4 w-full underline">Vérifier à nouveau</button>
+          <button type="button" onClick={handleLogout} disabled={submitting || preparingCheckout} className="mt-4 w-full underline">Déconnexion</button>
         </div>
       </main>
     );

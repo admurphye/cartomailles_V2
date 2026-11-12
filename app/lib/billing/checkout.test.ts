@@ -68,17 +68,17 @@ describe("secure subscription checkout", () => {
     await expect(createSubscriptionCheckout("uid1")).rejects.toThrow();
     expect(mocks.price).not.toHaveBeenCalled(); expect(mocks.reserve).not.toHaveBeenCalled();
   });
-  it("supports explicit live configuration", () => {
+  it("refuses explicit live configuration", () => {
     vi.stubEnv("STRIPE_ENVIRONMENT", "live"); vi.stubEnv("STRIPE_SECRET_KEY", "sk_live_fake");
-    expect(getCheckoutConfig().environment).toBe("live");
+    expect(() => getCheckoutConfig()).toThrow();
   });
-  it("creates in live only when the key, price, customer and session all agree", async () => {
+  it("refuses live before any Stripe or Firestore operation even with matching objects", async () => {
     vi.stubEnv("STRIPE_ENVIRONMENT", "live"); vi.stubEnv("STRIPE_SECRET_KEY", "sk_live_fake");
     mocks.price.mockResolvedValue({ id: "price_example", livemode: true, active: true, type: "recurring", recurring: { usage_type: "licensed" } });
     mocks.customerCreate.mockResolvedValue({ ...customer(), livemode: true, metadata: { firebaseUid: "uid1", environment: "live" } });
     mocks.sessionCreate.mockResolvedValue(session({ livemode: true, metadata: { firebaseUid: "uid1", orderId: "order1", environment: "live" } }));
-    await expect(createSubscriptionCheckout("uid1")).resolves.toContain("https://checkout.stripe.com/");
-    expect(mocks.store).toHaveBeenCalledWith("live");
+    await expect(createSubscriptionCheckout("uid1")).rejects.toThrow();
+    expect(mocks.price).not.toHaveBeenCalled(); expect(mocks.store).not.toHaveBeenCalled();
   });
   it.each([
     { livemode: true }, { active: false }, { type: "one_time" }, { recurring: null },

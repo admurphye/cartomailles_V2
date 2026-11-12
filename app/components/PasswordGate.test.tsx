@@ -5,9 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   listener: undefined as undefined | ((user: { uid: string; getIdToken: () => Promise<string> } | null) => void),
-  unsubscribe: vi.fn(), login: vi.fn(), logout: vi.fn(), reset: vi.fn(), signup: vi.fn(), token: vi.fn(), fetch: vi.fn(),
+  unsubscribe: vi.fn(), login: vi.fn(), logout: vi.fn(), reset: vi.fn(), signup: vi.fn(), token: vi.fn(), fetch: vi.fn(), navigate: vi.fn(),
 }));
 vi.mock("../lib/firebase", () => ({ auth: { name: "mock-auth" }, isFirebaseConfigured: true }));
+vi.mock("../lib/checkoutNavigation", () => ({ navigateToCheckout: mocks.navigate }));
 vi.mock("firebase/auth", () => ({
   onAuthStateChanged: (_auth: unknown, listener: typeof mocks.listener) => {
     mocks.listener = listener;
@@ -55,6 +56,73 @@ afterEach(async () => {
 });
 
 describe("Firebase login independently of retired routes", () => {
+  const subscribe = () => [...container.querySelectorAll("button")].find((button) => button.textContent === "S’abonner")!;
+  it("starts authenticated Checkout once and redirects only to Stripe", async () => {
+    await session({ uid: "member" });
+    let resolve!: (response: Response) => void;
+    mocks.fetch.mockReturnValueOnce(new Promise((finish) => { resolve = finish; }));
+    await act(async () => { const button = subscribe(); button.click(); button.click(); });
+    expect(mocks.fetch).toHaveBeenCalledTimes(2);
+    expect(mocks.fetch).toHaveBeenLastCalledWith("/api/stripe/checkout", expect.objectContaining({ method: "POST", headers: { Authorization: "Bearer firebase-test-token" }, credentials: "omit" }));
+    expect(container.querySelector("[role=status]")?.textContent).toContain("Stripe test");
+    await act(async () => { resolve(new Response(JSON.stringify({ url: "https://checkout.stripe.com/c/pay/test" }))); });
+    expect(mocks.navigate).toHaveBeenCalledExactlyOnceWith("https://checkout.stripe.com/c/pay/test");
+    expect(container.querySelector("[data-editor]")).toBeNull();
+  });
+  it.each(["https://checkout.stripe.com.evil.invalid/pay", "http://checkout.stripe.com/pay", "https://evil@checkout.stripe.com/pay", "javascript:alert(1)", "/relative", null])("rejects unsafe Checkout URL %s", async (url) => {
+    await session({ uid: "member" });
+    mocks.fetch.mockResolvedValueOnce(new Response(JSON.stringify({ url })));
+    await act(async () => { subscribe().click(); });
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(container.querySelector("[role=alert]")).not.toBeNull();
+    expect(subscribe().disabled).toBe(false);
+  });
+  it.each([401, 409, 503])("shows a recoverable Checkout error for HTTP %s", async (status) => {
+    await session({ uid: "member" });
+    mocks.fetch.mockResolvedValueOnce(new Response("private service details", { status }));
+    await act(async () => { subscribe().click(); });
+    expect(container.querySelector("[role=alert]")).not.toBeNull();
+    expect(container.textContent).not.toContain("private service details");
+    expect(subscribe().disabled).toBe(false); expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+  it("ignores Checkout responses after the authenticated user changes", async () => {
+    await session({ uid: "member" });
+    let resolve!: (response: Response) => void;
+    mocks.fetch.mockReturnValueOnce(new Promise((finish) => { resolve = finish; }));
+    await act(async () => { subscribe().click(); });
+    await session({ uid: "other" });
+    await act(async () => { resolve(new Response(JSON.stringify({ url: "https://checkout.stripe.com/c/pay/test" }))); });
+    expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+  it("bounds a stalled Checkout token request and allows retry", async () => {
+    vi.useFakeTimers(); await session({ uid: "member" });
+    mocks.token.mockReturnValueOnce(new Promise(() => {}));
+    await act(async () => { subscribe().click(); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(30000); });
+    expect(container.querySelector("[role=alert]")?.textContent).toContain("trop de temps");
+    expect(subscribe().disabled).toBe(false); expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+  it("reports network and malformed JSON failures without redirecting", async () => {
+    await session({ uid: "member" });
+    mocks.fetch.mockRejectedValueOnce(new TypeError("network unavailable"));
+    await act(async () => { subscribe().click(); });
+    expect(container.querySelector("[role=alert]")).not.toBeNull();
+    mocks.fetch.mockResolvedValueOnce(new Response("invalid JSON"));
+    await act(async () => { subscribe().click(); });
+    expect(container.querySelector("[role=alert]")).not.toBeNull();
+    expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+  it("rechecks server rights on a restored Checkout return, never trusting success", async () => {
+    await session({ uid: "member" });
+    window.history.replaceState({}, "", "/?checkout=success");
+    await act(async () => { window.dispatchEvent(new Event("pageshow")); });
+    expect(container.querySelector("[data-editor]")).toBeNull();
+    expect(mocks.fetch).toHaveBeenCalledTimes(2);
+    mocks.fetch.mockResolvedValueOnce(new Response(JSON.stringify({ authorized: true, validUntil: Date.now() + 3600000 })));
+    await act(async () => { window.dispatchEvent(new Event("pageshow")); });
+    expect(container.querySelector("[data-editor]")).not.toBeNull();
+    window.history.replaceState({}, "", "/");
+  });
   it("waits for Firebase and hides the editor when signed out", async () => {
     expect(container.querySelector("[data-editor]")).toBeNull();
     await session(null);
@@ -102,7 +170,7 @@ describe("Firebase login independently of retired routes", () => {
     await session({ uid: "new-user" });
     expect(container.querySelector("[data-editor]")).toBeNull();
     expect(container.textContent).toContain("Un abonnement est nécessaire");
-    expect([...container.querySelectorAll("button")].find((button) => button.textContent?.includes("S’abonner"))!.disabled).toBe(true);
+    expect([...container.querySelectorAll("button")].find((button) => button.textContent?.includes("S’abonner"))!.disabled).toBe(false);
   });
   it("shows a technical failure instead of claiming a subscription is missing", async () => {
     mocks.fetch.mockResolvedValue(new Response(JSON.stringify({ authorized: false, status: "unavailable" }), { status: 503 }));
