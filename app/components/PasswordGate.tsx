@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { LogOut } from "lucide-react";
 import { FirebaseError } from "firebase/app";
-import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, type User } from "firebase/auth";
 import { auth, isFirebaseConfigured } from "../lib/firebase";
 
 type PasswordGateProps = {
@@ -12,6 +12,9 @@ type PasswordGateProps = {
 
 export default function PasswordGate({ children }: PasswordGateProps) {
   const [authorized, setAuthorized] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [accessError, setAccessError] = useState("");
+  const [creatingAccount, setCreatingAccount] = useState(false);
   const [loading, setLoading] = useState(isFirebaseConfigured);
   const [submitting, setSubmitting] = useState(false);
   const [email, setEmail] = useState("");
@@ -19,24 +22,101 @@ export default function PasswordGate({ children }: PasswordGateProps) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const emailInput = useRef<HTMLInputElement>(null);
+  const refreshAccess = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (!auth) {
       return;
     }
 
-    return onAuthStateChanged(
+    let generation = 0;
+    let currentUser: User | null = null;
+    let controller: AbortController | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let expiryTimer: ReturnType<typeof setTimeout> | undefined;
+    let requestTimer: ReturnType<typeof setTimeout> | undefined;
+    let allowedUntil = 0;
+
+    async function checkAccess(user: User) {
+      const requestGeneration = ++generation;
+      controller?.abort();
+      clearTimeout(timer); clearTimeout(requestTimer);
+      const requestController = new AbortController();
+      controller = requestController;
+      const signal = requestController.signal;
+      requestTimer = setTimeout(() => requestController.abort(), 10_000);
+      // Also bounds a stalled getIdToken(), which has no abort parameter.
+      const timeout = requestTimer;
+      const isCurrent = () => requestGeneration === generation && currentUser === user;
+      signal.addEventListener("abort", () => {
+        if (!isCurrent()) return;
+        setAuthorized(false); setLoading(false);
+        setAccessError("La vérification de votre abonnement est indisponible. Veuillez réessayer.");
+      }, { once: true });
+      try {
+        const token = await user.getIdToken();
+        if (!isCurrent() || signal.aborted) return;
+        const response = await fetch("/api/billing/access", {
+          headers: { Authorization: `Bearer ${token}` }, cache: "no-store", credentials: "omit", signal,
+        });
+        const result = await response.json();
+        if (!isCurrent() || signal.aborted) return;
+        if (response.status === 401) {
+          clearTimeout(expiryTimer);
+          allowedUntil = 0; setAuthorized(false);
+          setAccessError("Votre session a expiré ou a été révoquée. Déconnectez-vous puis reconnectez-vous.");
+        } else if (response.status === 403 && result.authorized === false && result.status === "subscription_required") {
+          clearTimeout(expiryTimer);
+          allowedUntil = 0; setAuthorized(false); setAccessError("");
+        } else if (response.ok && result.authorized === true && Number.isSafeInteger(result.validUntil) && result.validUntil > Date.now()) {
+          allowedUntil = result.validUntil; setAuthorized(true); setAccessError("");
+          clearTimeout(expiryTimer);
+          expiryTimer = setTimeout(() => {
+            if (Date.now() >= allowedUntil) { setAuthorized(false); setLoading(true); }
+            void checkAccess(user);
+          }, Math.min(2_147_483_647, Math.max(0, allowedUntil - Date.now())));
+          timer = setTimeout(() => { void checkAccess(user); }, 5 * 60_000);
+        } else {
+          throw new Error("Access unavailable");
+        }
+      } catch {
+        if (!isCurrent()) return;
+        clearTimeout(expiryTimer); allowedUntil = 0; setAuthorized(false);
+        setAccessError("Impossible de vérifier votre abonnement. Réessayez ou reconnectez-vous.");
+      } finally {
+        clearTimeout(timeout);
+        if (isCurrent()) setLoading(false);
+      }
+    }
+    refreshAccess.current = () => {
+      if (currentUser) { setAccessError(""); setLoading(true); void checkAccess(currentUser); }
+    };
+    const onFocus = () => {
+      if (!currentUser) return;
+      if (Date.now() >= allowedUntil) { setAuthorized(false); setLoading(true); }
+      void checkAccess(currentUser);
+    };
+    window.addEventListener("focus", onFocus);
+    const unsubscribe = onAuthStateChanged(
       auth,
       (user) => {
-        setAuthorized(Boolean(user));
-        setLoading(false);
+        ++generation; controller?.abort(); clearTimeout(timer); clearTimeout(expiryTimer); clearTimeout(requestTimer);
+        currentUser = user; allowedUntil = 0;
+        setAuthorized(false); setSignedIn(Boolean(user)); setError(""); setMessage(""); setAccessError("");
+        setLoading(Boolean(user));
+        if (user) void checkAccess(user);
       },
       () => {
-        setAuthorized(false);
+        ++generation; currentUser = null; controller?.abort(); clearTimeout(timer); clearTimeout(expiryTimer); clearTimeout(requestTimer);
+        setAuthorized(false); setSignedIn(false);
         setLoading(false);
         setError("Impossible de vérifier votre session. Rechargez la page pour réessayer.");
       }
     );
+    return () => {
+      ++generation; currentUser = null; controller?.abort(); clearTimeout(timer); clearTimeout(expiryTimer); clearTimeout(requestTimer);
+      window.removeEventListener("focus", onFocus); refreshAccess.current = () => {}; unsubscribe();
+    };
   }, []);
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
@@ -48,7 +128,8 @@ export default function PasswordGate({ children }: PasswordGateProps) {
     setMessage("");
 
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      if (creatingAccount) await createUserWithEmailAndPassword(auth, email.trim(), password);
+      else await signInWithEmailAndPassword(auth, email.trim(), password);
       setPassword("");
     } catch (signInError) {
       const code = signInError instanceof FirebaseError ? signInError.code : "";
@@ -57,7 +138,11 @@ export default function PasswordGate({ children }: PasswordGateProps) {
           ? "Connexion impossible. Vérifiez votre connexion Internet."
           : code === "auth/too-many-requests"
             ? "Trop de tentatives. Veuillez patienter avant de réessayer."
-            : "Connexion impossible. Vérifiez votre e-mail et votre mot de passe."
+            : creatingAccount
+              ? code === "auth/weak-password" || code === "auth/password-does-not-meet-requirements"
+                ? "Choisissez un mot de passe plus robuste, conforme aux exigences du service."
+                : "Création du compte impossible. Réessayez ou connectez-vous si vous avez déjà un compte."
+              : "Connexion impossible. Vérifiez votre e-mail et votre mot de passe."
       );
     } finally {
       setSubmitting(false);
@@ -86,6 +171,7 @@ export default function PasswordGate({ children }: PasswordGateProps) {
     setMessage("");
     try {
       await signOut(auth);
+      setAuthorized(false);
       setPassword("");
     } catch {
       setError("La déconnexion a échoué. Veuillez réessayer.");
@@ -97,7 +183,7 @@ export default function PasswordGate({ children }: PasswordGateProps) {
   if (loading) {
     return (
       <main className="min-h-screen bg-[#FFF9F5] flex items-center justify-center">
-        <p className="text-[#5B2E4D]">Chargement de Cartomailles…</p>
+        <p role="status" className="text-[#5B2E4D]">Chargement de Cartomailles…</p>
       </main>
     );
   }
@@ -121,12 +207,29 @@ export default function PasswordGate({ children }: PasswordGateProps) {
     );
   }
 
+  if (signedIn) {
+    return (
+      <main className="min-h-screen bg-[#FFF9F5] flex items-center justify-center px-6">
+        <div className="w-full max-w-md rounded-3xl bg-white shadow-xl border border-pink-100 p-10 text-[#5B2E4D]">
+          <h1 className="text-2xl font-bold">{accessError ? "Vérification indisponible" : "Un abonnement est nécessaire"}</h1>
+          {accessError ? <p role="alert" className="mt-4">{accessError}</p> : <>
+            <p className="mt-4">Votre compte est connecté. Un abonnement payé et en cours de validité est nécessaire pour accéder à Cartomailles.</p>
+            <button type="button" disabled className="mt-6 w-full rounded-xl bg-[#D98CA8] py-3 text-white opacity-60">S’abonner — bientôt disponible</button>
+          </>}
+          {error && <p role="alert" className="mt-4">{error}</p>}
+          <button type="button" onClick={() => refreshAccess.current()} className="mt-4 w-full underline">Vérifier à nouveau</button>
+          <button type="button" onClick={handleLogout} disabled={submitting} className="mt-4 w-full underline">Déconnexion</button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#FFF9F5] flex items-center justify-center px-6">
       <div className="w-full max-w-md rounded-3xl bg-white shadow-xl border border-pink-100 p-10 text-[#5B2E4D]">
         <h1 className="text-3xl font-bold text-center">🧶 Cartomailles</h1>
         <p className="mt-3 text-center text-gray-600">
-          Bienvenue dans la bêta privée de Cartomailles
+          {creatingAccount ? "Créer votre compte Cartomailles" : "Connectez-vous à Cartomailles"}
         </p>
 
         {!isFirebaseConfigured ? (
@@ -152,7 +255,8 @@ export default function PasswordGate({ children }: PasswordGateProps) {
             <input
               id="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete={creatingAccount ? "new-password" : "current-password"}
+              minLength={creatingAccount ? 6 : undefined}
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -167,15 +271,19 @@ export default function PasswordGate({ children }: PasswordGateProps) {
               disabled={submitting}
               className="mt-6 w-full rounded-xl bg-[#D98CA8] py-3 font-semibold text-white transition hover:bg-[#E8A4BD] disabled:cursor-wait disabled:opacity-60"
             >
-              {submitting ? "Veuillez patienter…" : "Accéder à Cartomailles"}
+              {submitting ? "Veuillez patienter…" : creatingAccount ? "Créer mon compte" : "Se connecter"}
             </button>
-            <button
+            {!creatingAccount && <button
               type="button"
               onClick={handlePasswordReset}
               disabled={submitting}
               className="mt-4 w-full text-sm underline disabled:cursor-wait disabled:opacity-60"
             >
               Mot de passe oublié ?
+            </button>}
+            <button type="button" disabled={submitting} className="mt-4 w-full text-sm underline"
+              onClick={() => { setCreatingAccount(!creatingAccount); setPassword(""); setError(""); setMessage(""); }}>
+              {creatingAccount ? "J’ai déjà un compte" : "Créer un compte"}
             </button>
           </form>
         )}
